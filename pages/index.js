@@ -1,65 +1,61 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React, { useState } from 'react'
 
-export default function Home() {
+import AudioSVGWaveform from '../lib/waveform'
+import { Svg, Polyline } from 'react-svg-path'
+import AppLayout from '../components/AppLayout'
+
+const isBrowser = () => typeof window !== 'undefined'
+
+const NUM_PEAKS = 600
+
+function pathfromAudio(url, callback) {
+  const trackWaveform = new AudioSVGWaveform({ url: url, peaks: NUM_PEAKS })
+
+  trackWaveform.loadFromUrl().then(() => {
+    const data = trackWaveform.getData()
+    callback(data)
+  })
+}
+
+const SVG = ({ path, color = '#222' }) => (
+  <Svg height="100%" width="100%" viewBox="0 0 200 81">
+    <g transform={`matrix(0.0334504,0,0,81,0,40.5)`}>
+      <path d={path} fill="none" stroke={color} height="100%" width="100%" x="0" y="0" />
+    </g>
+  </Svg>
+)
+
+const SvgFromAudioPeaks = ({ peaks }) => {
+  const height = 100
+  const points = peaks.map((peak, index) => {
+    const xPos = index * 1
+    const yPos = height / 2 + peak * height
+    console.log([index, peak, xPos, yPos])
+    return [xPos, yPos]
+  })
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+    <Svg width={peaks.length / 2} height={height} scale>
+      <Polyline points={points} stroke="#222" strokeWidth={1} fill="#ffffff" />
+    </Svg>
+  )
+}
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+const AudioWaveForm = () => {
+  const url = 'http://localhost:5000/The_Amen_Break.wav'
+  const [data, setData] = useState({})
+  const { peaks, path } = data
+  pathfromAudio(url, (data) => setData(data))
+  return (
+    <div style={{ textAlign: 'center' }}>
+      {/* <button onClick={() => pathfromAudio(url, (data) => setData(data))}>audio</button> */}
+      {/* <pre>{`${path}`}</pre> */}
+      <div className="ratio ratio-16x9">{!!path && <SVG path={path} />}</div>
+      {/* <div className="ratio ratio-16x9">{!!peaks && <pre>{JSON.stringify(peaks)}</pre>}</div> */}
+      <div className="ratio ratio-16x9">{!!peaks && <SvgFromAudioPeaks peaks={peaks} />}</div>
     </div>
   )
+}
+
+export default function Home() {
+  return <AppLayout>{isBrowser() && <AudioWaveForm />}</AppLayout>
 }
