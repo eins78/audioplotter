@@ -1,13 +1,17 @@
 // adapted from <https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/>
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
 
-const AudioAnalyzer = ({ url, lines = 100, children } = {}) => {
+export const MIN_LINES = 1
+export const MAX_LINES = 2048
+export const DEFAULT_LINES = 732
+
+export default function AudioAnalyzer({ url, lines = 100, normalize = true, children } = {}) {
   const [audioContext, setAudioContext] = useState(new AudioCtx())
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState(undefined)
-  const [buffer, setBuffer] = useState(new ArrayBuffer())
+  const buffer = useRef(new ArrayBuffer())
   const [peaks, setPeaks] = useState(undefined)
 
   useEffect(() => {
@@ -25,7 +29,7 @@ const AudioAnalyzer = ({ url, lines = 100, children } = {}) => {
         err = true
         setFetchError(error)
       }
-      if (!err) setBuffer(buf)
+      if (!err) buffer.current = buf
       setIsFetching(false)
     },
     [url]
@@ -33,21 +37,19 @@ const AudioAnalyzer = ({ url, lines = 100, children } = {}) => {
 
   useEffect(
     async function calculatePeaks() {
-      if (audioContext && !isFetching && buffer && buffer.byteLength) {
-        const audioData = await audioContext.decodeAudioData(buffer)
-        const peaks = normalizeData(filterData(audioData, lines))
-        setPeaks(peaks)
+      if (!(audioContext && !isFetching && buffer.current && buffer.current.byteLength)) {
+        return setPeaks(null)
       }
+      const audioData = await audioContext.decodeAudioData(buffer.current.slice())
+      const peaks = filterData(audioData, lines)
+      setPeaks(normalize ? normalizeData(peaks) : peaks)
     },
-    [audioContext, url, lines, isFetching, buffer]
+    [url, lines, audioContext, isFetching, buffer]
   )
 
   const data = { peaks, error: fetchError }
-
   return typeof children !== 'function' ? null : children(data)
 }
-
-export default AudioAnalyzer
 
 function filterData(audioBuffer, numSamples) {
   const rawData = audioBuffer.getChannelData(0) // We only need to work with one channel of data
