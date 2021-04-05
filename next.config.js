@@ -1,3 +1,3 @@
-const withTranspiledModules = require('next-transpile-modules')(['audio-waveform-svg-path'])
+// const withTranspiledModules = require('next-transpile-modules')(['audio-waveform-svg-path'])
 
-module.exports = withTranspiledModules()
+// module.exports = withTranspiledModules()
