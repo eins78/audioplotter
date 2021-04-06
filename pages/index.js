@@ -64,32 +64,15 @@ const AudioWaveForm = () => {
           </select>
         </div>
         <div className="mb-3">
-          <div className="row">
-            <div className="col-sm">
-              <FormField
-                id="inputNumLinesRange"
-                labelTxt="nr. of lines"
-                type="range"
-                className="form-range"
-                value={numLines}
-                onChange={(e) => setNumLines(e.target.value)}
-                required
-                min={MIN_LINES}
-                max={MAX_LINES}
-              />
-            </div>
-            <div className="col-sm">
-              <FormField
-                id="inputNumLinesNr"
-                type="number"
-                value={numLines}
-                onChange={(e) => setNumLines(e.target.value)}
-                required
-                min={MIN_LINES}
-                max={MAX_LINES}
-              />
-            </div>
-          </div>
+          <NumberSliderInput
+            id="inputNumLines"
+            labelTxt="nr. of lines"
+            value={numLines}
+            onChange={(e) => setNumLines(e.target.value)}
+            required
+            min={MIN_LINES}
+            max={MAX_LINES}
+          />
         </div>
         <div className="mb-3">
           <CheckBox
@@ -205,6 +188,17 @@ const CheckBox = ({ id, labelTxt, ...inputProps }) => (
     <label className="form-check-label" htmlFor={id}>
       {labelTxt}
     </label>
+  </div>
+)
+
+const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
+  <div id={id} className="row">
+    <div className="col-sm">
+      <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
+    </div>
+    <div className="col-sm">
+      <FormField id={`${id}Nr`} type="number" {...inputProps} />
+    </div>
   </div>
 )
 
