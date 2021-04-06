@@ -6,16 +6,20 @@ import AudioAnalyser, { MIN_LINES, MAX_LINES, DEFAULT_LINES } from '../component
 const isBrowser = () => typeof window !== 'undefined'
 
 const DEFAULT_AUDIO_URL = 'http://localhost:5000/The_Amen_Break.wav'
+const VIS_STYLES = ['zigzag']
 
 const AudioWaveForm = () => {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
   const [numLines, setNumLines] = useState(DEFAULT_LINES)
   const [doNormalize, setDoNormalize] = useState(true)
+  const [addCaps, setAddCaps] = useState(true)
+  // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
 
   return (
     <div>
       <form
+        class="font-monospace small"
         onSubmit={() => {
           setRunAnalysis(true)
         }}
@@ -32,29 +36,56 @@ const AudioWaveForm = () => {
           />
         </div>
         <div className="mb-3">
-          <FormField
-            id="inputNumLines"
-            labelTxt="nr. of lines"
-            helpTxt={String(numLines)}
-            type="range"
-            className="form-range"
-            value={numLines}
-            onChange={(e) => setNumLines(e.target.value)}
-            required
-            min={MIN_LINES}
-            max={MAX_LINES}
-          />
+          <select class="form-select" aria-label="choose visualisation style">
+            {/* <option selected>Open this select menu</option> */}
+            {VIS_STYLES.map((s) => (
+              <option value={s}>{s}</option>
+            ))}
+          </select>
         </div>
         <div className="mb-3">
-          <FormField
-            id="inputDoNormalize"
+          <div class="row">
+            <div class="col-sm">
+              <FormField
+                id="inputNumLinesRange"
+                labelTxt="nr. of lines"
+                type="range"
+                className="form-range"
+                value={numLines}
+                onChange={(e) => setNumLines(e.target.value)}
+                required
+                min={MIN_LINES}
+                max={MAX_LINES}
+              />
+            </div>
+            <div class="col-sm">
+              <FormField
+                id="inputNumLinesNr"
+                type="number"
+                value={numLines}
+                onChange={(e) => setNumLines(e.target.value)}
+                required
+                min={MIN_LINES}
+                max={MAX_LINES}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="mb-3">
+          <CheckBox
             labelTxt="normalize"
-            type="checkbox"
-            className="form-control form-control-sm"
-            value={doNormalize}
+            id="inputDoNormalize"
+            checked={doNormalize}
             onChange={(e) => {
-              setNumLines(e.target.value)
-              debugger
+              setDoNormalize(e.target.checked)
+            }}
+          />
+          <CheckBox
+            labelTxt="add Caps"
+            id="inputAddCaps"
+            checked={addCaps}
+            onChange={(e) => {
+              setAddCaps(e.target.checked)
             }}
           />
         </div>
@@ -66,14 +97,19 @@ const AudioWaveForm = () => {
           </div>
         )}
       </form>
+
+      <hr />
+
       {runAnalysis && (
-        <AudioAnalyser url={url} lines={numLines} normalize={false}>
+        <AudioAnalyser url={url} lines={numLines} normalize={doNormalize}>
           {(data) => {
             const { error, peaks } = data
             if (error) return <ErrorMessage error={error} />
             return (
               <>
-                <div className="ratio ratio-16x9">{!!peaks && <SvgFromAudioPeaks peaks={peaks} />}</div>
+                <div className="ratio ratio-16x9">
+                  {!!peaks && <SvgFromAudioPeaks peaks={peaks} withCaps={addCaps} />}
+                </div>
                 {/* <div className="">{!!peaks && <pre>{JSON.stringify(data, 0, 2)}</pre>}</div> */}
               </>
             )
@@ -91,18 +127,27 @@ const ErrorMessage = ({ error }) => (
   </div>
 )
 
-const FormField = ({ id, labelTxt, helpTxt, ...fieldProps }) => (
+const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
   <>
     <label htmlFor={id} className="form-label">
       {labelTxt}
     </label>
-    <input id={id} className="form-control" {...fieldProps} />
+    <input id={id} className="form-control" {...inputProps} />
     {!!helpTxt && (
       <div id={`${id}Help`} className="form-text">
         {helpTxt}
       </div>
     )}
   </>
+)
+
+const CheckBox = ({ id, labelTxt, ...inputProps }) => (
+  <div class="form-check">
+    <input id={id} type="checkbox" class="form-check-input" {...inputProps} />
+    <label class="form-check-label" htmlFor={id}>
+      {labelTxt}
+    </label>
+  </div>
 )
 
 export default function Home() {

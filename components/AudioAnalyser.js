@@ -5,7 +5,7 @@ import AudioCtx from 'audio-context'
 
 export const MIN_LINES = 1
 export const MAX_LINES = 2048
-export const DEFAULT_LINES = 732
+export const DEFAULT_LINES = 1024
 
 export default function AudioAnalyzer({ url, lines = 100, normalize = true, children } = {}) {
   const [audioContext, setAudioContext] = useState(new AudioCtx())
@@ -41,6 +41,8 @@ export default function AudioAnalyzer({ url, lines = 100, normalize = true, chil
         return setPeaks(null)
       }
       const audioData = await audioContext.decodeAudioData(buffer.current.slice())
+      // const peaks = normalizeData(filterData(audioData, lines))
+      // setPeaks(peaks)
       const peaks = filterData(audioData, lines)
       setPeaks(normalize ? normalizeData(peaks) : peaks)
     },
