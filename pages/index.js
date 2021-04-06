@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import AppLayout from '../components/AppLayout'
 import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from '../components/SvgFromAudioPeaks'
 import AudioAnalyser, { MIN_LINES, MAX_LINES, DEFAULT_LINES } from '../components/AudioAnalyser'
+import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isBrowser = () => typeof window !== 'undefined'
 
 const DEFAULT_AUDIO_URL = 'http://localhost:5000/The_Amen_Break.wav'
@@ -54,10 +55,11 @@ const AudioWaveForm = () => {
           />
         </div>
         <div className="mb-3">
-          <select className="form-select" aria-label="choose visualisation style">
-            {/* <option selected>Open this select menu</option> */}
+          <select className="form-select" aria-label="choose visualisation style" required>
             {VIS_STYLES.map((s) => (
-              <option value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
         </div>
@@ -174,27 +176,6 @@ const AudioWaveForm = () => {
       )}
     </div>
   )
-}
-
-// from <https://stackoverflow.com/a/44320679>
-function svgNodeToBlob(node) {
-  // first an doctype
-  var svgDocType = document.implementation.createDocumentType(
-    'svg',
-    '-//W3C//DTD SVG 1.1//EN',
-    'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'
-  )
-  // then a new SVG Document
-  var svgDoc = document.implementation.createDocument('http://www.w3.org/2000/svg', 'svg', svgDocType)
-  // set its documentElement to our root svg node (well a clone of it)
-  svgDoc.replaceChild(node.cloneNode(true), svgDoc.documentElement)
-  // serialize the document
-  var svgData = new XMLSerializer().serializeToString(svgDoc)
-  // convert to a blob
-  var blob = new Blob([svgData], {
-    type: 'image/svg+xml; charset=utf8'
-  })
-  return blob
 }
 
 const ErrorMessage = ({ error }) => (
