@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 
 import AppLayout from '../components/AppLayout'
 import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from '../components/SvgFromAudioPeaks'
@@ -14,6 +14,25 @@ const AudioWaveForm = () => {
   const [addCaps, setAddCaps] = useState(true)
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
+  const [svgBlobURL, setSvgBlobURL] = useState(null)
+  const svgEl = useRef(null)
+
+  // FIXME: does not work on initial render… either find the correct way to hook it up,
+  //        or make a "display SVG with download button" wrapper that should be up to date always?
+  // alternative: *only* make that blob from React.renderToString(<svg/>) and embed this in the DOM. should save memory and be fast enough?
+  useEffect(
+    function makeSVGBlobURL() {
+      const node = svgEl.current
+      if (!node) return setSvgBlobURL(null)
+      const blob = svgNodeToBlob(node)
+      setSvgBlobURL(URL.createObjectURL(blob))
+
+      return function cleanup() {
+        svgBlobURL && URL.revokeObjectURL(svgBlobURL)
+      }
+    },
+    [svgEl.current]
+  )
 
   return (
     <div>
@@ -104,10 +123,48 @@ const AudioWaveForm = () => {
           {(data) => {
             const { error, peaks } = data
             if (error) return <ErrorMessage error={error} />
+
+            function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
+              // NOTE: goes around React straight to the DOM
+              const node = document.querySelector('svg')
+              if (!node) return
+
+              const blob = svgNodeToBlob(node)
+              const url = URL.createObjectURL(blob)
+
+              // make a link and click it trigger the download
+              const a = document.createElement('a')
+              a.href = url
+              a.download = filename
+              a.click()
+              // return a
+            }
             return (
               <>
+                <div className="mb-3">
+                  <div style={{ textAlign: 'center' }}>
+                    <a
+                      className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
+                      target="_blank"
+                      download="audioplot.svg"
+                      disabled={!svgBlobURL}
+                      href={svgBlobURL}
+                    >
+                      Download blob!
+                    </a>{' '}
+                    <button
+                      className="btn btn-outline-info"
+                      target="_blank"
+                      download="audioplot.svg"
+                      onClick={() => downloadSVGNodeInDOM('audioplot.svg')}
+                    >
+                      Download from DOM!
+                    </button>
+                  </div>
+                  <hr />
+                </div>
                 <div className="ratio ratio-16x9">
-                  {!!peaks && <SvgFromAudioPeaks peaks={peaks} withCaps={addCaps} />}
+                  {!!peaks && <SvgFromAudioPeaks ref={svgEl} peaks={peaks} withCaps={addCaps} />}
                 </div>
                 {/* <div className="">{!!peaks && <pre>{JSON.stringify(data, 0, 2)}</pre>}</div> */}
               </>
@@ -117,6 +174,27 @@ const AudioWaveForm = () => {
       )}
     </div>
   )
+}
+
+// from <https://stackoverflow.com/a/44320679>
+function svgNodeToBlob(node) {
+  // first an doctype
+  var svgDocType = document.implementation.createDocumentType(
+    'svg',
+    '-//W3C//DTD SVG 1.1//EN',
+    'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'
+  )
+  // then a new SVG Document
+  var svgDoc = document.implementation.createDocument('http://www.w3.org/2000/svg', 'svg', svgDocType)
+  // set its documentElement to our root svg node (well a clone of it)
+  svgDoc.replaceChild(node.cloneNode(true), svgDoc.documentElement)
+  // serialize the document
+  var svgData = new XMLSerializer().serializeToString(svgDoc)
+  // convert to a blob
+  var blob = new Blob([svgData], {
+    type: 'image/svg+xml; charset=utf8'
+  })
+  return blob
 }
 
 const ErrorMessage = ({ error }) => (

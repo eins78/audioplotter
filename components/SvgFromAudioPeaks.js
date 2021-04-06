@@ -28,8 +28,8 @@ export default React.forwardRef(function SvgFromAudioPeaks(
   })
   const points = !withCaps ? peakPoints : [startPos].concat(peakPoints, [endPos])
   return (
-    <Svg width={totalWidth} height={height} scale>
+    <svg ref={ref} width={totalWidth} height={height}>
       <Polyline points={points} stroke="#222" strokeWidth={1} fill="#ffffff" />
-    </Svg>
+    </svg>
   )
-}
+})
