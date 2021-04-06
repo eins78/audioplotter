@@ -2,10 +2,17 @@ import React from 'react'
 
 import { Svg, Polyline } from 'react-svg-path'
 
-export default function SvgFromAudioPeaks({
-  peaks,
-  withCaps = true // wrap in start- and endpoint?
-}) {
+export const STYLES = ['zigzag']
+
+export default React.forwardRef(function SvgFromAudioPeaks(
+  {
+    peaks,
+    withCaps = true, // wrap in start- and endpoint?
+    style = STYLES[0]
+  },
+  ref
+) {
+  if (!STYLES.includes(style)) throw new ArgumentError()
   const height = 100
   const totalWidth = peaks.length + 2
   const middleY = height / 2

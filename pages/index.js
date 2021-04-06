@@ -1,12 +1,11 @@
 import React, { useState } from 'react'
 
 import AppLayout from '../components/AppLayout'
-import SvgFromAudioPeaks from '../components/SvgFromAudioPeaks'
+import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from '../components/SvgFromAudioPeaks'
 import AudioAnalyser, { MIN_LINES, MAX_LINES, DEFAULT_LINES } from '../components/AudioAnalyser'
 const isBrowser = () => typeof window !== 'undefined'
 
 const DEFAULT_AUDIO_URL = 'http://localhost:5000/The_Amen_Break.wav'
-const VIS_STYLES = ['zigzag']
 
 const AudioWaveForm = () => {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
@@ -19,7 +18,7 @@ const AudioWaveForm = () => {
   return (
     <div>
       <form
-        class="font-monospace small"
+        className="font-monospace small"
         onSubmit={() => {
           setRunAnalysis(true)
         }}
@@ -36,7 +35,7 @@ const AudioWaveForm = () => {
           />
         </div>
         <div className="mb-3">
-          <select class="form-select" aria-label="choose visualisation style">
+          <select className="form-select" aria-label="choose visualisation style">
             {/* <option selected>Open this select menu</option> */}
             {VIS_STYLES.map((s) => (
               <option value={s}>{s}</option>
@@ -44,8 +43,8 @@ const AudioWaveForm = () => {
           </select>
         </div>
         <div className="mb-3">
-          <div class="row">
-            <div class="col-sm">
+          <div className="row">
+            <div className="col-sm">
               <FormField
                 id="inputNumLinesRange"
                 labelTxt="nr. of lines"
@@ -58,7 +57,7 @@ const AudioWaveForm = () => {
                 max={MAX_LINES}
               />
             </div>
-            <div class="col-sm">
+            <div className="col-sm">
               <FormField
                 id="inputNumLinesNr"
                 type="number"
@@ -142,9 +141,9 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
 )
 
 const CheckBox = ({ id, labelTxt, ...inputProps }) => (
-  <div class="form-check">
-    <input id={id} type="checkbox" class="form-check-input" {...inputProps} />
-    <label class="form-check-label" htmlFor={id}>
+  <div className="form-check">
+    <input id={id} type="checkbox" className="form-check-input" {...inputProps} />
+    <label className="form-check-label" htmlFor={id}>
       {labelTxt}
     </label>
   </div>
