@@ -7,9 +7,12 @@ import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isBrowser = () => typeof window !== 'undefined'
 
 const DEFAULT_AUDIO_URL = 'http://localhost:5000/The_Amen_Break.wav'
+const DEFAULT_HEIGHT = 100
+const MAX_HEIGHT = 2048
 
 const AudioWaveForm = () => {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
+  const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numLines, setNumLines] = useState(DEFAULT_LINES)
   const [doNormalize, setDoNormalize] = useState(true)
   const [addCaps, setAddCaps] = useState(true)
@@ -64,6 +67,15 @@ const AudioWaveForm = () => {
           </select>
         </div>
         <div className="mb-3">
+          <NumberSliderInput
+            id="inputHeight"
+            labelTxt="height"
+            value={imgHeight}
+            onChange={(e) => setImgHeight(e.target.value)}
+            required
+            min={1}
+            max={MAX_HEIGHT}
+          />
           <NumberSliderInput
             id="inputNumLines"
             labelTxt="nr. of lines"
@@ -148,8 +160,18 @@ const AudioWaveForm = () => {
                   </div>
                   <hr />
                 </div>
-                <div className="ratio ratio-16x9">
-                  {!!peaks && <SvgFromAudioPeaks ref={svgEl} peaks={peaks} withCaps={addCaps} />}
+                <div className="">
+                  {!!peaks && (
+                    <div data-style={{ border: '1px solid lightgray' }}>
+                      <SvgFromAudioPeaks
+                        ref={svgEl}
+                        className="img-fluid shadow-sm p-3 mb-5 bg-body rounded"
+                        peaks={peaks}
+                        height={imgHeight}
+                        withCaps={addCaps}
+                      />
+                    </div>
+                  )}
                 </div>
                 {/* <div className="">{!!peaks && <pre>{JSON.stringify(data, 0, 2)}</pre>}</div> */}
               </>
