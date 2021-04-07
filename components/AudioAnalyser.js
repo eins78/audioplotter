@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
+import promisify from 'pify'
 
 export const MIN_LINES = 1
 export const MAX_LINES = 2048
@@ -40,9 +41,10 @@ export default function AudioAnalyzer({ url, lines = 100, normalize = true, chil
       if (!(audioContext && !isFetching && buffer.current && buffer.current.byteLength)) {
         return setPeaks(null)
       }
-      const audioData = await audioContext.decodeAudioData(buffer.current.slice())
-      // const peaks = normalizeData(filterData(audioData, lines))
-      // setPeaks(peaks)
+      // debugger
+      // NOTE: fix for Safari which only supports the callback style
+      const decodeAudioData = promisify(audioContext.decodeAudioData.bind(audioContext), { errorFirst: false })
+      const audioData = await decodeAudioData(buffer.current.slice())
       const peaks = filterData(audioData, lines)
       setPeaks(normalize ? normalizeData(peaks) : peaks)
     },
