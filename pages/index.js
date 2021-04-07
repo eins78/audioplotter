@@ -18,12 +18,17 @@ const DEFAULT_AUDIO_URL = isDev
   : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
 const DEFAULT_HEIGHT = 100
 const MAX_HEIGHT = 2048
+const DEFAULT_STROKE_WIDTH = 1
+const MIN_STROKE_WIDTH = 0.1
+const MAX_STROKE_WIDTH = 10
+const STROKE_WIDTH_STEP = 0.1
 
 const AudioWaveForm = () => {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numBands, setNumBands] = useState(DEFAULT_BANDS)
   const [doNormalize, setDoNormalize] = useState(true)
+  const [strokeWidth, setStrokeWidth] = useState(DEFAULT_STROKE_WIDTH)
   const [addCaps, setAddCaps] = useState(true)
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
@@ -97,6 +102,16 @@ const AudioWaveForm = () => {
             required
             min={MIN_BANDS}
             max={MAX_BANDS}
+          />
+          <NumberSliderInput
+            id="inputStrokeWidth"
+            labelTxt="stroke width"
+            value={strokeWidth}
+            onChange={(e) => setStrokeWidth(e.target.value)}
+            required
+            min={MIN_STROKE_WIDTH}
+            max={MAX_STROKE_WIDTH}
+            step={STROKE_WIDTH_STEP}
           />
         </div>
         <div className="mb-3">
@@ -184,9 +199,10 @@ const AudioWaveForm = () => {
                     <div data-style={{ border: '1px solid lightgray' }}>
                       <SvgFromAudioPeaks
                         ref={svgEl}
-                        className="img-fluid shadow-sm p-3 mb-5 bg-body rounded"
+                        className="img-fluid w-100 shadow-sm p-3 mb-5 bg-body rounded"
                         peaks={peaks}
                         height={imgHeight}
+                        strokeWidth={strokeWidth}
                         withCaps={addCaps}
                       />
                     </div>

@@ -9,7 +9,7 @@ export default React.forwardRef(function SvgFromAudioPeaks(
     peaks,
     height,
     withCaps = true, // wrap in start- and endpoint?
-    style = STYLES[0],
+    strokeWidth,
     ...restProps
   },
   ref
@@ -34,8 +34,19 @@ export default React.forwardRef(function SvgFromAudioPeaks(
   const points = !withCaps ? peakPoints : [startPos].concat(peakPoints, [endPos])
 
   return (
-    <svg ref={ref} width={totalWidth} height={height} viewBox={`0 0 ${totalWidth} ${height}`} {...restProps}>
-      <Polyline points={points} stroke="#222" strokeWidth={1} fill="#ffffff" />
+    <svg
+      ref={ref}
+      width={targetWidth}
+      height={height}
+      viewBox={`0 0 ${targetWidth} ${height}`}
+      {...restProps}
+    >
+      <Polyline
+        points={points}
+        stroke="#222"
+        strokeWidth={strokeWidth}
+        fill="#ffffff"
+      />
     </svg>
   )
 })
