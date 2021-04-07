@@ -5,11 +5,11 @@ import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
 import promisify from 'pify'
 
-export const MIN_LINES = 1
-export const MAX_LINES = 2048
-export const DEFAULT_LINES = 1024
+export const MIN_BANDS = 1
+export const MAX_BANDS = 2048
+export const DEFAULT_BANDS = 1024
 
-export default function AudioAnalyzer({ url, lines = 100, normalize = true, children } = {}) {
+export default function AudioAnalyzer({ url, bands = 100, normalize = true, children } = {}) {
   const [audioContext, setAudioContext] = useState(new AudioCtx())
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState(undefined)
@@ -42,14 +42,13 @@ export default function AudioAnalyzer({ url, lines = 100, normalize = true, chil
       if (!(audioContext && !isFetching && buffer.current && buffer.current.byteLength)) {
         return setPeaks(null)
       }
-      // debugger
       // NOTE: fix for Safari which only supports the callback style
       const decodeAudioData = promisify(audioContext.decodeAudioData.bind(audioContext), { errorFirst: false })
       const audioData = await decodeAudioData(buffer.current.slice())
-      const peaks = filterData(audioData, lines)
+      const peaks = filterData(audioData, bands)
       setPeaks(normalize ? normalizeData(peaks) : peaks)
     },
-    [url, lines, audioContext, isFetching, buffer]
+    [url, bands, audioContext, isFetching, buffer]
   )
 
   const data = { peaks, error: fetchError }
