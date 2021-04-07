@@ -4,9 +4,12 @@ import AppLayout from '../components/AppLayout'
 import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from '../components/SvgFromAudioPeaks'
 import AudioAnalyser, { MIN_LINES, MAX_LINES, DEFAULT_LINES } from '../components/AudioAnalyser'
 import svgNodeToBlob from '../lib/svgNodeToBlob'
+const isDev = () => process.env.NODE_ENV === 'development'
 const isBrowser = () => typeof window !== 'undefined'
 
-const DEFAULT_AUDIO_URL = 'http://localhost:5000/The_Amen_Break.wav'
+const DEFAULT_AUDIO_URL = isDev()
+  ? 'http://localhost:5000/The_Amen_Break.wav'
+  : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
 const DEFAULT_HEIGHT = 100
 const MAX_HEIGHT = 2048
 
