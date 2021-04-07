@@ -9,6 +9,7 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 ## Ideas
 
+- addCaps: also add line of configurable length to start and end (like starting with silence, but just a horixontal line)
 - playback of the audio
 - better download option
 - options to trim start/endpoint of audio (needed for amen break demo, wikimedia hosted file hast context around it)
