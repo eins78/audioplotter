@@ -15,6 +15,11 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 - options to trim start/endpoint of audio (needed for amen break demo, wikimedia hosted file hast context around it)
 - separate frequencies, create 1 graph per band in different colors (low/red,mid/green,high/yellow)
 
+## Credits
+
+Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visualizer with Vanilla JavaScript" on css-tricks.com](https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/) and [open-sourcing the example code]*,
+on which the initial prototype of this tool is based.
+
 ## Development
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
