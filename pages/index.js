@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-import AppLayout from '../components/AppLayout'
-import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from '../components/SvgFromAudioPeaks'
-import AudioAnalyser, { MIN_LINES, MAX_LINES, DEFAULT_LINES } from '../components/AudioAnalyser'
-import svgNodeToBlob from '../lib/svgNodeToBlob'
-const isDev = () => process.env.NODE_ENV === 'development'
-const isBrowser = () => typeof window !== 'undefined'
+import AudioAnalyser, {
+  MIN_BANDS,
+  MAX_BANDS,
+  DEFAULT_BANDS,
+} from "../components/AudioAnalyser"
 
 const DEFAULT_AUDIO_URL = isDev()
   ? 'http://localhost:5000/The_Amen_Break.wav'
@@ -16,7 +15,7 @@ const MAX_HEIGHT = 2048
 const AudioWaveForm = () => {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
-  const [numLines, setNumLines] = useState(DEFAULT_LINES)
+  const [numBands, setNumBands] = useState(DEFAULT_BANDS)
   const [doNormalize, setDoNormalize] = useState(true)
   const [addCaps, setAddCaps] = useState(true)
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
@@ -80,13 +79,13 @@ const AudioWaveForm = () => {
             max={MAX_HEIGHT}
           />
           <NumberSliderInput
-            id="inputNumLines"
-            labelTxt="nr. of lines"
-            value={numLines}
-            onChange={(e) => setNumLines(e.target.value)}
+            id="inputNumBands"
+            labelTxt="nr. of bands"
+            value={numBands}
+            onChange={(e) => setNumBands(e.target.value)}
             required
-            min={MIN_LINES}
-            max={MAX_LINES}
+            min={MIN_BANDS}
+            max={MAX_BANDS}
           />
         </div>
         <div className="mb-3">
@@ -119,7 +118,7 @@ const AudioWaveForm = () => {
       <hr />
 
       {runAnalysis && (
-        <AudioAnalyser url={url} lines={numLines} normalize={doNormalize}>
+        <AudioAnalyser url={url} bands={numBands} normalize={doNormalize}>
           {(data) => {
             const { error, peaks } = data
             if (error) return <ErrorMessage error={error} />
