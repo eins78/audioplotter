@@ -12,6 +12,7 @@ import AudioAnalyser, {
 import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isDev = process.env.NODE_ENV === 'development'
 
+const SOURCE_URL = 'https://github.com/eins78/audioplotter'
 const DEFAULT_AUDIO_URL = isDev
   ? 'http://localhost:5000/The_Amen_Break.wav'
   : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
@@ -258,6 +259,17 @@ export default function Home() {
   useEffect(() => setIsClient(true), [])
   return (
     <AppLayout
+      menu={[
+        [
+          <a
+            href={SOURCE_URL}
+            target="_blank"
+            className="btn btn-sm btn-outline-secondary"
+          >
+            source
+          </a>,
+        ],
+      ]}
     >
       {isClient && <AudioWaveForm />}
     </AppLayout>
