@@ -1,4 +1,5 @@
 // adapted from <https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/>
+// licensed under GPLv3, see LICENSE file in this repo and <https://codepen.io/matthewstrom/pen/mddOWWg>
 
 import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
