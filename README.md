@@ -4,8 +4,11 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 - analyses audio: calculate "peaks" (volume per time slot for N numbers of slots)
 - visualize peaks styles:
-  - `zigzag`: looks like a standard waveform from far, and like a frequency graph up close
-    (even though the input data is the volume).
+  - `zigzag`: alternates drawing points above and below the horizontal centerline.
+    looks like a standard waveform from far, and like a frequency graph up close.
+    _Not symmetric_
+  - `saw`: follows a [Sawtooth wave](https://en.wikipedia.org/wiki/Sawtooth_wave) pattern.
+    _Is symmetric but has more line density per bands._
 
 ## Ideas
 
@@ -17,7 +20,7 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 ## Credits
 
-Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visualizer with Vanilla JavaScript" on css-tricks.com](https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/) and [open-sourcing the example code]*,
+Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visualizer with Vanilla JavaScript" on css-tricks.com](https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/) and [open-sourcing the example code]\*,
 on which the initial prototype of this tool is based.
 
 ## Development

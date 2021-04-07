@@ -1,37 +1,58 @@
-import React from "react"
+import React from 'react'
 
-import { Svg, Polyline } from "react-svg-path"
+import { Svg, Polyline } from 'react-svg-path'
 
-export const STYLES = ['zigzag']
+export const STYLES = ['zigzag', 'saw']
 
 export default React.forwardRef(function SvgFromAudioPeaks(
   {
     peaks,
     height,
     withCaps = true, // wrap in start- and endpoint?
+    style,
     strokeWidth,
     ...restProps
   },
   ref
 ) {
   if (!height) throw new TypeError()
-  if (!STYLES.includes(style)) throw new TypeError()
 
-  const totalWidth = peaks.length + 2
+  const targetWidth = 1000
+  const totalWidth = peaks.length + (withCaps ? 2 : 0)
+  const distanceX = targetWidth / totalWidth
   const middleY = height / 2
   const startPos = [0, middleY]
-  const endPos = [totalWidth, middleY]
+  const endPos = [targetWidth, middleY]
+  let points = []
 
-  const peakPoints = peaks.map((peak, index) => {
-    const isEven = index % 2 === 0
-    const isUp = totalWidth % 2 === 0 ? isEven : !isEven // start up or down according to total width - less flicker when changing values?
-    const xPos = index * 1 + (withCaps ? 1 : 0)
-    const distance = peak * height
-    const yPos = isUp ? middleY + distance : middleY - distance
-    return [xPos, yPos]
-  })
+  if (!STYLES.includes(style)) throw new TypeError()
+  if (style === 'zigzag') {
+    points = peaks.map((peak, index) => {
+      const isEven = index % 2 === 0
+      const isUp = totalWidth % 2 === 0 ? isEven : !isEven // start up or down according to total width - less flicker when changing values?
+      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const distance = peak * height
+      const yPos = isUp ? middleY + distance : middleY - distance
+      return [xPos, yPos]
+    })
+  }
 
-  const points = !withCaps ? peakPoints : [startPos].concat(peakPoints, [endPos])
+  if (style === 'saw') {
+    points = peaks.reduce((result, peak, index) => {
+      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const distance = peak * height
+      const yUp = middleY - distance
+      const yDown = middleY + distance
+      return result.concat([
+        [xPos, yUp],
+        [xPos, yDown],
+      ])
+    }, [])
+  }
+
+  if (withCaps) {
+    points = [startPos].concat(points, [endPos])
+  }
 
   return (
     <svg
