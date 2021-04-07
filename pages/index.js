@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react'
 
+import AppLayout from '../components/AppLayout'
+import SvgFromAudioPeaks, {
+  STYLES as VIS_STYLES,
+} from '../components/SvgFromAudioPeaks'
 import AudioAnalyser, {
   MIN_BANDS,
   MAX_BANDS,
   DEFAULT_BANDS,
-} from "../components/AudioAnalyser"
+} from '../components/AudioAnalyser'
+import svgNodeToBlob from '../lib/svgNodeToBlob'
+const isDev = process.env.NODE_ENV === 'development'
 
-const DEFAULT_AUDIO_URL = isDev()
+const DEFAULT_AUDIO_URL = isDev
   ? 'http://localhost:5000/The_Amen_Break.wav'
   : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
 const DEFAULT_HEIGHT = 100
@@ -60,7 +66,11 @@ const AudioWaveForm = () => {
           />
         </div>
         <div className="mb-3">
-          <select className="form-select" aria-label="choose visualisation style" required>
+          <select
+            className="form-select"
+            aria-label="choose visualisation style"
+            required
+          >
             {VIS_STYLES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -108,7 +118,10 @@ const AudioWaveForm = () => {
         </div>
         {!runAnalysis && (
           <div style={{ textAlign: 'center' }}>
-            <button className="btn btn-outline-dark" onClick={() => setRunAnalysis(true)}>
+            <button
+              className="btn btn-outline-dark"
+              onClick={() => setRunAnalysis(true)}
+            >
               Go!
             </button>
           </div>
@@ -136,14 +149,17 @@ const AudioWaveForm = () => {
               a.href = url
               a.download = filename
               a.click()
-              // return a
             }
             return (
               <>
                 <div className="mb-3">
                   <div style={{ textAlign: 'center' }}>
                     <a
-                      className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
+                      className={
+                        svgBlobURL
+                          ? 'btn btn-outline-dark'
+                          : 'btn btn-outline-warning'
+                      }
                       target="_blank"
                       download="audioplot.svg"
                       disabled={!svgBlobURL}
@@ -208,7 +224,12 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
 
 const CheckBox = ({ id, labelTxt, ...inputProps }) => (
   <div className="form-check">
-    <input id={id} type="checkbox" className="form-check-input" {...inputProps} />
+    <input
+      id={id}
+      type="checkbox"
+      className="form-check-input"
+      {...inputProps}
+    />
     <label className="form-check-label" htmlFor={id}>
       {labelTxt}
     </label>
@@ -218,7 +239,13 @@ const CheckBox = ({ id, labelTxt, ...inputProps }) => (
 const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
   <div id={id} className="row">
     <div className="col-sm">
-      <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
+      <FormField
+        id={`${id}Range`}
+        type="range"
+        className="form-range"
+        labelTxt={labelTxt}
+        {...inputProps}
+      />
     </div>
     <div className="col-sm">
       <FormField id={`${id}Nr`} type="number" {...inputProps} />
@@ -227,5 +254,12 @@ const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
 )
 
 export default function Home() {
-  return <AppLayout>{isBrowser() && <AudioWaveForm />}</AppLayout>
+  const [isClient, setIsClient] = useState(false)
+  useEffect(() => setIsClient(true), [])
+  return (
+    <AppLayout
+    >
+      {isClient && <AudioWaveForm />}
+    </AppLayout>
+  )
 }
