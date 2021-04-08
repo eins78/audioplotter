@@ -10,14 +10,17 @@ export const MAX_BANDS = 2048
 export const DEFAULT_BANDS = 1024
 
 export default function AudioAnalyzer({ url, bands = 100, normalize = true, children } = {}) {
-  const [audioContext, setAudioContext] = useState(new AudioCtx())
+  const [audioContext, setAudioContext] = useState()
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState(undefined)
   const buffer = useRef(new ArrayBuffer())
   const [peaks, setPeaks] = useState(undefined)
 
   useEffect(() => {
-    if (!audioContext) setAudioContext(new AudioCtx())
+    setAudioContext(new AudioCtx())
+    return function cleanup() {
+      if (audioContext && audioContext.close) audioContext.close()
+    }
   }, [])
 
   useEffect(
@@ -34,7 +37,7 @@ export default function AudioAnalyzer({ url, bands = 100, normalize = true, chil
       if (!err) buffer.current = buf
       setIsFetching(false)
     },
-    [url]
+    [url, audioContext]
   )
 
   useEffect(

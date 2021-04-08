@@ -42,17 +42,7 @@ const AppLayout = ({ menu, children }) => {
                 <b>audioplotter</b>
               </h1>
 
-              {menu && (
-                <div className="btn-toolbar mb-2 mb-md-0">
-                  {menu.map((items, i) => (
-                    <div key={i} className="btn-group btn-group-sm me-2">
-                      {items.map((m, i) => (
-                        <F key={i}>{m}</F>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
+              {menu && <div className="btn-toolbar mb-2 mb-md-0">{menu}</div>}
             </div>
             <div className="app-content">{children}</div>
           </main>
