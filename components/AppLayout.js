@@ -45,7 +45,7 @@ const AppLayout = ({ menu, children }) => {
               {menu && (
                 <div className="btn-toolbar mb-2 mb-md-0">
                   {menu.map((items, i) => (
-                    <div key={i} className="btn-group me-2">
+                    <div key={i} className="btn-group btn-group-sm me-2">
                       {items.map((m, i) => (
                         <F key={i}>{m}</F>
                       ))}

@@ -254,17 +254,16 @@ const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
 export default function Home() {
   const [isClient, setIsClient] = useState(false)
   useEffect(() => setIsClient(true), [])
-  return (
-    <AppLayout
-      menu={[
-        [
-          <a href={SOURCE_URL} target="_blank" className="btn btn-sm btn-outline-secondary">
-            source
-          </a>,
-        ],
-      ]}
-    >
-      {isClient && <AudioWaveForm />}
-    </AppLayout>
+  const readMeLink = (
+    <a href={SOURCE_URL + '#readme'} target="_blank" className="btn  btn-outline-secondary">
+      README
+    </a>
   )
+  const sourceLink = (
+    <a href={SOURCE_URL} target="_blank" className="btn  btn-outline-secondary">
+      source code
+    </a>
+  )
+
+  return <AppLayout menu={[[readMeLink, sourceLink]]}>{isClient && <AudioWaveForm />}</AppLayout>
 }
