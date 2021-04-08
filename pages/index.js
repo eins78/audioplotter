@@ -1,14 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
 
 import AppLayout from '../components/AppLayout'
-import SvgFromAudioPeaks, {
-  STYLES as VIS_STYLES,
-} from '../components/SvgFromAudioPeaks'
-import AudioAnalyser, {
-  MIN_BANDS,
-  MAX_BANDS,
-  DEFAULT_BANDS,
-} from '../components/AudioAnalyser'
+import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from '../components/SvgFromAudioPeaks'
+import AudioAnalyser, { MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from '../components/AudioAnalyser'
 import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -138,10 +132,7 @@ const AudioWaveForm = () => {
         </div>
         {!runAnalysis && (
           <div style={{ textAlign: 'center' }}>
-            <button
-              className="btn btn-outline-dark"
-              onClick={() => setRunAnalysis(true)}
-            >
+            <button className="btn btn-outline-dark" onClick={() => setRunAnalysis(true)}>
               Go!
             </button>
           </div>
@@ -175,11 +166,7 @@ const AudioWaveForm = () => {
                 <div className="mb-3">
                   <div style={{ textAlign: 'center' }}>
                     <a
-                      className={
-                        svgBlobURL
-                          ? 'btn btn-outline-dark'
-                          : 'btn btn-outline-warning'
-                      }
+                      className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
                       target="_blank"
                       download="audioplot.svg"
                       disabled={!svgBlobURL}
@@ -246,12 +233,7 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
 
 const CheckBox = ({ id, labelTxt, ...inputProps }) => (
   <div className="form-check">
-    <input
-      id={id}
-      type="checkbox"
-      className="form-check-input"
-      {...inputProps}
-    />
+    <input id={id} type="checkbox" className="form-check-input" {...inputProps} />
     <label className="form-check-label" htmlFor={id}>
       {labelTxt}
     </label>
@@ -261,13 +243,7 @@ const CheckBox = ({ id, labelTxt, ...inputProps }) => (
 const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
   <div id={id} className="row">
     <div className="col-sm">
-      <FormField
-        id={`${id}Range`}
-        type="range"
-        className="form-range"
-        labelTxt={labelTxt}
-        {...inputProps}
-      />
+      <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
     </div>
     <div className="col-sm">
       <FormField id={`${id}Nr`} type="number" {...inputProps} />
@@ -282,11 +258,7 @@ export default function Home() {
     <AppLayout
       menu={[
         [
-          <a
-            href={SOURCE_URL}
-            target="_blank"
-            className="btn btn-sm btn-outline-secondary"
-          >
+          <a href={SOURCE_URL} target="_blank" className="btn btn-sm btn-outline-secondary">
             source
           </a>,
         ],

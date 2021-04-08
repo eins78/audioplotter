@@ -55,19 +55,8 @@ export default React.forwardRef(function SvgFromAudioPeaks(
   }
 
   return (
-    <svg
-      ref={ref}
-      width={targetWidth}
-      height={height}
-      viewBox={`0 0 ${targetWidth} ${height}`}
-      {...restProps}
-    >
-      <Polyline
-        points={points}
-        stroke="#222"
-        strokeWidth={strokeWidth}
-        fill="#ffffff"
-      />
+    <svg ref={ref} width={targetWidth} height={height} viewBox={`0 0 ${targetWidth} ${height}`} {...restProps}>
+      <Polyline points={points} stroke="#222" strokeWidth={strokeWidth} fill="#ffffff" />
     </svg>
   )
 })

@@ -1,4 +1,4 @@
-import React, { Fragment as F } from "react"
+import React, { Fragment as F } from 'react'
 
 const AppLayout = ({ menu, children }) => {
   return (
