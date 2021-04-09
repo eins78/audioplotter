@@ -9,11 +9,16 @@ export const DEFAULT_HEIGHT = 100
 export const MAX_HEIGHT = 2048
 export const DEFAULT_STROKE_WIDTH = 1
 export const MIN_STROKE_WIDTH = 0.1
-export const MAX_STROKE_WIDTH = 10
+export const MAX_STROKE_WIDTH = 100
 export const STROKE_WIDTH_STEP = 0.1
 
 const STROKE_COLOR = '#222'
 const STROKE_FILL = 'transparent'
+
+export function calcMaxStrokeWidth(numBands) {
+  const relativeWidth = Math.ceil((2 / numBands) * 100 * 100)
+  return Math.min(MAX_STROKE_WIDTH, relativeWidth)
+}
 
 export default React.forwardRef(function SvgFromAudioPeaks(
   {

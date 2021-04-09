@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-import AudioAnalyzer, { MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
+import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
 import SvgFromAudioPeaks, {
   STYLES as VIS_STYLES,
   DEFAULT_HEIGHT,
   MAX_HEIGHT,
   DEFAULT_STROKE_WIDTH,
   MIN_STROKE_WIDTH,
-  MAX_STROKE_WIDTH,
   STROKE_WIDTH_STEP,
+  calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
 import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isDev = process.env.NODE_ENV === 'development'
@@ -20,17 +20,28 @@ const DEFAULT_AUDIO_URL = isDev
 const DEFAULT_VIS_STYLE = 'saw'
 
 export default function AudioPlotter() {
+  // form state
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numBands, setNumBands] = useState(DEFAULT_BANDS)
   const [doNormalize, setDoNormalize] = useState(true)
   const [visStyle, setVisStyle] = useState(DEFAULT_VIS_STYLE)
-  const [strokeWidth, setStrokeWidth] = useState(DEFAULT_STROKE_WIDTH)
+  const [strokeWidth, setStrokeWidthRaw] = useState(DEFAULT_STROKE_WIDTH)
   const [addCaps, setAddCaps] = useState(true)
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
+  // other state
   const [svgBlobURL, setSvgBlobURL] = useState(null)
   const svgEl = useRef(null)
+
+  // related fields:
+  const maxStrokeWidth = calcMaxStrokeWidth(numBands)
+  function setStrokeWidth(num) {
+    setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth)
+  }
+  useEffect(() => {
+    if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth)
+  }, [numBands])
 
   // FIXME: does not work on initial render… either find the correct way to hook it up,
   //        or make a "display SVG with download button" wrapper that should be up to date always?
@@ -85,7 +96,6 @@ export default function AudioPlotter() {
           {(data) => {
             const { error, peaks, bufferLength } = data
             if (error) return <ErrorMessage error={error} />
-
 
             function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
               // NOTE: goes around React straight to the DOM
@@ -149,15 +159,16 @@ export default function AudioPlotter() {
                         />
                       </div>
                     </div>
-          <NumberSliderInput
                     <NumberSliderInput
                       id="inputStrokeWidth"
                       labelTxt="stroke width"
                       value={strokeWidth}
-                      onChange={(e) => setStrokeWidth(e.target.value)}
+                      onChange={({ target: { value: num } }) => {
+                        setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth)
+                      }}
                       required
                       min={MIN_STROKE_WIDTH}
-                      max={MAX_STROKE_WIDTH}
+                      max={maxStrokeWidth}
                       step={STROKE_WIDTH_STEP}
                     />
                   </div>
