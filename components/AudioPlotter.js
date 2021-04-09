@@ -92,25 +92,11 @@ export default function AudioPlotter() {
       <hr />
 
       {url && runAnalysis && (
-        <AudioAnalyzer url={url} bands={numBands} normalize={doNormalize}>
-          {(data) => {
-            const { error, peaks, bufferLength } = data
-            if (error) return <ErrorMessage error={error} />
+        <AudioBuffer url={url}>
+          {({ isFetching, fetchError, bufferLength, buffer }) => {
+            if (isFetching) return 'loading…'
+            if (fetchError) return <ErrorMessage error={fetchError} />
 
-            function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
-              // NOTE: goes around React straight to the DOM
-              const node = document.querySelector('svg')
-              if (!node) return
-
-              const blob = svgNodeToBlob(node)
-              const url = URL.createObjectURL(blob)
-
-              // make a link and click it trigger the download
-              const a = document.createElement('a')
-              a.href = url
-              a.download = filename
-              a.click()
-            }
             return (
               <>
                 <form
@@ -216,26 +202,30 @@ export default function AudioPlotter() {
                   </div>
                   <hr />
                 </div>
-                <div className="">
-                  {!!peaks && (
-                    <div data-style={{ border: '1px solid lightgray' }}>
-                      <SvgFromAudioPeaks
-                        ref={svgEl}
-                        className="img-fluid w-100 shadow-sm p-3 mb-5 bg-body rounded"
-                        peaks={peaks}
-                        height={imgHeight}
-                        style={visStyle}
-                        strokeWidth={strokeWidth}
-                        withCaps={addCaps}
-                      />
+
+                <AudioPeaks buffer={buffer} bands={numBands} normalize={doNormalize}>
+                  {({ peaks }) => (
+                    <div className="">
+                      {!!peaks && (
+                        <div data-style={{ border: '1px solid lightgray' }}>
+                          <SvgFromAudioPeaks
+                            ref={svgEl}
+                            className="img-fluid w-100 shadow-sm p-3 mb-5 bg-body rounded"
+                            peaks={peaks}
+                            height={imgHeight}
+                            style={visStyle}
+                            strokeWidth={strokeWidth}
+                            withCaps={addCaps}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-                {/* <div className="">{!!peaks && <pre>{JSON.stringify(data, 0, 2)}</pre>}</div> */}
+                </AudioPeaks>
               </>
             )
           }}
-        </AudioAnalyzer>
+        </AudioBuffer>
       )}
     </div>
   )
@@ -281,3 +271,18 @@ const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
     </div>
   </div>
 )
+
+function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
+  // NOTE: goes around React straight to the DOM
+  const node = document.querySelector('svg')
+  if (!node) return
+
+  const blob = svgNodeToBlob(node)
+  const url = URL.createObjectURL(blob)
+
+  // make a link and click it trigger the download
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+}

@@ -9,20 +9,21 @@ export const MIN_BANDS = 1
 export const MAX_BANDS = 2048
 export const DEFAULT_BANDS = 1024
 
-export default function AudioAnalyzer({ url, ...restProps }) {
-  return (
-    <AudioBuffer url={url}>
-      {({ isFetching, fetchError, bufferLength, buffer }) => {
-        if (isFetching) return 'loading…'
-        if (fetchError) return 'error!'
-        if (!(bufferLength > 0)) return 'empty!'
-        return <AudioPeaks buffer={buffer} {...restProps} />
-      }}
-    </AudioBuffer>
-  )
-}
+// unused, just showing how to plug those 2 parts together…
+// export default function AudioAnalyzer({ url, ...restProps }) {
+//   return (
+//     <AudioBuffer url={url}>
+//       {({ isFetching, fetchError, bufferLength, buffer }) => {
+//         if (isFetching) return 'loading…'
+//         if (fetchError) return 'error!'
+//         if (!(bufferLength > 0)) return 'empty!'
+//         return <AudioPeaks buffer={buffer} {...restProps} />
+//       }}
+//     </AudioBuffer>
+//   )
+// }
 
-function AudioBuffer({ url, children } = {}) {
+export function AudioBuffer({ url, children } = {}) {
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState(undefined)
   const buffer = useRef(new ArrayBuffer())
@@ -50,7 +51,7 @@ function AudioBuffer({ url, children } = {}) {
     : children({ isFetching, fetchError, bufferLength, buffer: buffer.current })
 }
 
-function AudioPeaks({ buffer, bands = 100, normalize = true, children } = {}) {
+export function AudioPeaks({ buffer, bands = 100, normalize = true, children } = {}) {
   const [audioContext, setAudioContext] = useState()
   const [peaks, setPeaks] = useState(undefined)
 
