@@ -262,11 +262,11 @@ const CheckBox = ({ id, labelTxt, ...inputProps }) => (
 )
 
 const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
-  <div id={id} className="row">
-    <div className="col-sm">
+  <div id={id} className="row mb-2">
+    <div className="col">
       <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
     </div>
-    <div className="col-sm">
+    <div className="col">
       <FormField id={`${id}Nr`} type="number" {...inputProps} />
     </div>
   </div>
