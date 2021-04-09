@@ -9,19 +9,24 @@ export const MIN_BANDS = 1
 export const MAX_BANDS = 2048
 export const DEFAULT_BANDS = 1024
 
-export default function AudioAnalyzer({ url, bands = 100, normalize = true, children } = {}) {
-  const [audioContext, setAudioContext] = useState()
+export default function AudioAnalyzer({ url, ...restProps }) {
+  return (
+    <AudioBuffer url={url}>
+      {({ isFetching, fetchError, bufferLength, buffer }) => {
+        if (isFetching) return 'loading…'
+        if (fetchError) return 'error!'
+        if (!(bufferLength > 0)) return 'empty!'
+        return <AudioPeaks buffer={buffer} {...restProps} />
+      }}
+    </AudioBuffer>
+  )
+}
+
+function AudioBuffer({ url, children } = {}) {
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState(undefined)
   const buffer = useRef(new ArrayBuffer())
-  const [peaks, setPeaks] = useState(undefined)
-
-  useEffect(() => {
-    setAudioContext(new AudioCtx())
-    return function cleanup() {
-      if (audioContext && audioContext.close) audioContext.close()
-    }
-  }, [])
+  const bufferLength = buffer.current ? buffer.current.byteLength : 0
 
   useEffect(
     async function fetchData() {
@@ -37,24 +42,42 @@ export default function AudioAnalyzer({ url, bands = 100, normalize = true, chil
       if (!err) buffer.current = buf
       setIsFetching(false)
     },
-    [url, audioContext]
+    [url]
   )
+
+  return typeof children !== 'function'
+    ? null
+    : children({ isFetching, fetchError, bufferLength, buffer: buffer.current })
+}
+
+function AudioPeaks({ buffer, bands = 100, normalize = true, children } = {}) {
+  const [audioContext, setAudioContext] = useState()
+  const [peaks, setPeaks] = useState(undefined)
+
+  const bufferLength = buffer ? buffer.byteLength : 0
+
+  useEffect(() => {
+    setAudioContext(new AudioCtx())
+    return function cleanup() {
+      if (audioContext && audioContext.close) audioContext.close()
+    }
+  }, [])
 
   useEffect(
     async function calculatePeaks() {
-      if (!(audioContext && !isFetching && buffer.current && buffer.current.byteLength)) {
+      if (!(audioContext && bufferLength > 0)) {
         return setPeaks(null)
       }
       // NOTE: fix for Safari which only supports the callback style
       const decodeAudioData = promisify(audioContext.decodeAudioData.bind(audioContext), { errorFirst: false })
-      const audioData = await decodeAudioData(buffer.current.slice())
+      const audioData = await decodeAudioData(buffer.slice())
       const peaks = filterData(audioData, bands)
       setPeaks(normalize ? normalizeData(peaks) : peaks)
     },
-    [url, bands, audioContext, isFetching, buffer]
+    [buffer, bands, audioContext]
   )
 
-  const data = { peaks, error: fetchError }
+  const data = { peaks, bufferLength }
   return typeof children !== 'function' ? null : children(data)
 }
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 
 import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from './SvgFromAudioPeaks'
-import AudioAnalyser, { MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyser'
+import AudioAnalyzer, { MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
 import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -65,69 +65,7 @@ export default function AudioPlotter() {
             required
           />
         </div>
-        <div className="mb-3">
-          <select
-            className="form-select"
-            aria-label="choose visualisation style"
-            value={visStyle}
-            onChange={(e) => setVisStyle(e.target.value)}
-            required
-          >
-            {VIS_STYLES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="mb-3">
-          <NumberSliderInput
-            id="inputHeight"
-            labelTxt="height"
-            value={imgHeight}
-            onChange={(e) => setImgHeight(e.target.value)}
-            required
-            min={1}
-            max={MAX_HEIGHT}
-          />
-          <NumberSliderInput
-            id="inputNumBands"
-            labelTxt="nr. of bands"
-            value={numBands}
-            onChange={(e) => setNumBands(e.target.value)}
-            required
-            min={MIN_BANDS}
-            max={MAX_BANDS}
-          />
-          <NumberSliderInput
-            id="inputStrokeWidth"
-            labelTxt="stroke width"
-            value={strokeWidth}
-            onChange={(e) => setStrokeWidth(e.target.value)}
-            required
-            min={MIN_STROKE_WIDTH}
-            max={MAX_STROKE_WIDTH}
-            step={STROKE_WIDTH_STEP}
-          />
-        </div>
-        <div className="mb-3">
-          <CheckBox
-            labelTxt="normalize"
-            id="inputDoNormalize"
-            checked={doNormalize}
-            onChange={(e) => {
-              setDoNormalize(e.target.checked)
-            }}
-          />
-          <CheckBox
-            labelTxt="add Caps"
-            id="inputAddCaps"
-            checked={addCaps}
-            onChange={(e) => {
-              setAddCaps(e.target.checked)
-            }}
-          />
-        </div>
+
         {!runAnalysis && (
           <div style={{ textAlign: 'center' }}>
             <button className="btn btn-outline-dark" onClick={() => setRunAnalysis(true)}>
@@ -139,11 +77,12 @@ export default function AudioPlotter() {
 
       <hr />
 
-      {runAnalysis && (
-        <AudioAnalyser url={url} bands={numBands} normalize={doNormalize}>
+      {url && runAnalysis && (
+        <AudioAnalyzer url={url} bands={numBands} normalize={doNormalize}>
           {(data) => {
-            const { error, peaks } = data
+            const { error, peaks, bufferLength } = data
             if (error) return <ErrorMessage error={error} />
+
 
             function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
               // NOTE: goes around React straight to the DOM
@@ -161,6 +100,86 @@ export default function AudioPlotter() {
             }
             return (
               <>
+                <form
+                  className="font-monospace small"
+                  onSubmit={() => {
+                    setRunAnalysis(true)
+                  }}
+                >
+                  <div className="mb-3">
+                    <select
+                      className="form-select"
+                      aria-label="choose visualisation style"
+                      value={visStyle}
+                      onChange={(e) => setVisStyle(e.target.value)}
+                      required
+                    >
+                      {VIS_STYLES.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <div className="row mb-2">
+                      <div className="col">
+                        <NumberSliderInput
+                          id="inputHeight"
+                          labelTxt="height"
+                          value={imgHeight}
+                          onChange={(e) => setImgHeight(e.target.value)}
+                          required
+                          min={1}
+                          max={MAX_HEIGHT}
+                        />
+                      </div>
+                      <div className="col">
+                        <NumberSliderInput
+                          id="inputNumBands"
+                          labelTxt="nr. of bands"
+                          value={numBands}
+                          onChange={(e) => setNumBands(e.target.value)}
+                          required
+                          min={MIN_BANDS}
+                          max={MAX_BANDS}
+                        />
+                      </div>
+                    </div>
+          <NumberSliderInput
+                    <NumberSliderInput
+                      id="inputStrokeWidth"
+                      labelTxt="stroke width"
+                      value={strokeWidth}
+                      onChange={(e) => setStrokeWidth(e.target.value)}
+                      required
+                      min={MIN_STROKE_WIDTH}
+                      max={MAX_STROKE_WIDTH}
+                      step={STROKE_WIDTH_STEP}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <CheckBox
+                      labelTxt="normalize"
+                      id="inputDoNormalize"
+                      checked={doNormalize}
+                      onChange={(e) => {
+                        setDoNormalize(e.target.checked)
+                      }}
+                    />
+                    <CheckBox
+                      labelTxt="add Caps"
+                      id="inputAddCaps"
+                      checked={addCaps}
+                      onChange={(e) => {
+                        setAddCaps(e.target.checked)
+                      }}
+                    />
+                  </div>
+                </form>
+
+                <hr />
+
                 <div className="mb-3">
                   <div style={{ textAlign: 'center' }}>
                     <a
@@ -202,7 +221,7 @@ export default function AudioPlotter() {
               </>
             )
           }}
-        </AudioAnalyser>
+        </AudioAnalyzer>
       )}
     </div>
   )
