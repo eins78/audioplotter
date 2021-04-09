@@ -236,12 +236,12 @@ const ErrorMessage = ({ error }) => (
 
 const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
   <>
-    <label htmlFor={id} className="form-label">
+    <label htmlFor={id} className="form-label small">
       {labelTxt}
     </label>
-    <input id={id} className="form-control" {...inputProps} />
+    <input id={id} className="form-control form-control-sm" {...inputProps} />
     {!!helpTxt && (
-      <div id={`${id}Help`} className="form-text">
+      <div id={`${id}Help`} className="form-text small">
         {helpTxt}
       </div>
     )}
