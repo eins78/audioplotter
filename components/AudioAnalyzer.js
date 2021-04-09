@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
-import promisify from 'pify'
 
 export const MIN_BANDS = 1
 export const MAX_BANDS = 2048
@@ -31,14 +30,18 @@ export function AudioBuffer({ url, children } = {}) {
 
   useEffect(
     async function fetchData() {
+      buffer.current = null
+      setFetchError(null)
       setIsFetching(true)
       let buf, err
       try {
         const response = await fetch(url)
+        const { ok, statusText } = response
+        if (!ok) throw new Error(statusText)
         buf = await response.arrayBuffer()
       } catch (error) {
         err = true
-        setFetchError(error)
+        setFetchError(String(error))
       }
       if (!err) buffer.current = buf
       setIsFetching(false)
@@ -51,8 +54,9 @@ export function AudioBuffer({ url, children } = {}) {
     : children({ isFetching, fetchError, bufferLength, buffer: buffer.current })
 }
 
-export function AudioPeaks({ buffer, bands = 100, normalize = true, children } = {}) {
+export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize = true, children } = {}) {
   const [audioContext, setAudioContext] = useState()
+  const [decodeError, setDecodeError] = useState(undefined)
   const [peaks, setPeaks] = useState(undefined)
 
   const bufferLength = buffer ? buffer.byteLength : 0
@@ -69,16 +73,25 @@ export function AudioPeaks({ buffer, bands = 100, normalize = true, children } =
       if (!(audioContext && bufferLength > 0)) {
         return setPeaks(null)
       }
-      // NOTE: fix for Safari which only supports the callback style
-      const decodeAudioData = promisify(audioContext.decodeAudioData.bind(audioContext), { errorFirst: false })
-      const audioData = await decodeAudioData(buffer.slice())
-      const peaks = filterData(audioData, bands)
-      setPeaks(normalize ? normalizeData(peaks) : peaks)
+      // NOTE: no `await`, Safari only supports the callback style
+      audioContext.decodeAudioData(
+        buffer.slice(),
+        function onSuccess(audioData) {
+          const filteredData = filterData(audioData, bands)
+          const peaks = normalize ? normalizeData(filteredData) : filteredData
+          setPeaks(peaks)
+          setDecodeError(null)
+        },
+        function onErr(err) {
+          setPeaks(null)
+          setDecodeError(String(err))
+        }
+      )
     },
     [buffer, bands, audioContext]
   )
 
-  const data = { peaks, bufferLength }
+  const data = { peaks, decodeError }
   return typeof children !== 'function' ? null : children(data)
 }
 

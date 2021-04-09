@@ -36,7 +36,7 @@ const AppLayout = ({ menu, children }) => {
       )}
       <div className="container-fluid">
         <div className="row">
-          <main className="col-md-9 ms-sm-auto col-lg-10 Xpx-md-4">
+          <main className="col-md-11 col-lg-10 m-auto">
             <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
               <h1 className="h3">
                 <b>audioplotter</b>

@@ -203,24 +203,27 @@ export default function AudioPlotter() {
                   <hr />
                 </div>
 
-                <AudioPeaks buffer={buffer} bands={numBands} normalize={doNormalize}>
-                  {({ peaks }) => (
-                    <div className="">
-                      {!!peaks && (
-                        <div data-style={{ border: '1px solid lightgray' }}>
-                          <SvgFromAudioPeaks
-                            ref={svgEl}
-                            className="img-fluid w-100 shadow-sm p-3 mb-5 bg-body rounded"
-                            peaks={peaks}
-                            height={imgHeight}
-                            style={visStyle}
-                            strokeWidth={strokeWidth}
-                            withCaps={addCaps}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <AudioPeaks buffer={buffer} bands={numBands} normalize={doNormalize} trimPoints={audioTrimPoints}>
+                  {({ peaks, decodeError }) => {
+                    if (decodeError) return <ErrorMessage error={decodeError} />
+                    return (
+                      <div className="">
+                        {!!peaks && (
+                          <div data-style={{ border: '1px solid lightgray' }}>
+                            <SvgFromAudioPeaks
+                              ref={svgEl}
+                              className="img-fluid w-100 shadow-sm p-3 mb-5 bg-body rounded"
+                              peaks={peaks}
+                              height={imgHeight}
+                              style={visStyle}
+                              strokeWidth={strokeWidth}
+                              withCaps={addCaps}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }}
                 </AudioPeaks>
               </>
             )
@@ -231,10 +234,13 @@ export default function AudioPlotter() {
   )
 }
 
-const ErrorMessage = ({ error }) => (
-  <div>
-    <p>Something went wrong…</p>
-    <pre>{JSON.stringify(error, 0, 2)}</pre>
+const ErrorMessage = ({ error, children }) => (
+  <div class="card text-center text-dark bg-warning mb-3 m-auto" style={{ maxWidth: '42em' }}>
+    <div class="card-body">
+      <h5 class="card-title">Something went wrong…</h5>
+      <pre class="card-text">{error}</pre>
+      {children}
+    </div>
   </div>
 )
 
