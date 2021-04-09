@@ -1,20 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react'
 
-import SvgFromAudioPeaks, { STYLES as VIS_STYLES } from './SvgFromAudioPeaks'
 import AudioAnalyzer, { MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
+import SvgFromAudioPeaks, {
+  STYLES as VIS_STYLES,
+  DEFAULT_HEIGHT,
+  MAX_HEIGHT,
+  DEFAULT_STROKE_WIDTH,
+  MIN_STROKE_WIDTH,
+  MAX_STROKE_WIDTH,
+  STROKE_WIDTH_STEP,
+} from './SvgFromAudioPeaks'
 import svgNodeToBlob from '../lib/svgNodeToBlob'
 const isDev = process.env.NODE_ENV === 'development'
 
 const DEFAULT_AUDIO_URL = isDev
   ? 'http://localhost:5000/The_Amen_Break.wav'
   : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
-const DEFAULT_HEIGHT = 100
-const MAX_HEIGHT = 2048
+
 const DEFAULT_VIS_STYLE = 'saw'
-const DEFAULT_STROKE_WIDTH = 1
-const MIN_STROKE_WIDTH = 0.1
-const MAX_STROKE_WIDTH = 10
-const STROKE_WIDTH_STEP = 0.1
 
 export default function AudioPlotter() {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)

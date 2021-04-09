@@ -2,9 +2,18 @@ import React from 'react'
 
 import { Svg, Polyline } from 'react-svg-path'
 
-export const STYLES = ['zigzag', 'saw']
+export const STYLES = ['zigzag', 'saw', 'quad']
 export const DEFAULT_WIDTH = 1000
 export const DEFAULT_PADDING_X = 100
+export const DEFAULT_HEIGHT = 100
+export const MAX_HEIGHT = 2048
+export const DEFAULT_STROKE_WIDTH = 1
+export const MIN_STROKE_WIDTH = 0.1
+export const MAX_STROKE_WIDTH = 10
+export const STROKE_WIDTH_STEP = 0.1
+
+const STROKE_COLOR = '#222'
+const STROKE_FILL = 'transparent'
 
 export default React.forwardRef(function SvgFromAudioPeaks(
   {
@@ -28,9 +37,11 @@ export default React.forwardRef(function SvgFromAudioPeaks(
   const middleY = targetHeight / 2
   const startPos = [0, middleY]
   const endPos = [targetWidth, middleY]
-  let points = []
+  let points = [],
+    graph = null
 
   if (!STYLES.includes(style)) throw new TypeError()
+
   if (style === 'zigzag') {
     points = peaks.map((peak, index) => {
       const isEven = index % 2 === 0
@@ -40,6 +51,12 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       const yPos = isUp ? middleY + distance : middleY - distance
       return [xPos, yPos]
     })
+
+    if (withCaps) {
+      points = [startPos].concat(points, [endPos])
+    }
+
+    graph = <Polyline points={points} stroke={STROKE_COLOR} strokeWidth={strokeWidth} fill={STROKE_FILL} />
   }
 
   if (style === 'saw') {
@@ -53,10 +70,11 @@ export default React.forwardRef(function SvgFromAudioPeaks(
         [xPos, yDown],
       ])
     }, [])
-  }
 
-  if (withCaps) {
-    points = [startPos].concat(points, [endPos])
+    if (withCaps) {
+      points = [startPos].concat(points, [endPos])
+    }
+    graph = <Polyline points={points} stroke={STROKE_COLOR} strokeWidth={strokeWidth} fill={STROKE_FILL} />
   }
 
   return (
@@ -67,7 +85,7 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       viewBox={[0, -Math.floor(paddingX / 2), targetWidth, Math.floor(targetHeight + paddingX)].join(' ')}
       {...restProps}
     >
-      <Polyline points={points} stroke="#222" strokeWidth={strokeWidth} fill="#ffffff" />
+      {graph}
     </svg>
   )
 })
