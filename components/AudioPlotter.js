@@ -13,10 +13,12 @@ import SvgFromAudioPeaks, {
 import svgNodeToBlob from '../util/svgNodeToBlob'
 import Try from '../util/Try'
 const isDev = process.env.NODE_ENV === 'development'
+const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
 
-const DEFAULT_AUDIO_URL = isDev
-  ? 'http://localhost:5000/The_Amen_Break.wav'
-  : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
+const DEFAULT_AUDIO_URL =
+  isDev && !DEV_HTTP_FETCH
+    ? 'http://localhost:5000/The_Amen_Break.wav'
+    : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
 
 const DEFAULT_VIS_STYLE = 'saw'
 
@@ -100,6 +102,10 @@ export default function AudioPlotter() {
 
             return (
               <>
+                {/* TODO: file info
+                <pre className="mb-2">
+                  <small>{bufferLength} bytes</small>
+                </pre> */}
                 <form
                   className="font-monospace small"
                   onSubmit={() => {
@@ -121,6 +127,7 @@ export default function AudioPlotter() {
                       ))}
                     </select>
                   </div>
+
                   <div className="mb-3">
                     <div className="row mb-2">
                       <div className="col">
@@ -139,7 +146,9 @@ export default function AudioPlotter() {
                           id="inputNumBands"
                           labelTxt="nr. of bands"
                           value={numBands}
-                          onChange={(e) => setNumBands(e.target.value)}
+                          onChange={(e) => {
+                            Try(() => setNumBands(parseInt(e.target.value, 10)))
+                          }}
                           required
                           min={MIN_BANDS}
                           max={MAX_BANDS}
@@ -192,12 +201,7 @@ export default function AudioPlotter() {
                     >
                       Download blob!
                     </a>{' '}
-                    <button
-                      className="btn btn-outline-info"
-                      target="_blank"
-                      download="audioplot.svg"
-                      onClick={() => downloadSVGNodeInDOM('audioplot.svg')}
-                    >
+                    <button className="btn btn-outline-info" onClick={() => downloadSVGNodeInDOM('audioplot.svg')}>
                       Download from DOM!
                     </button>
                   </div>
@@ -236,10 +240,10 @@ export default function AudioPlotter() {
 }
 
 const ErrorMessage = ({ error, children }) => (
-  <div class="card text-center text-dark bg-warning mb-3 m-auto" style={{ maxWidth: '42em' }}>
-    <div class="card-body">
-      <h5 class="card-title">Something went wrong…</h5>
-      <pre class="card-text">{error}</pre>
+  <div className="card text-center text-dark bg-warning mb-3 m-auto" style={{ maxWidth: '42em' }}>
+    <div className="card-body">
+      <h5 className="card-title">Something went wrong…</h5>
+      <pre className="card-text">{error}</pre>
       {children}
     </div>
   </div>

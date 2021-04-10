@@ -14,6 +14,7 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 - addCaps: also add line of configurable length to start and end (like starting with silence, but just a horixontal line)
 - playback of the audio
+- show audio file info
 - better download option
 - options to trim start/endpoint of audio (needed for amen break demo, wikimedia hosted file hast context around it)
 - separate frequencies, create 1 graph per band in different colors (low/red,mid/green,high/yellow)
