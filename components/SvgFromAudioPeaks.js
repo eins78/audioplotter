@@ -13,7 +13,7 @@ export const MAX_STROKE_WIDTH = 100
 export const STROKE_WIDTH_STEP = 0.1
 
 const STROKE_COLOR = '#222'
-const STROKE_FILL = 'transparent'
+const STROKE_FILL = 'white'
 
 export function calcMaxStrokeWidth(numBands) {
   const relativeWidth = Math.ceil((2 / numBands) * 100 * 100)
