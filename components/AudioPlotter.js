@@ -14,6 +14,7 @@ import svgNodeToBlob from '../util/svgNodeToBlob'
 import Try from '../util/Try'
 const isDev = process.env.NODE_ENV === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
+const SHOW_BLOB_DOWNLOAD = false // isDev
 
 const DEFAULT_AUDIO_URL =
   isDev && !DEV_HTTP_FETCH
@@ -221,17 +222,21 @@ export default function AudioPlotter() {
 
                 <div className="mb-3">
                   <div style={{ textAlign: 'center' }}>
-                    <a
-                      className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
-                      target="_blank"
-                      download="audioplot.svg"
-                      disabled={!svgBlobURL}
-                      href={svgBlobURL}
-                    >
-                      Download blob!
-                    </a>{' '}
+                    {!!SHOW_BLOB_DOWNLOAD && (
+                      <>
+                        <a
+                          className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
+                          target="_blank"
+                          download="audioplot.svg"
+                          disabled={!svgBlobURL}
+                          href={svgBlobURL}
+                        >
+                          Download SVG (from blob!)
+                        </a>{' '}
+                      </>
+                    )}
                     <button className="btn btn-outline-info" onClick={() => downloadSVGNodeInDOM('audioplot.svg')}>
-                      Download from DOM!
+                      Download SVG
                     </button>
                   </div>
                   <hr />
