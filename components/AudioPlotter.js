@@ -10,7 +10,8 @@ import SvgFromAudioPeaks, {
   STROKE_WIDTH_STEP,
   calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
-import svgNodeToBlob from '../lib/svgNodeToBlob'
+import svgNodeToBlob from '../util/svgNodeToBlob'
+import Try from '../util/Try'
 const isDev = process.env.NODE_ENV === 'development'
 
 const DEFAULT_AUDIO_URL = isDev
