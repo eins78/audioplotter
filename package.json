@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "audio-buffer-utils": "^5.1.2",
     "audio-context": "^1.0.3",
     "bootstrap": "^5.0.0-beta3",
     "next": "10.1.3",

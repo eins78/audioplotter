@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
+import AudioUtil from 'audio-buffer-utils'
 
 export const MIN_BANDS = 1
 export const MAX_BANDS = 2048
@@ -77,7 +78,7 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
       audioContext.decodeAudioData(
         buffer.slice(),
         function onSuccess(audioData) {
-          const filteredData = filterData(audioData, bands)
+          const filteredData = filterData(audioData, bands, trimPoints)
           const peaks = normalize ? normalizeData(filteredData) : filteredData
           setPeaks(peaks)
           setDecodeError(null)
@@ -88,16 +89,27 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
         }
       )
     },
-    [buffer, bands, audioContext]
+    [buffer, bands, trimPoints, audioContext]
   )
 
   const data = { peaks, decodeError }
   return typeof children !== 'function' ? null : children(data)
 }
 
-function filterData(audioBuffer, numSamples) {
+function filterData(audioBufferTotal, numSamples, trimPoints) {
+  const bufferLength = audioBufferTotal.length
+  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimPoints[0]), 1)
+  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimPoints[1]), bufferLength)
+
+  if (bufferLength - bufferStart - bufferEnd < 1) return []
+
+  const audioBuffer = AudioUtil.subbuffer(audioBufferTotal, bufferStart, -bufferEnd)
   const rawData = audioBuffer.getChannelData(0) // We only need to work with one channel of data
+
+  if (numSamples > rawData.length) return []
+
   const blockSize = Math.floor(rawData.length / numSamples) // the number of samples in each subdivision
+
   const filteredData = []
   for (let i = 0; i < numSamples; i++) {
     let blockStart = blockSize * i // the location of the first sample in the block
@@ -107,6 +119,7 @@ function filterData(audioBuffer, numSamples) {
     }
     filteredData.push(sum / blockSize) // divide the sum by the block size to get the average
   }
+
   return filteredData
 }
 

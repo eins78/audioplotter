@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Svg, Polyline } from 'react-svg-path'
+import { Polyline, Quad } from 'react-svg-path'
 
 export const STYLES = ['zigzag', 'saw', 'quad']
 export const DEFAULT_WIDTH = 1000
@@ -80,6 +80,25 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       points = [startPos].concat(points, [endPos])
     }
     graph = <Polyline points={points} stroke={STROKE_COLOR} strokeWidth={strokeWidth} fill={STROKE_FILL} />
+  }
+
+  if (style === 'quad') {
+    points = peaks.reduce((result, peak, index) => {
+      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const distance = peak * targetHeight
+      const yUp = middleY - distance
+      const yDown = middleY + distance
+      return result.concat([
+        [xPos, yUp],
+        [xPos, yDown],
+      ])
+    }, [])
+
+    if (withCaps) {
+      points = [startPos].concat(points, [endPos])
+    }
+
+    graph = <Quad T={points} stroke={STROKE_COLOR} strokeWidth={strokeWidth} fill={STROKE_FILL} />
   }
 
   return (

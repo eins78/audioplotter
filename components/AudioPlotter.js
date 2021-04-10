@@ -27,6 +27,7 @@ export default function AudioPlotter() {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numBands, setNumBands] = useState(DEFAULT_BANDS)
+  const [audioTrimPoints, setAudioTrimPoints] = useState([0, 0])
   const [doNormalize, setDoNormalize] = useState(true)
   const [visStyle, setVisStyle] = useState(DEFAULT_VIS_STYLE)
   const [strokeWidth, setStrokeWidthRaw] = useState(DEFAULT_STROKE_WIDTH)
@@ -155,6 +156,34 @@ export default function AudioPlotter() {
                         />
                       </div>
                     </div>
+
+                    <div className="row mb-2">
+                      <div className="col">
+                        <NumberSliderInput
+                          id="inputTrimStart"
+                          labelTxt="trim start"
+                          value={audioTrimPoints[0]}
+                          onChange={({ target: { value: v } }) => setAudioTrimPoints((a) => [v, a[1]])}
+                          required
+                          min={0}
+                          max={99.99}
+                          step={0.01}
+                        />
+                      </div>
+                      <div className="col">
+                        <NumberSliderInput
+                          id="inputTrimEnd"
+                          labelTxt="trim end"
+                          value={audioTrimPoints[1]}
+                          onChange={({ target: { value: v } }) => setAudioTrimPoints((a) => [a[0], v])}
+                          required
+                          min={0}
+                          max={99.99}
+                          step={0.01}
+                        />
+                      </div>
+                    </div>
+
                     <NumberSliderInput
                       id="inputStrokeWidth"
                       labelTxt="stroke width"
