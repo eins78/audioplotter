@@ -21,8 +21,7 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 ## Credits
 
-Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visualizer with Vanilla JavaScript" on css-tricks.com](https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/) and [open-sourcing the example code]\*,
-on which the initial prototype of this tool is based.
+Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visualizer with Vanilla JavaScript" on css-tricks.com](https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/) and [open-sourcing the example code](https://codepen.io/matthewstrom/pen/mddOWWg), on which the initial prototype of this tool is based.
 
 ## Development
 
