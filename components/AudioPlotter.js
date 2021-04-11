@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 
 import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
 import SvgFromAudioPeaks, {
@@ -10,7 +10,7 @@ import SvgFromAudioPeaks, {
   STROKE_WIDTH_STEP,
   calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
-import { svgDomNodeToBlob } from '../util'
+import { debounce, Try, svgDomNodeToBlob } from '../util'
 
 const isDev = process.env.NODE_ENV === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
@@ -29,10 +29,12 @@ export default function AudioPlotter() {
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numBands, setNumBands] = useState(DEFAULT_BANDS)
   const [audioTrimPoints, setAudioTrimPoints] = useState([0, 0])
+  const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState([0, 0])
   const [doNormalize, setDoNormalize] = useState(true)
   const [visStyle, setVisStyle] = useState(DEFAULT_VIS_STYLE)
   const [strokeWidth, setStrokeWidthRaw] = useState(DEFAULT_STROKE_WIDTH)
   const [addCaps, setAddCaps] = useState(true)
+
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
   // other state
@@ -40,6 +42,7 @@ export default function AudioPlotter() {
   const svgEl = useRef(null)
 
   // related fields:
+  // * stroke width
   const maxStrokeWidth = calcMaxStrokeWidth(numBands)
   function setStrokeWidth(num) {
     setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth)
@@ -47,6 +50,18 @@ export default function AudioPlotter() {
   useEffect(() => {
     if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth)
   }, [numBands])
+
+  // * audio trim points
+  const debounceAudioTrimPoints = useCallback(
+    debounce((atp) => setAudioTrimPointsDebounced(atp), 50),
+    []
+  )
+  const onChangeTrimStart = (event, where = 'start') => {
+    const val = Try(() => parseFloat(event.target.value, 10))
+    setAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
+    debounceAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
+  }
+  const onChangeTrimEnd = (event) => onChangeTrimStart(event, 'end')
 
   // FIXME: does not work on initial render… either find the correct way to hook it up,
   //        or make a "display SVG with download button" wrapper that should be up to date always?
@@ -164,7 +179,7 @@ export default function AudioPlotter() {
                           id="inputTrimStart"
                           labelTxt="trim start"
                           value={audioTrimPoints[0]}
-                          onChange={({ target: { value: v } }) => setAudioTrimPoints((a) => [v, a[1]])}
+                          onChange={onChangeTrimStart}
                           required
                           min={0}
                           max={99.99}
@@ -176,7 +191,7 @@ export default function AudioPlotter() {
                           id="inputTrimEnd"
                           labelTxt="trim end"
                           value={audioTrimPoints[1]}
-                          onChange={({ target: { value: v } }) => setAudioTrimPoints((a) => [a[0], v])}
+                          onChange={onChangeTrimEnd}
                           required
                           min={0}
                           max={99.99}
@@ -242,7 +257,12 @@ export default function AudioPlotter() {
                   <hr />
                 </div>
 
-                <AudioPeaks buffer={buffer} bands={numBands} normalize={doNormalize} trimPoints={audioTrimPoints}>
+                <AudioPeaks
+                  buffer={buffer}
+                  bands={numBands}
+                  normalize={doNormalize}
+                  trimPoints={audioTrimPointsDebounced}
+                >
                   {({ peaks, decodeError }) => {
                     if (decodeError) return <ErrorMessage error={decodeError} />
                     return (
