@@ -10,8 +10,8 @@ import SvgFromAudioPeaks, {
   STROKE_WIDTH_STEP,
   calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
-import svgNodeToBlob from '../util/svgNodeToBlob'
-import Try from '../util/Try'
+import { svgDomNodeToBlob } from '../util'
+
 const isDev = process.env.NODE_ENV === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
 const SHOW_BLOB_DOWNLOAD = false // isDev
@@ -55,7 +55,7 @@ export default function AudioPlotter() {
     function makeSVGBlobURL() {
       const node = svgEl.current
       if (!node) return setSvgBlobURL(null)
-      const blob = svgNodeToBlob(node)
+      const blob = svgDomNodeToBlob(node)
       setSvgBlobURL(URL.createObjectURL(blob))
 
       return function cleanup() {
@@ -320,7 +320,7 @@ function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
   const node = document.querySelector('svg')
   if (!node) return
 
-  const blob = svgNodeToBlob(node)
+  const blob = svgDomNodeToBlob(node)
   const url = URL.createObjectURL(blob)
 
   // make a link and click it trigger the download
