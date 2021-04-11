@@ -246,19 +246,17 @@ export default function AudioPlotter() {
                   {({ peaks, decodeError }) => {
                     if (decodeError) return <ErrorMessage error={decodeError} />
                     return (
-                      <div className="">
+                      <div className="shadow-sm p-2 mb-5 bg-body rounded border">
                         {!!peaks && (
-                          <div data-style={{ border: '1px solid lightgray' }}>
-                            <SvgFromAudioPeaks
-                              ref={svgEl}
-                              className="img-fluid w-100 shadow-sm p-3 mb-5 bg-body rounded"
-                              peaks={peaks}
-                              height={imgHeight}
-                              style={visStyle}
-                              strokeWidth={strokeWidth}
-                              withCaps={addCaps}
-                            />
-                          </div>
+                          <SvgFromAudioPeaks
+                            ref={svgEl}
+                            className="img-fluid w-100 rounded"
+                            peaks={peaks}
+                            height={imgHeight}
+                            style={visStyle}
+                            strokeWidth={strokeWidth}
+                            withCaps={addCaps}
+                          />
                         )}
                       </div>
                     )
