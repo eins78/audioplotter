@@ -74,6 +74,7 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
       if (!(audioContext && bufferLength > 0)) {
         return setPeaks(null)
       }
+
       // NOTE: no `await`, Safari only supports the callback style
       audioContext.decodeAudioData(
         buffer.slice(),
@@ -89,7 +90,7 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
         }
       )
     },
-    [buffer, bands, trimPoints, audioContext]
+    [buffer, bands, trimPoints, normalize, audioContext]
   )
 
   const data = { peaks, decodeError }
