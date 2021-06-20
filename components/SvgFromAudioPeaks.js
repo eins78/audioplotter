@@ -7,9 +7,9 @@ export const STYLES = [
   'saw',
   // 'quad'
 ]
+export const DEFAULT_HEIGHT = 150
 export const DEFAULT_WIDTH = 1000
-export const DEFAULT_PADDING_X = 10
-export const DEFAULT_HEIGHT = 100
+export const DEFAULT_PADDING_X = 100
 export const MAX_HEIGHT = 2048
 export const DEFAULT_STROKE_WIDTH = 1
 export const MIN_STROKE_WIDTH = 0.1
