@@ -13,12 +13,12 @@ import SvgFromAudioPeaks, {
 import { debounce, Try, svgDomNodeToBlob } from '../util'
 
 const isDev = process.env.NODE_ENV === 'development'
-const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
+const DEV_HTTP_FETCH = true // do external network calls even in dev mode, to test that it works
 const SHOW_BLOB_DOWNLOAD = false // isDev
 
 const DEFAULT_AUDIO_URL =
   isDev && !DEV_HTTP_FETCH
-    ? 'http://localhost:5000/The_Amen_Break.wav'
+    ? 'http://localhost:57915/The_Amen_Break.wav'
     : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
 
 const DEFAULT_VIS_STYLE = 'saw'
