@@ -13,13 +13,16 @@ import SvgFromAudioPeaks, {
 import svgNodeToBlob from '../util/svgNodeToBlob'
 import Try from '../util/Try'
 const isDev = process.env.NODE_ENV === 'development'
-const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
+const DEV_HTTP_FETCH = true // do network calls even in dev mode, to test that it works
 const SHOW_BLOB_DOWNLOAD = false // isDev
 
-const DEFAULT_AUDIO_URL =
+const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
   isDev && !DEV_HTTP_FETCH
-    ? 'http://localhost:5000/The_Amen_Break.wav'
-    : 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
+    ? ['http://localhost:5000/The_Amen_Break.wav', [0, 0]]
+    : [
+        'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3',
+        [32.78, 20.22],
+      ]
 
 const DEFAULT_VIS_STYLE = 'saw'
 
@@ -28,7 +31,7 @@ export default function AudioPlotter() {
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numBands, setNumBands] = useState(DEFAULT_BANDS)
-  const [audioTrimPoints, setAudioTrimPoints] = useState([0, 0])
+  const [audioTrimPoints, setAudioTrimPoints] = useState(DEFAULT_TRIM_POINTS)
   const [doNormalize, setDoNormalize] = useState(true)
   const [visStyle, setVisStyle] = useState(DEFAULT_VIS_STYLE)
   const [strokeWidth, setStrokeWidthRaw] = useState(DEFAULT_STROKE_WIDTH)
