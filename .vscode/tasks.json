@@ -1,0 +1,52 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run dev",
+      "detail": "start everything for development",
+      "dependsOn": ["run next dev", "run dev audio file server"],
+      "problemMatcher": []
+    },
+    {
+      "label": "run next dev",
+      "type": "npm",
+      "script": "dev",
+      "detail": "next dev",
+      "problemMatcher": [],
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "dev"
+      }
+    },
+    {
+      "label": "run dev audio file server",
+      "type": "shell",
+      "command": "npm run dev-audio-server",
+      "problemMatcher": [],
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": true,
+        "clear": true,
+        "group": "dev"
+      }
+    }
+  ]
+}
