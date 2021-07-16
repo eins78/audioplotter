@@ -1,6 +1,6 @@
 import React, { Fragment as F } from 'react'
 
-const AppLayout = ({ menu, children }) => {
+const AppLayout = ({ version, menu, children }) => {
   return (
     <div className="app">
       {false && (
@@ -40,6 +40,17 @@ const AppLayout = ({ menu, children }) => {
             <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
               <h1 className="h3">
                 <b>audioplotter</b>
+                {!!version && (
+                  <>
+                    {' '}
+                    <small
+                      className="ui-version text-muted font-monospace"
+                      style={{ verticalAlign: 'super', fontSize: '0.75rem', letterSpacing: '-0.05em' }}
+                    >
+                      {version}
+                    </small>
+                  </>
+                )}
               </h1>
 
               {menu && <div className="btn-toolbar mb-2 mb-md-0">{menu}</div>}
