@@ -37,13 +37,13 @@ const AppLayout = ({ menu, children }) => {
       <div className="container-fluid">
         <div className="row">
           <main className="col-md-11 col-lg-10 m-auto">
-            <div className="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+            <header className="app-main-nav d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
               <h1 className="h3">
                 <b>audioplotter</b>
               </h1>
 
               {menu && <div className="btn-toolbar mb-2 mb-md-0">{menu}</div>}
-            </div>
+            </header>
             <div className="app-content">{children}</div>
           </main>
         </div>

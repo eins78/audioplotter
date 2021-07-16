@@ -9,6 +9,9 @@
     "start": "next start"
   },
   "dependencies": {
+    "@fontsource/b612": "^4.4.5",
+    "@fontsource/b612-mono": "^4.4.5",
+    "@fontsource/eb-garamond": "^4.4.5",
     "audio-buffer-utils": "^5.1.2",
     "audio-context": "^1.0.3",
     "bootstrap": "^5.0.0-beta3",
@@ -18,7 +21,8 @@
     "react-svg-path": "^1.11.0"
   },
   "devDependencies": {
-    "prettier": "^2.2.1"
+    "prettier": "^2.2.1",
+    "sass": "^1.35.1"
   },
   "prettier": {
     "semi": false,

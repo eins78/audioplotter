@@ -1,0 +1,54 @@
+@use "~@fontsource/eb-garamond/scss/mixins" as Garamond;
+
+@include Garamond.fontFace(
+  $fontName: 'EB Garamond',
+  $weight: 400,
+  $display: fallback,
+  $fontDir: '~@fontsource/eb-garamond/files'
+);
+@include Garamond.fontFace(
+  $fontName: 'EB Garamond',
+  $weight: 800,
+  $display: fallback,
+  $fontDir: '~@fontsource/eb-garamond/files'
+);
+
+$enable-shadows: false;
+$enable-gradients: false;
+$enable-negative-margins: true;
+
+// https://www.dimanoinmano.it/en/cp172505/scienze/fisica/the-treatise-on-electricity-and-magnetism
+$primary: rgb(62, 50, 41);
+$body-color: rgb(62, 50, 41);
+// $body-bg: rgb(255, 249, 242);
+
+$font-family-sans-serif: 'EB Garamond', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+  'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+  'Noto Color Emoji';
+$font-family-monospace: 'EB Garamond', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+  monospace;
+
+$font-size-base: 1.4rem;
+
+$line-height-base: 1.85;
+$line-height-sm: 1.55;
+$line-height-lg: 3;
+
+@import '../bootstrap';
+
+header {
+  &.app-main-nav h1 {
+    text-align: center;
+    width: 100%;
+    text-transform: uppercase;
+    font-size: $font-size-base * 2;
+    line-height: 3;
+  }
+
+  .btn-toolbar,
+  .btn-toolbar.mb-2 {
+    // font-style: italic;
+    margin: 0 auto;
+    margin-bottom: 2rem;
+  }
+}

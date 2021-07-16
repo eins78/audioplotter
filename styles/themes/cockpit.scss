@@ -1,0 +1,25 @@
+@use "~@fontsource/b612/scss/mixins" as B612;
+@use "~@fontsource/b612-mono/scss/mixins" as B612Mono;
+
+@include B612.fontFace($weight: 400, $display: fallback, $fontDir: '~@fontsource/b612/files');
+@include B612Mono.fontFace($weight: 400, $display: fallback, $fontDir: '~@fontsource/b612-mono/files');
+
+$enable-shadows: true;
+$enable-gradients: true;
+$enable-negative-margins: true;
+
+$primary: #13795b; // $teal-700
+
+$body-color: rgb(14, 44, 32);
+// $body-bg: hsl(158deg 100% 98%);
+
+$font-family-sans-serif: 'B612', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+  'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji' !default;
+$font-family-monospace: 'B612 Mono', SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+  monospace !default;
+
+@import '../bootstrap';
+
+svg.body-bg {
+  background-color: $teal-100;
+}
