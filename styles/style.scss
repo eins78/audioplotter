@@ -1,0 +1,7 @@
+@import '~bootstrap/scss/bootstrap';
+
+.font-sans-serif {
+  font-family: $font-family-sans-serif;
+}
+
+@import './toggle.scss';

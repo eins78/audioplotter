@@ -10,6 +10,7 @@ import SvgFromAudioPeaks, {
   STROKE_WIDTH_STEP,
   calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
+import CheckBox from './Form/CheckBox'
 import { debounce, Try, svgDomNodeToBlob } from '../util'
 
 const isDev = process.env.NODE_ENV === 'development'
@@ -317,15 +318,6 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
       </div>
     )}
   </>
-)
-
-const CheckBox = ({ id, labelTxt, ...inputProps }) => (
-  <div className="form-check">
-    <input id={id} type="checkbox" className="form-check-input" {...inputProps} />
-    <label className="form-check-label" htmlFor={id}>
-      {labelTxt}
-    </label>
-  </div>
 )
 
 const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
