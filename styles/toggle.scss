@@ -1,0 +1,61 @@
+@import '~react-toggle/style.css';
+
+$toggle-color-unchecked: $gray-600;
+$toggle-color-unchecked-hover: $gray-500;
+$toggle-color-checked: $primary;
+$toggle-color-checked-hover: tint-color($primary, 20%);
+
+.react-toggle {
+  margin-right: 8px;
+  vertical-align: middle;
+
+  .react-toggle-thumb {
+    width: 18px;
+    height: 18px;
+    border-color: $toggle-color-unchecked;
+  }
+  .react-toggle-track {
+    width: 40px;
+    height: 20px;
+    border-radius: 20px;
+    background-color: $toggle-color-unchecked;
+  }
+  .react-toggle-track-check {
+    left: 10px;
+  }
+  .react-toggle-track-x {
+    right: 7px;
+  }
+
+  &:hover:not(.react-toggle--disabled) {
+    .react-toggle-track {
+      background-color: $toggle-color-unchecked-hover;
+    }
+    .react-toggle-thumb {
+      border-color: $toggle-color-unchecked-hover;
+    }
+  }
+
+  &.react-toggle--checked {
+    .react-toggle-thumb {
+      left: 21px;
+      border-color: $toggle-color-checked;
+    }
+    .react-toggle-track {
+      background-color: $toggle-color-checked;
+    }
+
+    &:hover:not(.react-toggle--disabled) {
+      .react-toggle-track {
+        background-color: $toggle-color-checked-hover;
+      }
+      .react-toggle-thumb {
+        border-color: $toggle-color-checked-hover;
+      }
+    }
+  }
+
+  &.react-toggle--focus .react-toggle-thumb {
+    box-shadow: 0px 0px 2px 3px $toggle-color-checked-hover;
+  }
+}
