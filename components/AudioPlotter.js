@@ -255,7 +255,7 @@ export default function AudioPlotter() {
                         </a>{' '}
                       </>
                     )}
-                    <button className="btn btn-outline-info" onClick={() => downloadSVGNodeInDOM('audioplot.svg')}>
+                    <button className="btn btn-outline-primary" onClick={() => downloadSVGNodeInDOM('audioplot.svg')}>
                       Download SVG
                     </button>
                   </div>
