@@ -97,7 +97,7 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
   return typeof children !== 'function' ? null : children(data)
 }
 
-function filterData(audioBufferTotal, numSamples, trimPoints) {
+export function filterData(audioBufferTotal, numSamples, trimPoints) {
   const bufferLength = audioBufferTotal.length
   const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimPoints[0]), 1)
   const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimPoints[1]), bufferLength)
@@ -124,7 +124,7 @@ function filterData(audioBufferTotal, numSamples, trimPoints) {
   return filteredData
 }
 
-function normalizeData(filteredData) {
+export function normalizeData(filteredData) {
   const multiplier = Math.pow(Math.max(...filteredData), -1)
   return filteredData.map((n) => n * multiplier)
 }
