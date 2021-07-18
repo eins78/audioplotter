@@ -2,7 +2,7 @@
   "name": "audioplotter",
   "short_name": "audioplotter",
   "theme_color": "#500cbd",
-  "background_color": "#004740",
+  "background_color": "#500cbd",
   "display": "fullscreen",
   "orientation": "portrait",
   "scope": "/",
@@ -45,6 +45,16 @@
     },
     {
       "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
