@@ -6,4 +6,8 @@ module.exports = withPWA({
     dest: 'public',
     runtimeCaching,
   },
+  experimental: {
+    // needed when building a Docker image for the app
+    outputStandalone: true,
+  }
 })

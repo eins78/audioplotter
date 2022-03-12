@@ -1,1 +1,3 @@
---require spec_helper
+# NOTE: `-I .` is needed because the default load_path is `./spec`, but this is already running inside this subdir
+-I . --require spec_helper \
+--format doc

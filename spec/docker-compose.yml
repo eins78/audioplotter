@@ -1,0 +1,34 @@
+services:
+  web:
+    build: '..'
+    restart: 'unless-stopped'
+
+  rspec:
+    command: '/bin/bash'
+    environment:
+      APP_URL: http://web:3000
+      SELENIUM_URL: http://selenium-firefox:4444
+    depends_on:
+      - web
+      - firefox
+    build:
+      context: .
+      dockerfile: 'config/rspec.Dockerfile'
+    volumes:
+      - '..:/app'
+    working_dir: /app/spec
+
+  firefox:
+    container_name: selenium-firefox
+    image: selenium/standalone-firefox:97.0-geckodriver-0.30-20220217
+    restart: 'unless-stopped'
+    ports:
+      - 5901:5900
+      - 7901:7900
+    environment:
+      VNC_NO_PASSWORD: 1
+
+  # chrome:
+  #   image: selenium/standalone-chrome:3.141.59-zirconium # this version should match that of the selenium-webdriver gem (see Gemfile)
+  #   volumes:
+  #     - /dev/shm:/dev/shm
