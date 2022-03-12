@@ -23,6 +23,19 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visualizer with Vanilla JavaScript" on css-tricks.com](https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/) and [open-sourcing the example code](https://codepen.io/matthewstrom/pen/mddOWWg), on which the initial prototype of this tool is based.
 
+## tests
+
+- Written using RSpec, run with Docker.
+- Setup based on examples:
+  - <https://github.com/vercel/next.js/tree/79016b879f200c99cc3c3b69b2b84dee14b6615e/examples/with-docker>
+  - <https://www.plymouthsoftware.com/articles/rails-on-docker-system-specs-in-containers-with-rspec-capybara-chrome-and-selenium>
+
+```bash
+cd spec
+bin/build
+bin/rspec features/example_spec.rb
+```
+
 ## Development
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).

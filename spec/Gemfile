@@ -1,0 +1,9 @@
+source 'https://rubygems.org'
+
+group :test do
+  gem 'rspec'
+  gem 'pry'
+  gem 'activesupport'
+  gem 'capybara', '>= 2.15'
+  gem 'selenium-webdriver'
+end

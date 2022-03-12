@@ -13,7 +13,24 @@
 # it.
 #
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
+
+require 'active_support/all'
+require 'pry'
+
+BROWSER_WINDOW_SIZE = [ 1200, 800 ]
+
+require 'config/browser'
+
 RSpec.configure do |config|
+
+  # config.before(:each, type: :system) do
+  #   driven_by :chrome_headless
+
+  #   Capybara.app_host = "http://#{IPSocket.getaddress(Socket.gethostname)}:3000"
+  #   Capybara.server_host = IPSocket.getaddress(Socket.gethostname)
+  #   Capybara.server_port = 3000
+  # end
+
   # rspec-expectations config goes here. You can use an alternate
   # assertion/expectation library such as wrong or the stdlib/minitest
   # assertions if you prefer.

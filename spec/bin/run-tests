@@ -1,0 +1,7 @@
+#!/bin/bash
+
+docker-compose up --build --no-start web firefox
+docker-compose restart web firefox
+# docker-compose up --build --no-start web firefox
+
+bin/rspec feature/
