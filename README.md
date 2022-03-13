@@ -29,12 +29,14 @@ Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visu
 - Setup based on examples:
   - <https://github.com/vercel/next.js/tree/79016b879f200c99cc3c3b69b2b84dee14b6615e/examples/with-docker>
   - <https://www.plymouthsoftware.com/articles/rails-on-docker-system-specs-in-containers-with-rspec-capybara-chrome-and-selenium>
+- Firefox is not headless, but is still inside a container and is not shown on the host display. To view the browser window (and interact with it for debugging), connect via VNC ([`vnc://localhost:5901`](vnc://localhost:5901)) or use the web-based VNC viewer ([`http://localhost:7901`](http://localhost:7901)).
+- run:
 
-```bash
-cd spec
-bin/build
-bin/rspec features/example_spec.rb
-```
+  ```bash
+  cd spec
+  bin/build
+  bin/rspec features/example_spec.rb
+  ```
 
 ## Development
 
