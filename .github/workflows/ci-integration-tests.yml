@@ -1,0 +1,21 @@
+# Run Specs with Docker Compose
+
+name: Integration Tests
+
+on: [push]
+
+jobs:
+  rspec:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Build services
+        run: cd spec && bin/build
+
+      - name: Run services
+        run: cd spec && docker compose up -d
+
+      - name: Run test suite
+        run: cd spec && docker compose run -T rspec bundle exec rspec --force-color features/
