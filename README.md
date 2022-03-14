@@ -25,6 +25,8 @@ Thanks to Matthew Ström for writing the article ["Making an Audio Waveform Visu
 
 ## tests
 
+_Work In Progress, only 1 "smoke" scenario implemented so far_
+
 - Written using RSpec, run with Docker.
 - Setup based on examples:
   - <https://github.com/vercel/next.js/tree/79016b879f200c99cc3c3b69b2b84dee14b6615e/examples/with-docker>
