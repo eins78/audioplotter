@@ -1,13 +1,12 @@
-const withPWA = require('next-pwa')
+const nextPwa = require('next-pwa')
 const runtimeCaching = require('next-pwa/cache')
 
+const withPWA = nextPwa({
+  dest: 'public',
+  runtimeCaching,
+})
+
 module.exports = withPWA({
-  pwa: {
-    dest: 'public',
-    runtimeCaching,
-  },
-  experimental: {
-    // needed when building a Docker image for the app
-    outputStandalone: true,
-  }
+  // needed when building a Docker image for the app
+  output: 'standalone',
 })
