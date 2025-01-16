@@ -34,5 +34,8 @@
     "semi": false,
     "singleQuote": true,
     "printWidth": 120
+  },
+  "engines": {
+    "node": "^22.0.0"
   }
 }
