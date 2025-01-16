@@ -5,6 +5,7 @@ import { Svg, Polyline, Quad } from 'react-svg-path'
 export const STYLES = [
   'zigzag',
   'saw',
+  'bars',
   // 'quad'
 ]
 export const DEFAULT_HEIGHT = 150
@@ -90,6 +91,25 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       points = [startPos].concat(points, [endPos])
     }
     graph = <Polyline points={points} {...strokeProps} />
+  }
+
+  if (style === 'bars') {
+    const lines = peaks.map((peak, index) => {
+      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const distance = (peak * targetHeight) / 2 // Divide by 2 since we want bars centered on middle
+      const yUp = middleY - distance
+      const yDown = middleY + distance
+      return <line key={index} x1={xPos} y1={yUp} x2={xPos} y2={yDown} {...strokeProps} />
+    })
+
+    if (withCaps) {
+      lines.unshift(
+        <line key="start" x1={startPos[0]} y1={startPos[1]} x2={startPos[0]} y2={startPos[1]} {...strokeProps} />
+      )
+      lines.push(<line key="end" x1={endPos[0]} y1={endPos[1]} x2={endPos[0]} y2={endPos[1]} {...strokeProps} />)
+    }
+
+    graph = <>{lines}</>
   }
 
   // if (style === 'quad') {
