@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# this script is used by the github action to run the tests
+bundle exec rspec --force-color features/
