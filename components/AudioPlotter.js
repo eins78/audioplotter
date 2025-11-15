@@ -247,7 +247,14 @@ export default function AudioPlotter() {
                         <a
                           className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
                           target="_blank"
-                          download="audioplot.svg"
+                          download={generateFilename(url, {
+                            height: imgHeight,
+                            bands: numBands,
+                            trimStart: audioTrimPoints[0],
+                            trimEnd: audioTrimPoints[1],
+                            normalize: doNormalize,
+                            addCaps: addCaps,
+                          })}
                           disabled={!svgBlobURL}
                           href={svgBlobURL}
                         >
@@ -255,7 +262,21 @@ export default function AudioPlotter() {
                         </a>{' '}
                       </>
                     )}
-                    <button className="btn btn-outline-primary" onClick={() => downloadSVGNodeInDOM('audioplot.svg')}>
+                    <button
+                      className="btn btn-outline-primary"
+                      onClick={() =>
+                        downloadSVGNodeInDOM(
+                          generateFilename(url, {
+                            height: imgHeight,
+                            bands: numBands,
+                            trimStart: audioTrimPoints[0],
+                            trimEnd: audioTrimPoints[1],
+                            normalize: doNormalize,
+                            addCaps: addCaps,
+                          })
+                        )
+                      }
+                    >
                       Download SVG
                     </button>
                   </div>
@@ -330,6 +351,31 @@ const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
     </div>
   </div>
 )
+
+function generateFilename(audioUrl, settings) {
+  // Extract base filename from URL
+  const urlPath = audioUrl.split('/').pop()
+  const basename = urlPath.split('?')[0].replace(/\.[^.]+$/, '') // remove query params and extension
+  const decodedBasename = decodeURIComponent(basename)
+
+  // Normalize: lowercase, replace spaces/special chars with dashes, alphanumerics only
+  const normalizedBasename = decodedBasename
+    .toLowerCase()
+    .replace(/\s+/g, '-') // spaces to dashes
+    .replace(/[^a-z0-9-]/g, '-') // non-alphanumeric to dashes
+    .replace(/-+/g, '-') // collapse multiple dashes
+    .replace(/^-|-$/g, '') // remove leading/trailing dashes
+
+  // Build settings string
+  const h = `h${settings.height}`
+  const b = `b${settings.bands}`
+  const ts = `ts${settings.trimStart}`
+  const te = `te${settings.trimEnd}`
+  const norm = `norm${settings.normalize ? 'yes' : 'no'}`
+  const caps = `caps${settings.addCaps ? 'yes' : 'no'}`
+
+  return `audioplot-${normalizedBasename}-${h}-${b}-${ts}-${te}-${norm}-${caps}.svg`
+}
 
 function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
   // NOTE: goes around React straight to the DOM
