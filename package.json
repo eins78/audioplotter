@@ -25,7 +25,9 @@
     "react-toggle": "^4.1.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.28.5",
     "@prettier/plugin-ruby": "^2.0.0",
+    "babel-loader": "^10.0.0",
     "prettier": "^2.5.1",
     "sass": "^1.35.2",
     "serve": "^14.0.1"
