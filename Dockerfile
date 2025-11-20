@@ -20,7 +20,7 @@ RUN npm i -g corepack && pnpm -v
 
 # Copy package files before installing
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --production=true
+RUN pnpm install --frozen-lockfile
 
 COPY . .
 # disable build telemetry, see https://nextjs.org/telemetry
