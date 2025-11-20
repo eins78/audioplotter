@@ -31,6 +31,7 @@ const DEFAULT_VIS_STYLE = 'saw'
 export default function AudioPlotter() {
   // form state
   const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
+  const [audioFile, setAudioFile] = useState(null)
   const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
   const [numBands, setNumBands] = useState(DEFAULT_BANDS)
   const [audioTrimPoints, setAudioTrimPoints] = useState(DEFAULT_TRIM_POINTS)
@@ -100,8 +101,31 @@ export default function AudioPlotter() {
             className="form-control form-control-sm"
             type="text"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            required
+            onChange={(e) => {
+              setUrl(e.target.value)
+              setAudioFile(null)
+            }}
+          />
+        </div>
+
+        <div className="mb-3 text-center small text-muted">— OR —</div>
+
+        <div className="mb-3">
+          <label htmlFor="inputFile" className="form-label small">
+            upload audiofile
+          </label>
+          <input
+            id="inputFile"
+            className="form-control form-control-sm"
+            type="file"
+            accept="audio/*"
+            onChange={(e) => {
+              const file = e.target.files[0]
+              if (file) {
+                setAudioFile(file)
+                setUrl('')
+              }
+            }}
           />
         </div>
 
@@ -116,8 +140,8 @@ export default function AudioPlotter() {
 
       <hr />
 
-      {url && runAnalysis && (
-        <AudioBuffer url={url}>
+      {(url || audioFile) && runAnalysis && (
+        <AudioBuffer url={url} file={audioFile}>
           {({ isFetching, fetchError, bufferLength, buffer }) => {
             if (isFetching) return 'loading…'
             if (fetchError) return <ErrorMessage error={fetchError} />
@@ -247,7 +271,7 @@ export default function AudioPlotter() {
                         <a
                           className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
                           target="_blank"
-                          download={generateFilename(url, {
+                          download={generateFilename(audioFile || url, {
                             height: imgHeight,
                             bands: numBands,
                             trimStart: audioTrimPoints[0],
@@ -266,7 +290,7 @@ export default function AudioPlotter() {
                       className="btn btn-outline-primary"
                       onClick={() =>
                         downloadSVGNodeInDOM(
-                          generateFilename(url, {
+                          generateFilename(audioFile || url, {
                             height: imgHeight,
                             bands: numBands,
                             trimStart: audioTrimPoints[0],
@@ -352,11 +376,19 @@ const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
   </div>
 )
 
-function generateFilename(audioUrl, settings) {
-  // Extract base filename from URL
-  const urlPath = audioUrl.split('/').pop()
-  const basename = urlPath.split('?')[0].replace(/\.[^.]+$/, '') // remove query params and extension
-  const decodedBasename = decodeURIComponent(basename)
+function generateFilename(audioSource, settings) {
+  let decodedBasename
+
+  // Handle File object
+  if (audioSource instanceof File) {
+    const basename = audioSource.name.replace(/\.[^.]+$/, '') // remove extension
+    decodedBasename = basename
+  } else {
+    // Handle URL string
+    const urlPath = audioSource.split('/').pop()
+    const basename = urlPath.split('?')[0].replace(/\.[^.]+$/, '') // remove query params and extension
+    decodedBasename = decodeURIComponent(basename)
+  }
 
   // Normalize: lowercase, replace spaces/special chars with dashes, alphanumerics only
   const normalizedBasename = decodedBasename
