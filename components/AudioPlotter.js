@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useQueryState, queryTypes } from 'next-usequerystate'
 
 import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
 import SvgFromAudioPeaks, {
@@ -19,33 +20,66 @@ const SHOW_BLOB_DOWNLOAD = false // isDev
 
 const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
   isDev && !DEV_HTTP_FETCH
-    ? // ['http://localhost:57915/The_Amen_Break.wav', [0, 0]]
-      ['http://localhost:57915/The_Amen_Break%2C_in_context.ogg.mp3', [32.78, 20.31]]
-    : [
-        'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3',
-        [32.78, 20.22],
+    ? ['http://localhost:57915/The_Amen_Break%2C_in_context.ogg.mp3', [32.78, 20.31]]
+    : // ['http://localhost:57915/The_Amen_Break.wav', [0, 0]]
+      [
+        // 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3',
+        '',
+        [0, 0],
       ]
 
 const DEFAULT_VIS_STYLE = 'saw'
 
 export default function AudioPlotter() {
-  // form state
-  const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
+  // form state - URL persisted
+  const [url, setUrl] = useQueryState('url', { defaultValue: DEFAULT_AUDIO_URL })
+  const [imgHeight, setImgHeight] = useQueryState('height', queryTypes.integer.withDefault(DEFAULT_HEIGHT))
+  const [numBands, setNumBands] = useQueryState('points', queryTypes.integer.withDefault(DEFAULT_BANDS))
+  const [trimStart, setTrimStart] = useQueryState('trimStart', queryTypes.float.withDefault(DEFAULT_TRIM_POINTS[0]))
+  const [trimEnd, setTrimEnd] = useQueryState('trimEnd', queryTypes.float.withDefault(DEFAULT_TRIM_POINTS[1]))
+  const [doNormalize, setDoNormalize] = useQueryState('normalize', queryTypes.boolean.withDefault(true))
+  const [visStyle, setVisStyle] = useQueryState(
+    'style',
+    queryTypes.stringEnum(VIS_STYLES).withDefault(DEFAULT_VIS_STYLE)
+  )
+  const [strokeWidth, setStrokeWidthRaw] = useQueryState(
+    'strokeWidth',
+    queryTypes.float.withDefault(DEFAULT_STROKE_WIDTH)
+  )
+  const [addCaps, setAddCaps] = useQueryState('caps', queryTypes.boolean.withDefault(true))
+
+  // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
-  const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
-  const [numBands, setNumBands] = useState(DEFAULT_BANDS)
-  const [audioTrimPoints, setAudioTrimPoints] = useState(DEFAULT_TRIM_POINTS)
   const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState(DEFAULT_TRIM_POINTS)
-  const [doNormalize, setDoNormalize] = useState(true)
-  const [visStyle, setVisStyle] = useState(DEFAULT_VIS_STYLE)
-  const [strokeWidth, setStrokeWidthRaw] = useState(DEFAULT_STROKE_WIDTH)
-  const [addCaps, setAddCaps] = useState(true)
 
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
   // other state
   const [svgBlobURL, setSvgBlobURL] = useState(null)
   const svgEl = useRef(null)
+
+  // Always rebuild URL from known state - removes any unknown params
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const cleanParams = new URLSearchParams()
+
+    // Build URL from current state (only known params)
+    if (url && url !== DEFAULT_AUDIO_URL) cleanParams.set('url', url)
+    if (imgHeight !== DEFAULT_HEIGHT) cleanParams.set('height', imgHeight)
+    if (numBands !== DEFAULT_BANDS) cleanParams.set('points', numBands)
+    if (trimStart !== DEFAULT_TRIM_POINTS[0]) cleanParams.set('trimStart', trimStart)
+    if (trimEnd !== DEFAULT_TRIM_POINTS[1]) cleanParams.set('trimEnd', trimEnd)
+    if (doNormalize !== true) cleanParams.set('normalize', doNormalize)
+    if (visStyle !== DEFAULT_VIS_STYLE) cleanParams.set('style', visStyle)
+    if (strokeWidth !== DEFAULT_STROKE_WIDTH) cleanParams.set('strokeWidth', strokeWidth)
+    if (addCaps !== true) cleanParams.set('caps', addCaps)
+
+    const cleanUrl = cleanParams.toString() ? `?${cleanParams.toString()}` : window.location.pathname
+    if (window.location.search !== `?${cleanParams.toString()}`) {
+      window.history.replaceState({}, '', cleanUrl)
+    }
+  }, [url, imgHeight, numBands, trimStart, trimEnd, doNormalize, visStyle, strokeWidth, addCaps])
 
   // related fields:
   // * stroke width
@@ -58,16 +92,21 @@ export default function AudioPlotter() {
   }, [numBands])
 
   // * audio trim points
+  const audioTrimPoints = [trimStart, trimEnd]
   const debounceAudioTrimPoints = useCallback(
     debounce((atp) => setAudioTrimPointsDebounced(atp), 50),
     []
   )
-  const onChangeTrimStart = (event, where = 'start') => {
+  const onChangeTrimStart = (event) => {
     const val = Try(() => parseFloat(event.target.value, 10))
-    setAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
-    debounceAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
+    setTrimStart(val)
+    debounceAudioTrimPoints([val, trimEnd])
   }
-  const onChangeTrimEnd = (event) => onChangeTrimStart(event, 'end')
+  const onChangeTrimEnd = (event) => {
+    const val = Try(() => parseFloat(event.target.value, 10))
+    setTrimEnd(val)
+    debounceAudioTrimPoints([trimStart, val])
+  }
 
   // FIXME: does not work on initial render… either find the correct way to hook it up,
   //        or make a "display SVG with download button" wrapper that should be up to date always?
@@ -190,7 +229,7 @@ export default function AudioPlotter() {
                       <div className="col">
                         <NumberSliderInput
                           id="inputNumBands"
-                          labelTxt="nr. of bands"
+                          labelTxt="points"
                           value={numBands}
                           onChange={(e) => {
                             Try(() => setNumBands(parseInt(e.target.value, 10)))
@@ -273,7 +312,7 @@ export default function AudioPlotter() {
                           target="_blank"
                           download={generateFilename(audioFile || url, {
                             height: imgHeight,
-                            bands: numBands,
+                            points: numBands,
                             trimStart: audioTrimPoints[0],
                             trimEnd: audioTrimPoints[1],
                             normalize: doNormalize,
@@ -292,7 +331,7 @@ export default function AudioPlotter() {
                         downloadSVGNodeInDOM(
                           generateFilename(audioFile || url, {
                             height: imgHeight,
-                            bands: numBands,
+                            points: numBands,
                             trimStart: audioTrimPoints[0],
                             trimEnd: audioTrimPoints[1],
                             normalize: doNormalize,
@@ -400,13 +439,13 @@ function generateFilename(audioSource, settings) {
 
   // Build settings string
   const h = `h${settings.height}`
-  const b = `b${settings.bands}`
+  const p = `p${settings.points}`
   const ts = `ts${settings.trimStart}`
   const te = `te${settings.trimEnd}`
   const norm = `norm${settings.normalize ? 'yes' : 'no'}`
   const caps = `caps${settings.addCaps ? 'yes' : 'no'}`
 
-  return `audioplot-${normalizedBasename}-${h}-${b}-${ts}-${te}-${norm}-${caps}.svg`
+  return `audioplot-${normalizedBasename}-${h}-${p}-${ts}-${te}-${norm}-${caps}.svg`
 }
 
 function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
