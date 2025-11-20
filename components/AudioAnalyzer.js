@@ -23,7 +23,7 @@ export const DEFAULT_BANDS = 1024
 //   )
 // }
 
-export function AudioBuffer({ url, children } = {}) {
+export function AudioBuffer({ url, file, children } = {}) {
   const [isFetching, setIsFetching] = useState(false)
   const [fetchError, setFetchError] = useState(undefined)
   const buffer = useRef(new ArrayBuffer())
@@ -31,23 +31,38 @@ export function AudioBuffer({ url, children } = {}) {
 
   useEffect(
     async function fetchData() {
+      if (!url && !file) return
+
       buffer.current = null
       setFetchError(null)
       setIsFetching(true)
       let buf, err
+
       try {
-        const response = await fetch(url)
-        const { ok, statusText } = response
-        if (!ok) throw new Error(statusText)
-        buf = await response.arrayBuffer()
+        if (file) {
+          // Handle File object using FileReader
+          buf = await new Promise((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = (e) => resolve(e.target.result)
+            reader.onerror = (e) => reject(new Error('Failed to read file'))
+            reader.readAsArrayBuffer(file)
+          })
+        } else if (url) {
+          // Handle URL using fetch
+          const response = await fetch(url)
+          const { ok, statusText } = response
+          if (!ok) throw new Error(statusText)
+          buf = await response.arrayBuffer()
+        }
       } catch (error) {
         err = true
         setFetchError(String(error))
       }
+
       if (!err) buffer.current = buf
       setIsFetching(false)
     },
-    [url]
+    [url, file]
   )
 
   return typeof children !== 'function'
