@@ -21,6 +21,8 @@ import SvgFromAudioPeaks, {
   DEFAULT_STROKE_WIDTH,
   MIN_STROKE_WIDTH,
   STROKE_WIDTH_STEP,
+  BLEND_MODES,
+  DEFAULT_BLEND_MODE,
   calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
 import CheckBox from './Form/CheckBox'
@@ -48,6 +50,7 @@ const URL_UPDATE_OPTIONS = { scroll: false, shallow: true }
 // Zod schema for bands array
 const bandSchema = z.object({
   color: z.string(),
+  opacity: z.number().min(0).max(1).optional(),
 })
 const bandsArraySchema = z.array(bandSchema)
 
@@ -110,16 +113,17 @@ export default function AudioPlotter() {
     if (currentBands.length !== targetCount) {
       const newBands = []
       for (let i = 0; i < targetCount; i++) {
-        // Keep existing color if available, otherwise use default
+        // Keep existing color and opacity if available, otherwise use defaults
         newBands.push({
           color: currentBands[i]?.color || DEFAULT_BAND_COLORS[i],
+          opacity: currentBands[i]?.opacity !== undefined ? currentBands[i].opacity : 1,
         })
       }
       setBands(newBands, URL_UPDATE_OPTIONS)
     }
   }, [numFrequencyBands])
 
-  // Build frequencyBands config from presets + colors
+  // Build frequencyBands config from presets + colors + opacity
   const frequencyBands =
     numFrequencyBands > 1
       ? FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => ({
@@ -127,6 +131,7 @@ export default function AudioPlotter() {
           lowHz: preset.low,
           highHz: preset.high,
           color: bands?.[i]?.color || DEFAULT_BAND_COLORS[i],
+          opacity: bands?.[i]?.opacity !== undefined ? bands[i].opacity : 1,
         }))
       : null
 
@@ -315,7 +320,7 @@ export default function AudioPlotter() {
                           {FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => (
                             <div key={i} className="card mb-2">
                               <div className="card-body py-2 px-3">
-                                <div className="row align-items-center">
+                                <div className="row align-items-center mb-2">
                                   <div className="col">
                                     <small>
                                       <strong>Band {i + 1}:</strong> {preset.name} ({preset.low}-{preset.high} Hz)
@@ -333,6 +338,31 @@ export default function AudioPlotter() {
                                       }}
                                       title="Choose color"
                                     />
+                                  </div>
+                                </div>
+                                <div className="row align-items-center">
+                                  <div className="col-3">
+                                    <small className="text-muted">opacity</small>
+                                  </div>
+                                  <div className="col">
+                                    <input
+                                      type="range"
+                                      className="form-range"
+                                      min="0"
+                                      max="1"
+                                      step="0.01"
+                                      value={bands[i]?.opacity !== undefined ? bands[i].opacity : 1}
+                                      onChange={(e) => {
+                                        const newBands = [...bands]
+                                        newBands[i] = { ...newBands[i], opacity: parseFloat(e.target.value) }
+                                        setBands(newBands, URL_UPDATE_OPTIONS)
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="col-auto">
+                                    <small className="text-muted">
+                                      {Math.round((bands[i]?.opacity !== undefined ? bands[i].opacity : 1) * 100)}%
+                                    </small>
                                   </div>
                                 </div>
                               </div>
@@ -356,6 +386,7 @@ export default function AudioPlotter() {
                   {showWaveformSettings && (
                     <div className="card card-body mt-2 font-monospace small">
                       <div className="mb-3">
+                        <label className="form-label small">style</label>
                         <select
                           className="form-select"
                           aria-label="choose visualisation style"

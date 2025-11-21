@@ -8,6 +8,10 @@ export const STYLES = [
   'bars',
   // 'quad'
 ]
+
+export const BLEND_MODES = ['normal', 'multiply', 'screen', 'darken', 'lighten', 'overlay']
+export const DEFAULT_BLEND_MODE = 'normal'
+
 export const DEFAULT_HEIGHT = 150
 export const DEFAULT_WIDTH = 1000
 export const DEFAULT_PADDING_X = 100
@@ -98,7 +102,7 @@ function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, stro
 
 export default React.forwardRef(function SvgFromAudioPeaks(
   {
-    bandPeaks, // Array of { name, lowHz, highHz, color, peaks }
+    bandPeaks, // Array of { name, lowHz, highHz, color, opacity, peaks }
     height,
     withCaps = true,
     style,
@@ -129,9 +133,10 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       {bandPeaks.map((band, index) => {
         const groupId = `band-${index + 1}-${band.name.toLowerCase()}-${band.lowHz}-${band.highHz}hz`
         const graph = renderBandGraph(band.peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, band.color)
+        const opacity = band.opacity !== undefined ? band.opacity : 1
 
         return (
-          <g key={index} id={groupId}>
+          <g key={index} id={groupId} opacity={opacity}>
             {graph}
           </g>
         )
