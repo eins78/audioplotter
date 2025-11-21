@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useQueryState, queryTypes } from 'next-usequerystate'
+import { z } from 'zod'
 
-import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
+import {
+  AudioBuffer,
+  AudioPeaks,
+  MIN_BANDS,
+  MAX_BANDS,
+  DEFAULT_BANDS,
+  MIN_FREQUENCY_BANDS,
+  MAX_FREQUENCY_BANDS,
+  DEFAULT_FREQUENCY_BANDS,
+  DEFAULT_BAND_COLORS,
+  FREQUENCY_PRESETS,
+} from './AudioAnalyzer'
 import SvgFromAudioPeaks, {
   STYLES as VIS_STYLES,
   DEFAULT_HEIGHT,
@@ -30,6 +42,32 @@ const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
 
 const DEFAULT_VIS_STYLE = 'saw'
 
+// Transition options to prevent scroll-to-top on URL updates
+const URL_UPDATE_OPTIONS = { scroll: false, shallow: true }
+
+// Zod schema for bands array
+const bandSchema = z.object({
+  color: z.string(),
+})
+const bandsArraySchema = z.array(bandSchema)
+
+// Custom parser for bands JSON
+const bandsParser = {
+  parse: (value) => {
+    try {
+      const parsed = JSON.parse(value)
+      const validated = bandsArraySchema.parse(parsed)
+      return validated
+    } catch {
+      return null
+    }
+  },
+  serialize: (value) => {
+    if (!value) return ''
+    return JSON.stringify(value)
+  },
+}
+
 export default function AudioPlotter() {
   // form state - URL persisted
   const [url, setUrl] = useQueryState('url', { defaultValue: DEFAULT_AUDIO_URL })
@@ -48,9 +86,49 @@ export default function AudioPlotter() {
   )
   const [addCaps, setAddCaps] = useQueryState('caps', queryTypes.boolean.withDefault(true))
 
+  // Multiband URL state
+  const [numFrequencyBands, setNumFrequencyBands] = useQueryState(
+    'numBands',
+    queryTypes.integer.withDefault(DEFAULT_FREQUENCY_BANDS)
+  )
+  const [bands, setBands] = useQueryState('bands', bandsParser)
+
   // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
   const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState(DEFAULT_TRIM_POINTS)
+
+  // Collapsible section state
+  const [showAudioFile, setShowAudioFile] = useState(true)
+  const [showFrequencyBands, setShowFrequencyBands] = useState(true)
+  const [showWaveformSettings, setShowWaveformSettings] = useState(false)
+
+  // Initialize/update bands array when numFrequencyBands changes
+  useEffect(() => {
+    const currentBands = bands || []
+    const targetCount = numFrequencyBands || DEFAULT_FREQUENCY_BANDS
+
+    if (currentBands.length !== targetCount) {
+      const newBands = []
+      for (let i = 0; i < targetCount; i++) {
+        // Keep existing color if available, otherwise use default
+        newBands.push({
+          color: currentBands[i]?.color || DEFAULT_BAND_COLORS[i],
+        })
+      }
+      setBands(newBands, URL_UPDATE_OPTIONS)
+    }
+  }, [numFrequencyBands])
+
+  // Build frequencyBands config from presets + colors
+  const frequencyBands =
+    numFrequencyBands > 1
+      ? FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => ({
+          name: preset.name,
+          lowHz: preset.low,
+          highHz: preset.high,
+          color: bands?.[i]?.color || DEFAULT_BAND_COLORS[i],
+        }))
+      : null
 
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
@@ -58,37 +136,52 @@ export default function AudioPlotter() {
   const [svgBlobURL, setSvgBlobURL] = useState(null)
   const svgEl = useRef(null)
 
-  // Always rebuild URL from known state - removes any unknown params
+  // Clean unknown URL params on mount only
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const cleanParams = new URLSearchParams()
+    const knownParams = new Set([
+      'url',
+      'height',
+      'points',
+      'trimStart',
+      'trimEnd',
+      'normalize',
+      'style',
+      'strokeWidth',
+      'caps',
+      'numBands',
+      'bands',
+    ])
 
-    // Build URL from current state (only known params)
-    if (url && url !== DEFAULT_AUDIO_URL) cleanParams.set('url', url)
-    if (imgHeight !== DEFAULT_HEIGHT) cleanParams.set('height', imgHeight)
-    if (numBands !== DEFAULT_BANDS) cleanParams.set('points', numBands)
-    if (trimStart !== DEFAULT_TRIM_POINTS[0]) cleanParams.set('trimStart', trimStart)
-    if (trimEnd !== DEFAULT_TRIM_POINTS[1]) cleanParams.set('trimEnd', trimEnd)
-    if (doNormalize !== true) cleanParams.set('normalize', doNormalize)
-    if (visStyle !== DEFAULT_VIS_STYLE) cleanParams.set('style', visStyle)
-    if (strokeWidth !== DEFAULT_STROKE_WIDTH) cleanParams.set('strokeWidth', strokeWidth)
-    if (addCaps !== true) cleanParams.set('caps', addCaps)
+    const urlParams = new URLSearchParams(window.location.search)
+    let hasUnknown = false
 
-    const cleanUrl = cleanParams.toString() ? `?${cleanParams.toString()}` : window.location.pathname
-    if (window.location.search !== `?${cleanParams.toString()}`) {
-      window.history.replaceState({}, '', cleanUrl)
+    for (const key of urlParams.keys()) {
+      if (!knownParams.has(key)) {
+        hasUnknown = true
+        urlParams.delete(key)
+      }
     }
-  }, [url, imgHeight, numBands, trimStart, trimEnd, doNormalize, visStyle, strokeWidth, addCaps])
+
+    if (hasUnknown) {
+      // Preserve scroll position
+      const scrollX = window.scrollX
+      const scrollY = window.scrollY
+      const cleanUrl = urlParams.toString() ? `?${urlParams.toString()}` : window.location.pathname
+      window.history.replaceState({}, '', cleanUrl)
+      window.scrollTo(scrollX, scrollY)
+    }
+  }, [])
 
   // related fields:
   // * stroke width
   const maxStrokeWidth = calcMaxStrokeWidth(numBands)
   function setStrokeWidth(num) {
-    setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth)
+    setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth, URL_UPDATE_OPTIONS)
   }
   useEffect(() => {
-    if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth)
+    if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth, URL_UPDATE_OPTIONS)
   }, [numBands])
 
   // * audio trim points
@@ -99,12 +192,12 @@ export default function AudioPlotter() {
   )
   const onChangeTrimStart = (event) => {
     const val = Try(() => parseFloat(event.target.value, 10))
-    setTrimStart(val)
+    setTrimStart(val, URL_UPDATE_OPTIONS)
     debounceAudioTrimPoints([val, trimEnd])
   }
   const onChangeTrimEnd = (event) => {
     const val = Try(() => parseFloat(event.target.value, 10))
-    setTrimEnd(val)
+    setTrimEnd(val, URL_UPDATE_OPTIONS)
     debounceAudioTrimPoints([trimStart, val])
   }
 
@@ -127,55 +220,62 @@ export default function AudioPlotter() {
 
   return (
     <div>
-      <form
-        className="font-monospace small"
-        onSubmit={() => {
-          setRunAnalysis(true)
-        }}
-      >
-        <div className="mb-3">
-          <FormField
-            labelTxt="audiofile url"
-            id="inputUrl"
-            className="form-control form-control-sm"
-            type="text"
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value)
-              setAudioFile(null)
-            }}
-          />
-        </div>
+      {/* Audio File Section - Collapsible */}
+      <div className="mb-3">
+        <button
+          className="btn btn-sm btn-outline-secondary w-100 text-start font-monospace"
+          type="button"
+          onClick={() => setShowAudioFile(!showAudioFile)}
+        >
+          {showAudioFile ? '▼' : '▶'} 📁 Audio File
+        </button>
+        {showAudioFile && (
+          <div className="card card-body mt-2 font-monospace small">
+            <div className="mb-3">
+              <FormField
+                labelTxt="audiofile url"
+                id="inputUrl"
+                className="form-control form-control-sm"
+                type="text"
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value, URL_UPDATE_OPTIONS)
+                  setAudioFile(null)
+                }}
+              />
+            </div>
 
-        <div className="mb-3 text-center small text-muted">— OR —</div>
+            <div className="mb-3 text-center small text-muted">— OR —</div>
 
-        <div className="mb-3">
-          <label htmlFor="inputFile" className="form-label small">
-            upload audiofile
-          </label>
-          <input
-            id="inputFile"
-            className="form-control form-control-sm"
-            type="file"
-            accept="audio/*"
-            onChange={(e) => {
-              const file = e.target.files[0]
-              if (file) {
-                setAudioFile(file)
-                setUrl('')
-              }
-            }}
-          />
-        </div>
+            <div className="mb-3">
+              <label htmlFor="inputFile" className="form-label small">
+                upload audiofile
+              </label>
+              <input
+                id="inputFile"
+                className="form-control form-control-sm"
+                type="file"
+                accept="audio/*"
+                onChange={(e) => {
+                  const file = e.target.files[0]
+                  if (file) {
+                    setAudioFile(file)
+                    setUrl('', URL_UPDATE_OPTIONS)
+                  }
+                }}
+              />
+            </div>
 
-        {!runAnalysis && (
-          <div style={{ textAlign: 'center' }}>
-            <button className="btn btn-outline-dark" onClick={() => setRunAnalysis(true)}>
-              Go!
-            </button>
+            {!runAnalysis && (
+              <div style={{ textAlign: 'center' }}>
+                <button className="btn btn-outline-dark" onClick={() => setRunAnalysis(true)}>
+                  Go!
+                </button>
+              </div>
+            )}
           </div>
         )}
-      </form>
+      </div>
 
       <hr />
 
@@ -187,119 +287,179 @@ export default function AudioPlotter() {
 
             return (
               <>
-                {/* TODO: file info
-                <pre className="mb-2">
-                  <small>{bufferLength} bytes</small>
-                </pre> */}
-                <form
-                  className="font-monospace small"
-                  onSubmit={() => {
-                    setRunAnalysis(true)
-                  }}
-                >
-                  <div className="mb-3">
-                    <select
-                      className="form-select"
-                      aria-label="choose visualisation style"
-                      value={visStyle}
-                      onChange={(e) => setVisStyle(e.target.value)}
-                      required
-                    >
-                      {VIS_STYLES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Frequency Bands Section - Expanded by default */}
+                <div className="mb-3">
+                  <button
+                    className="btn btn-sm btn-outline-secondary w-100 text-start font-monospace"
+                    type="button"
+                    onClick={() => setShowFrequencyBands(!showFrequencyBands)}
+                  >
+                    {showFrequencyBands ? '▼' : '▶'} 🎵 Frequency Bands
+                  </button>
+                  {showFrequencyBands && (
+                    <div className="card card-body mt-2 font-monospace small">
+                      <NumberSliderInput
+                        id="inputNumFrequencyBands"
+                        labelTxt="number of bands"
+                        value={numFrequencyBands}
+                        onChange={(e) => {
+                          Try(() => setNumFrequencyBands(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                        }}
+                        required
+                        min={MIN_FREQUENCY_BANDS}
+                        max={MAX_FREQUENCY_BANDS}
+                      />
 
-                  <div className="mb-3">
-                    <div className="row mb-2">
-                      <div className="col">
-                        <NumberSliderInput
-                          id="inputHeight"
-                          labelTxt="height"
-                          value={imgHeight}
-                          onChange={(e) => setImgHeight(e.target.value)}
+                      {numFrequencyBands > 1 && bands && (
+                        <div className="mt-3">
+                          {FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => (
+                            <div key={i} className="card mb-2">
+                              <div className="card-body py-2 px-3">
+                                <div className="row align-items-center">
+                                  <div className="col">
+                                    <small>
+                                      <strong>Band {i + 1}:</strong> {preset.name} ({preset.low}-{preset.high} Hz)
+                                    </small>
+                                  </div>
+                                  <div className="col-auto">
+                                    <input
+                                      type="color"
+                                      className="form-control form-control-color"
+                                      value={bands[i]?.color || DEFAULT_BAND_COLORS[i]}
+                                      onChange={(e) => {
+                                        const newBands = [...bands]
+                                        newBands[i] = { ...newBands[i], color: e.target.value }
+                                        setBands(newBands, URL_UPDATE_OPTIONS)
+                                      }}
+                                      title="Choose color"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Waveform Settings Section - Collapsed by default */}
+                <div className="mb-3">
+                  <button
+                    className="btn btn-sm btn-outline-secondary w-100 text-start font-monospace"
+                    type="button"
+                    onClick={() => setShowWaveformSettings(!showWaveformSettings)}
+                  >
+                    {showWaveformSettings ? '▼' : '▶'} ⚙️ Waveform Settings
+                  </button>
+                  {showWaveformSettings && (
+                    <div className="card card-body mt-2 font-monospace small">
+                      <div className="mb-3">
+                        <select
+                          className="form-select"
+                          aria-label="choose visualisation style"
+                          value={visStyle}
+                          onChange={(e) => setVisStyle(e.target.value, URL_UPDATE_OPTIONS)}
                           required
-                          min={1}
-                          max={MAX_HEIGHT}
-                        />
+                        >
+                          {VIS_STYLES.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                      <div className="col">
+
+                      <div className="mb-3">
+                        <div className="row mb-2">
+                          <div className="col">
+                            <NumberSliderInput
+                              id="inputHeight"
+                              labelTxt="height"
+                              value={imgHeight}
+                              onChange={(e) => setImgHeight(e.target.value, URL_UPDATE_OPTIONS)}
+                              required
+                              min={1}
+                              max={MAX_HEIGHT}
+                            />
+                          </div>
+                          <div className="col">
+                            <NumberSliderInput
+                              id="inputNumBands"
+                              labelTxt="points"
+                              value={numBands}
+                              onChange={(e) => {
+                                Try(() => setNumBands(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                              }}
+                              required
+                              min={MIN_BANDS}
+                              max={MAX_BANDS}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="row mb-2">
+                          <div className="col">
+                            <NumberSliderInput
+                              id="inputTrimStart"
+                              labelTxt="trim start"
+                              value={audioTrimPoints[0]}
+                              onChange={onChangeTrimStart}
+                              required
+                              min={0}
+                              max={99.99}
+                              step={0.01}
+                            />
+                          </div>
+                          <div className="col">
+                            <NumberSliderInput
+                              id="inputTrimEnd"
+                              labelTxt="trim end"
+                              value={audioTrimPoints[1]}
+                              onChange={onChangeTrimEnd}
+                              required
+                              min={0}
+                              max={99.99}
+                              step={0.01}
+                            />
+                          </div>
+                        </div>
+
                         <NumberSliderInput
-                          id="inputNumBands"
-                          labelTxt="points"
-                          value={numBands}
-                          onChange={(e) => {
-                            Try(() => setNumBands(parseInt(e.target.value, 10)))
+                          id="inputStrokeWidth"
+                          labelTxt="stroke width"
+                          value={strokeWidth}
+                          onChange={({ target: { value: num } }) => {
+                            setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth, URL_UPDATE_OPTIONS)
                           }}
                           required
-                          min={MIN_BANDS}
-                          max={MAX_BANDS}
+                          min={MIN_STROKE_WIDTH}
+                          max={maxStrokeWidth}
+                          step={STROKE_WIDTH_STEP}
+                        />
+                      </div>
+                      <div className="mb-3">
+                        <CheckBox
+                          labelTxt="normalize"
+                          id="inputDoNormalize"
+                          checked={doNormalize}
+                          onChange={(e) => {
+                            setDoNormalize(e.target.checked, URL_UPDATE_OPTIONS)
+                          }}
+                        />
+                        <CheckBox
+                          labelTxt="add Caps"
+                          id="inputAddCaps"
+                          checked={addCaps}
+                          onChange={(e) => {
+                            setAddCaps(e.target.checked, URL_UPDATE_OPTIONS)
+                          }}
                         />
                       </div>
                     </div>
-
-                    <div className="row mb-2">
-                      <div className="col">
-                        <NumberSliderInput
-                          id="inputTrimStart"
-                          labelTxt="trim start"
-                          value={audioTrimPoints[0]}
-                          onChange={onChangeTrimStart}
-                          required
-                          min={0}
-                          max={99.99}
-                          step={0.01}
-                        />
-                      </div>
-                      <div className="col">
-                        <NumberSliderInput
-                          id="inputTrimEnd"
-                          labelTxt="trim end"
-                          value={audioTrimPoints[1]}
-                          onChange={onChangeTrimEnd}
-                          required
-                          min={0}
-                          max={99.99}
-                          step={0.01}
-                        />
-                      </div>
-                    </div>
-
-                    <NumberSliderInput
-                      id="inputStrokeWidth"
-                      labelTxt="stroke width"
-                      value={strokeWidth}
-                      onChange={({ target: { value: num } }) => {
-                        setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth)
-                      }}
-                      required
-                      min={MIN_STROKE_WIDTH}
-                      max={maxStrokeWidth}
-                      step={STROKE_WIDTH_STEP}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <CheckBox
-                      labelTxt="normalize"
-                      id="inputDoNormalize"
-                      checked={doNormalize}
-                      onChange={(e) => {
-                        setDoNormalize(e.target.checked)
-                      }}
-                    />
-                    <CheckBox
-                      labelTxt="add Caps"
-                      id="inputAddCaps"
-                      checked={addCaps}
-                      onChange={(e) => {
-                        setAddCaps(e.target.checked)
-                      }}
-                    />
-                  </div>
-                </form>
+                  )}
+                </div>
 
                 <hr />
 
@@ -313,6 +473,7 @@ export default function AudioPlotter() {
                           download={generateFilename(audioFile || url, {
                             height: imgHeight,
                             points: numBands,
+                            numBands: numFrequencyBands,
                             trimStart: audioTrimPoints[0],
                             trimEnd: audioTrimPoints[1],
                             normalize: doNormalize,
@@ -332,6 +493,7 @@ export default function AudioPlotter() {
                           generateFilename(audioFile || url, {
                             height: imgHeight,
                             points: numBands,
+                            numBands: numFrequencyBands,
                             trimStart: audioTrimPoints[0],
                             trimEnd: audioTrimPoints[1],
                             normalize: doNormalize,
@@ -351,16 +513,17 @@ export default function AudioPlotter() {
                   bands={numBands}
                   normalize={doNormalize}
                   trimPoints={audioTrimPointsDebounced}
+                  frequencyBands={frequencyBands}
                 >
-                  {({ peaks, decodeError }) => {
+                  {({ bandPeaks, decodeError }) => {
                     if (decodeError) return <ErrorMessage error={decodeError} />
                     return (
                       <div className="shadow-sm p-2 mb-5 bg-body rounded border">
-                        {!!peaks && (
+                        {!!bandPeaks && (
                           <SvgFromAudioPeaks
                             ref={svgEl}
                             className="img-fluid w-100 rounded"
-                            peaks={peaks}
+                            bandPeaks={bandPeaks}
                             height={imgHeight}
                             style={visStyle}
                             strokeWidth={strokeWidth}
@@ -440,12 +603,13 @@ function generateFilename(audioSource, settings) {
   // Build settings string
   const h = `h${settings.height}`
   const p = `p${settings.points}`
+  const numBands = `${settings.numBands}band`
   const ts = `ts${settings.trimStart}`
   const te = `te${settings.trimEnd}`
   const norm = `norm${settings.normalize ? 'yes' : 'no'}`
   const caps = `caps${settings.addCaps ? 'yes' : 'no'}`
 
-  return `audioplot-${normalizedBasename}-${h}-${p}-${ts}-${te}-${norm}-${caps}.svg`
+  return `audioplot-${normalizedBasename}-${h}-${p}-${numBands}-${ts}-${te}-${norm}-${caps}.svg`
 }
 
 function downloadSVGNodeInDOM(filename = 'audioplot.svg') {

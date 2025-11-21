@@ -22,23 +22,7 @@ export function calcMaxStrokeWidth(numBands) {
   return Math.min(MAX_STROKE_WIDTH, relativeWidth)
 }
 
-export default React.forwardRef(function SvgFromAudioPeaks(
-  {
-    peaks,
-    height,
-    withCaps = true, // wrap in start- and endpoint?
-    style,
-    strokeWidth,
-    ...restProps
-  },
-  ref
-) {
-  if (!height) throw new TypeError()
-
-  const targetWidth = DEFAULT_WIDTH
-  const paddingX = DEFAULT_PADDING_X
-  const targetHeight = parseInt(height, 10)
-
+function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, color) {
   const totalWidth = peaks.length + (withCaps ? 2 : 0)
   const distanceX = targetWidth / totalWidth
   const middleY = targetHeight / 2
@@ -46,22 +30,19 @@ export default React.forwardRef(function SvgFromAudioPeaks(
   const endPos = [targetWidth, middleY]
 
   const strokeProps = {
-    stroke: '#222',
+    stroke: color,
     strokeWidth: strokeWidth,
     fill: 'white',
     strokeLinecap: 'round',
     strokeLinejoin: 'round',
   }
 
-  let points = [],
-    graph = null
-
-  if (!STYLES.includes(style)) throw new TypeError()
+  let points = []
 
   if (style === 'zigzag') {
     points = peaks.map((peak, index) => {
       const isEven = index % 2 === 0
-      const isUp = totalWidth % 2 === 0 ? isEven : !isEven // start up or down according to total width - less flicker when changing values?
+      const isUp = totalWidth % 2 === 0 ? isEven : !isEven
       const xPos = index * distanceX + (withCaps ? distanceX : 0)
       const distance = peak * targetHeight
       const yPos = isUp ? middleY + distance : middleY - distance
@@ -72,7 +53,7 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       points = [startPos].concat(points, [endPos])
     }
 
-    graph = <Polyline points={points} {...strokeProps} />
+    return <Polyline points={points} {...strokeProps} />
   }
 
   if (style === 'saw') {
@@ -90,13 +71,13 @@ export default React.forwardRef(function SvgFromAudioPeaks(
     if (withCaps) {
       points = [startPos].concat(points, [endPos])
     }
-    graph = <Polyline points={points} {...strokeProps} />
+    return <Polyline points={points} {...strokeProps} />
   }
 
   if (style === 'bars') {
     const lines = peaks.map((peak, index) => {
       const xPos = index * distanceX + (withCaps ? distanceX : 0)
-      const distance = (peak * targetHeight) / 2 // Divide by 2 since we want bars centered on middle
+      const distance = (peak * targetHeight) / 2
       const yUp = middleY - distance
       const yDown = middleY + distance
       return <line key={index} x1={xPos} y1={yUp} x2={xPos} y2={yDown} {...strokeProps} />
@@ -109,40 +90,52 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       lines.push(<line key="end" x1={endPos[0]} y1={endPos[1]} x2={endPos[0]} y2={endPos[1]} {...strokeProps} />)
     }
 
-    graph = <>{lines}</>
+    return <>{lines}</>
   }
 
-  // if (style === 'quad') {
-  //   points = peaks.reduce((result, peak, index) => {
-  //     const xPos = index * distanceX + (withCaps ? distanceX : 0)
-  //     const distance = peak * targetHeight
-  //     const yUp = middleY - distance
-  //     const yDown = middleY + distance
-  //     return result.concat([
-  //       [xPos, yUp],
-  //       [xPos, yDown],
-  //     ])
-  //   }, [])
+  return null
+}
 
-  //   if (withCaps) {
-  //     points = [startPos].concat(points, [endPos])
-  //   }
+export default React.forwardRef(function SvgFromAudioPeaks(
+  {
+    bandPeaks, // Array of { name, lowHz, highHz, color, peaks }
+    height,
+    withCaps = true,
+    style,
+    strokeWidth,
+    ...restProps
+  },
+  ref
+) {
+  if (!height) throw new TypeError()
+  if (!bandPeaks || bandPeaks.length === 0) return null
 
-  //   graph = <Quad T={points} {...strokeProps} />
-  // }
+  const targetWidth = DEFAULT_WIDTH
+  const paddingX = DEFAULT_PADDING_X
+  const targetHeight = parseInt(height, 10)
+
+  if (!STYLES.includes(style)) throw new TypeError()
 
   const finalHeight = Math.ceil(targetHeight + paddingX)
 
   return (
     <svg
-      // scale
       ref={ref}
       width={targetWidth}
       height={finalHeight}
       viewBox={[0, -Math.floor(paddingX / 2), targetWidth, finalHeight].join(' ')}
       {...restProps}
     >
-      {graph}
+      {bandPeaks.map((band, index) => {
+        const groupId = `band-${index + 1}-${band.name.toLowerCase()}-${band.lowHz}-${band.highHz}hz`
+        const graph = renderBandGraph(band.peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, band.color)
+
+        return (
+          <g key={index} id={groupId}>
+            {graph}
+          </g>
+        )
+      })}
     </svg>
   )
 })
