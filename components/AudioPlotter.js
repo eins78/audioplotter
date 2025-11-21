@@ -110,6 +110,7 @@ export default function AudioPlotter() {
   const [showAudioFile, setShowAudioFile] = useState(true)
   const [showFrequencyBands, setShowFrequencyBands] = useState(true)
   const [showWaveformSettings, setShowWaveformSettings] = useState(false)
+  const [showPreviewSettings, setShowPreviewSettings] = useState(false)
 
   // Initialize/update bands array when numFrequencyBands changes
   useEffect(() => {
@@ -234,16 +235,16 @@ export default function AudioPlotter() {
   return (
     <div>
       {/* Audio File Section - Collapsible */}
-      <div className="mb-3">
-        <button
-          className="btn btn-sm btn-outline-secondary w-100 text-start font-monospace"
-          type="button"
+      <div className="card mb-3">
+        <div
+          className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+          role="button"
           onClick={() => setShowAudioFile(!showAudioFile)}
         >
           {showAudioFile ? '▼' : '▶'} 📁 Audio File
-        </button>
+        </div>
         {showAudioFile && (
-          <div className="card card-body mt-2 font-monospace small">
+          <div className="card-body font-monospace small">
             <div className="mb-3">
               <FormField
                 labelTxt="audiofile url"
@@ -290,8 +291,6 @@ export default function AudioPlotter() {
         )}
       </div>
 
-      <hr />
-
       {(url || audioFile) && runAnalysis && (
         <AudioBuffer url={url} file={audioFile}>
           {({ isFetching, fetchError, bufferLength, buffer }) => {
@@ -301,16 +300,16 @@ export default function AudioPlotter() {
             return (
               <>
                 {/* Frequency Bands Section - Expanded by default */}
-                <div className="mb-3">
-                  <button
-                    className="btn btn-sm btn-outline-secondary w-100 text-start font-monospace"
-                    type="button"
+                <div className="card mb-3">
+                  <div
+                    className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+                    role="button"
                     onClick={() => setShowFrequencyBands(!showFrequencyBands)}
                   >
                     {showFrequencyBands ? '▼' : '▶'} 🎵 Frequency Bands
-                  </button>
+                  </div>
                   {showFrequencyBands && (
-                    <div className="card card-body mt-2 font-monospace small">
+                    <div className="card-body font-monospace small">
                       <NumberSliderInput
                         id="inputNumFrequencyBands"
                         labelTxt="number of bands"
@@ -383,16 +382,16 @@ export default function AudioPlotter() {
                 </div>
 
                 {/* Waveform Settings Section - Collapsed by default */}
-                <div className="mb-3">
-                  <button
-                    className="btn btn-sm btn-outline-secondary w-100 text-start font-monospace"
-                    type="button"
+                <div className="card mb-3">
+                  <div
+                    className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+                    role="button"
                     onClick={() => setShowWaveformSettings(!showWaveformSettings)}
                   >
                     {showWaveformSettings ? '▼' : '▶'} ⚙️ Waveform Settings
-                  </button>
+                  </div>
                   {showWaveformSettings && (
-                    <div className="card card-body mt-2 font-monospace small">
+                    <div className="card-body font-monospace small">
                       <div className="mb-3">
                         <label className="form-label small">style</label>
                         <select
@@ -482,10 +481,21 @@ export default function AudioPlotter() {
                           }}
                         />
                       </div>
+                    </div>
+                  )}
+                </div>
 
-                      <hr className="my-3" />
-                      <small className="text-muted d-block mb-2">Preview Settings</small>
-
+                {/* Preview Settings Section - Collapsed by default */}
+                <div className="card mb-3">
+                  <div
+                    className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+                    role="button"
+                    onClick={() => setShowPreviewSettings(!showPreviewSettings)}
+                  >
+                    {showPreviewSettings ? '▼' : '▶'} 🎨 Preview Settings
+                  </div>
+                  {showPreviewSettings && (
+                    <div className="card-body font-monospace small">
                       <NumberSliderInput
                         id="inputStrokeWidth"
                         labelTxt="stroke width"
