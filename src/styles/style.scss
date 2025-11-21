@@ -1,7 +1,8 @@
+@use 'sass:color';
 @import 'bootstrap/scss/functions';
 
 $indigo: #6610f2;
-$primary: shade-color($indigo, 22%);
+$primary: color.mix(black, $indigo, 22%);
 
 @import 'bootstrap/scss/bootstrap';
 

@@ -29,7 +29,7 @@ export function AudioBuffer({ url, children } = {}) {
   const buffer = useRef(new ArrayBuffer())
   const bufferLength = buffer.current ? buffer.current.byteLength : 0
 
-  useEffect(
+  useEffect(() => {
     async function fetchData() {
       buffer.current = null
       setFetchError(null)
@@ -46,9 +46,9 @@ export function AudioBuffer({ url, children } = {}) {
       }
       if (!err) buffer.current = buf
       setIsFetching(false)
-    },
-    [url]
-  )
+    }
+    fetchData()
+  }, [url])
 
   return typeof children !== 'function'
     ? null
@@ -69,8 +69,8 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
     }
   }, [])
 
-  useEffect(
-    async function calculatePeaks() {
+  useEffect(() => {
+    function calculatePeaks() {
       if (!(audioContext && bufferLength > 0)) {
         return setPeaks(null)
       }
@@ -89,9 +89,9 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
           setDecodeError(String(err))
         }
       )
-    },
-    [buffer, bands, trimPoints, normalize, audioContext]
-  )
+    }
+    calculatePeaks()
+  }, [buffer, bands, trimPoints, normalize, audioContext])
 
   const data = { peaks, decodeError }
   return typeof children !== 'function' ? null : children(data)
