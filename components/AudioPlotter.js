@@ -237,7 +237,7 @@ export default function AudioPlotter() {
       {/* Audio File Section - Collapsible */}
       <div className="card mb-3">
         <div
-          className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+          className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
           role="button"
           onClick={() => setShowAudioFile(!showAudioFile)}
         >
@@ -302,7 +302,7 @@ export default function AudioPlotter() {
                 {/* Frequency Bands Section - Expanded by default */}
                 <div className="card mb-3">
                   <div
-                    className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+                    className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
                     role="button"
                     onClick={() => setShowFrequencyBands(!showFrequencyBands)}
                   >
@@ -384,7 +384,7 @@ export default function AudioPlotter() {
                 {/* Waveform Settings Section - Collapsed by default */}
                 <div className="card mb-3">
                   <div
-                    className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+                    className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
                     role="button"
                     onClick={() => setShowWaveformSettings(!showWaveformSettings)}
                   >
@@ -488,7 +488,7 @@ export default function AudioPlotter() {
                 {/* Preview Settings Section - Collapsed by default */}
                 <div className="card mb-3">
                   <div
-                    className="card-header btn btn-sm btn-outline-secondary text-start font-monospace py-2"
+                    className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
                     role="button"
                     onClick={() => setShowPreviewSettings(!showPreviewSettings)}
                   >
