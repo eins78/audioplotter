@@ -235,11 +235,12 @@ export default function AudioPlotter() {
   return (
     <div>
       {/* Audio File Section - Collapsible */}
-      <div className="card mb-3">
+      <div className="card border-0 shadow-sm mb-3">
         <div
-          className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
+          className="card-header text-start font-monospace py-2 bg-light"
           role="button"
           onClick={() => setShowAudioFile(!showAudioFile)}
+          style={{ cursor: 'pointer' }}
         >
           {showAudioFile ? '▼' : '▶'} 📁 Audio File
         </div>
@@ -300,11 +301,12 @@ export default function AudioPlotter() {
             return (
               <>
                 {/* Frequency Bands Section - Expanded by default */}
-                <div className="card mb-3">
+                <div className="card border-0 shadow-sm mb-3">
                   <div
-                    className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
+                    className="card-header text-start font-monospace py-2 bg-light"
                     role="button"
                     onClick={() => setShowFrequencyBands(!showFrequencyBands)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {showFrequencyBands ? '▼' : '▶'} 🎵 Frequency Bands
                   </div>
@@ -382,11 +384,12 @@ export default function AudioPlotter() {
                 </div>
 
                 {/* Waveform Settings Section - Collapsed by default */}
-                <div className="card mb-3">
+                <div className="card border-0 shadow-sm mb-3">
                   <div
-                    className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
+                    className="card-header text-start font-monospace py-2 bg-light"
                     role="button"
                     onClick={() => setShowWaveformSettings(!showWaveformSettings)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {showWaveformSettings ? '▼' : '▶'} ⚙️ Waveform Settings
                   </div>
@@ -486,11 +489,12 @@ export default function AudioPlotter() {
                 </div>
 
                 {/* Preview Settings Section - Collapsed by default */}
-                <div className="card mb-3">
+                <div className="card border-0 shadow-sm mb-3">
                   <div
-                    className="card-header btn btn-sm text-start font-monospace py-2 border-0 bg-light"
+                    className="card-header text-start font-monospace py-2 bg-light"
                     role="button"
                     onClick={() => setShowPreviewSettings(!showPreviewSettings)}
+                    style={{ cursor: 'pointer' }}
                   >
                     {showPreviewSettings ? '▼' : '▶'} 🎨 Preview Settings
                   </div>
