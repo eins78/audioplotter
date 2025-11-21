@@ -6,7 +6,7 @@ services:
   rspec:
     command: '/bin/bash'
     environment:
-      APP_URL: http://web:3000
+      APP_URL: http://web:80
       SELENIUM_URL: http://selenium-firefox:4444
     depends_on:
       - web
