@@ -42,6 +42,16 @@ function MyApp({ Component, pageProps }) {
         <title>{SITE_TITLE}</title>
         {/* <meta name="description" content="Description" /> */}
         {/* <meta name="keywords" content="Keywords" /> */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', theme);
+              })();
+            `,
+          }}
+        />
         {pwaHead()}
         {faviconsHead()}
       </Head>
