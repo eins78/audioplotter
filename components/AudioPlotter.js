@@ -410,6 +410,95 @@ export default function AudioPlotter() {
                         </select>
                       </div>
 
+                      <div className="row mb-2">
+                        <div className="col">
+                          <NumberSliderInput
+                            id="inputHeight"
+                            labelTxt="height"
+                            value={imgHeight}
+                            onChange={(e) => setImgHeight(e.target.value, URL_UPDATE_OPTIONS)}
+                            required
+                            min={1}
+                            max={MAX_HEIGHT}
+                          />
+                        </div>
+                        <div className="col">
+                          <NumberSliderInput
+                            id="inputNumBands"
+                            labelTxt="points"
+                            value={numBands}
+                            onChange={(e) => {
+                              Try(() => setNumBands(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                            }}
+                            required
+                            min={MIN_BANDS}
+                            max={MAX_BANDS}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col">
+                          <NumberSliderInput
+                            id="inputTrimStart"
+                            labelTxt="trim start"
+                            value={audioTrimPoints[0]}
+                            onChange={onChangeTrimStart}
+                            required
+                            min={0}
+                            max={99.99}
+                            step={0.01}
+                          />
+                        </div>
+                        <div className="col">
+                          <NumberSliderInput
+                            id="inputTrimEnd"
+                            labelTxt="trim end"
+                            value={audioTrimPoints[1]}
+                            onChange={onChangeTrimEnd}
+                            required
+                            min={0}
+                            max={99.99}
+                            step={0.01}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <CheckBox
+                          labelTxt="normalize"
+                          id="inputDoNormalize"
+                          checked={doNormalize}
+                          onChange={(e) => {
+                            setDoNormalize(e.target.checked, URL_UPDATE_OPTIONS)
+                          }}
+                        />
+                        <CheckBox
+                          labelTxt="add Caps"
+                          id="inputAddCaps"
+                          checked={addCaps}
+                          onChange={(e) => {
+                            setAddCaps(e.target.checked, URL_UPDATE_OPTIONS)
+                          }}
+                        />
+                      </div>
+
+                      <hr className="my-3" />
+                      <small className="text-muted d-block mb-2">Preview Settings</small>
+
+                      <NumberSliderInput
+                        id="inputStrokeWidth"
+                        labelTxt="stroke width"
+                        value={strokeWidth}
+                        onChange={({ target: { value: num } }) => {
+                          setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth, URL_UPDATE_OPTIONS)
+                        }}
+                        required
+                        min={MIN_STROKE_WIDTH}
+                        max={maxStrokeWidth}
+                        step={STROKE_WIDTH_STEP}
+                      />
+
                       <div className="row mb-3">
                         <div className="col">
                           <label className="form-label small">blend mode</label>
@@ -437,93 +526,6 @@ export default function AudioPlotter() {
                             title="Choose background color"
                           />
                         </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <div className="row mb-2">
-                          <div className="col">
-                            <NumberSliderInput
-                              id="inputHeight"
-                              labelTxt="height"
-                              value={imgHeight}
-                              onChange={(e) => setImgHeight(e.target.value, URL_UPDATE_OPTIONS)}
-                              required
-                              min={1}
-                              max={MAX_HEIGHT}
-                            />
-                          </div>
-                          <div className="col">
-                            <NumberSliderInput
-                              id="inputNumBands"
-                              labelTxt="points"
-                              value={numBands}
-                              onChange={(e) => {
-                                Try(() => setNumBands(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
-                              }}
-                              required
-                              min={MIN_BANDS}
-                              max={MAX_BANDS}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="row mb-2">
-                          <div className="col">
-                            <NumberSliderInput
-                              id="inputTrimStart"
-                              labelTxt="trim start"
-                              value={audioTrimPoints[0]}
-                              onChange={onChangeTrimStart}
-                              required
-                              min={0}
-                              max={99.99}
-                              step={0.01}
-                            />
-                          </div>
-                          <div className="col">
-                            <NumberSliderInput
-                              id="inputTrimEnd"
-                              labelTxt="trim end"
-                              value={audioTrimPoints[1]}
-                              onChange={onChangeTrimEnd}
-                              required
-                              min={0}
-                              max={99.99}
-                              step={0.01}
-                            />
-                          </div>
-                        </div>
-
-                        <NumberSliderInput
-                          id="inputStrokeWidth"
-                          labelTxt="stroke width"
-                          value={strokeWidth}
-                          onChange={({ target: { value: num } }) => {
-                            setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth, URL_UPDATE_OPTIONS)
-                          }}
-                          required
-                          min={MIN_STROKE_WIDTH}
-                          max={maxStrokeWidth}
-                          step={STROKE_WIDTH_STEP}
-                        />
-                      </div>
-                      <div className="mb-3">
-                        <CheckBox
-                          labelTxt="normalize"
-                          id="inputDoNormalize"
-                          checked={doNormalize}
-                          onChange={(e) => {
-                            setDoNormalize(e.target.checked, URL_UPDATE_OPTIONS)
-                          }}
-                        />
-                        <CheckBox
-                          labelTxt="add Caps"
-                          id="inputAddCaps"
-                          checked={addCaps}
-                          onChange={(e) => {
-                            setAddCaps(e.target.checked, URL_UPDATE_OPTIONS)
-                          }}
-                        />
                       </div>
                     </div>
                   )}
