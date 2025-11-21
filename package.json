@@ -1,36 +1,39 @@
 {
   "name": "audioplotter",
   "version": "1.2.0",
+  "type": "module",
   "private": true,
   "homepage": "https://audioplotter.ars.is",
   "repository": "https://github.com/eins78/audioplotter",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "serve": "serve",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "serve": "serve dist -l 3000",
     "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",
     "audio-context": "^1.0.3",
-    "bootstrap": "^5.0.0-beta3",
+    "bootstrap": "^5.3.3",
     "lodash.debounce": "^4.0.8",
-    "next": "^12.1.0",
-    "next-pwa": "^5.4.6",
     "prop-types": "^15.8.1",
-    "react": "17.0.2",
-    "react-dom": "17.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-helmet-async": "^2.0.5",
     "react-svg-path": "^1.11.0",
-    "react-toggle": "^4.1.2"
+    "react-toggle": "^4.1.2",
+    "workbox-build": "^7.3.0",
+    "workbox-window": "^7.3.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.28.5",
-    "@prettier/plugin-ruby": "^2.0.0",
-    "babel-loader": "^10.0.0",
-    "prettier": "^2.5.1",
-    "sass": "^1.35.2",
-    "serve": "^14.0.1"
+    "@prettier/plugin-ruby": "^3.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "prettier": "^3.4.2",
+    "sass": "^1.83.2",
+    "serve": "^14.2.4",
+    "vite": "^6.0.5",
+    "vite-plugin-pwa": "^0.21.1"
   },
   "prettier": {
     "semi": false,
