@@ -11,6 +11,7 @@ export const STYLES = [
 
 export const BLEND_MODES = ['normal', 'multiply', 'screen', 'darken', 'lighten', 'overlay']
 export const DEFAULT_BLEND_MODE = 'normal'
+export const DEFAULT_BACKGROUND_COLOR = '#FFFFFF'
 
 export const DEFAULT_HEIGHT = 150
 export const DEFAULT_WIDTH = 1000
@@ -107,6 +108,8 @@ export default React.forwardRef(function SvgFromAudioPeaks(
     withCaps = true,
     style,
     strokeWidth,
+    backgroundColor = DEFAULT_BACKGROUND_COLOR,
+    blendMode = DEFAULT_BLEND_MODE,
     ...restProps
   },
   ref
@@ -130,13 +133,22 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       viewBox={[0, -Math.floor(paddingX / 2), targetWidth, finalHeight].join(' ')}
       {...restProps}
     >
+      {/* Background */}
+      <rect
+        x="0"
+        y={-Math.floor(paddingX / 2)}
+        width={targetWidth}
+        height={finalHeight}
+        fill={backgroundColor}
+      />
+      {/* Frequency bands */}
       {bandPeaks.map((band, index) => {
         const groupId = `band-${index + 1}-${band.name.toLowerCase()}-${band.lowHz}-${band.highHz}hz`
         const graph = renderBandGraph(band.peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, band.color)
         const opacity = band.opacity !== undefined ? band.opacity : 1
 
         return (
-          <g key={index} id={groupId} opacity={opacity}>
+          <g key={index} id={groupId} opacity={opacity} style={{ mixBlendMode: blendMode }}>
             {graph}
           </g>
         )

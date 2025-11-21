@@ -23,6 +23,7 @@ import SvgFromAudioPeaks, {
   STROKE_WIDTH_STEP,
   BLEND_MODES,
   DEFAULT_BLEND_MODE,
+  DEFAULT_BACKGROUND_COLOR,
   calcMaxStrokeWidth,
 } from './SvgFromAudioPeaks'
 import CheckBox from './Form/CheckBox'
@@ -95,6 +96,11 @@ export default function AudioPlotter() {
     queryTypes.integer.withDefault(DEFAULT_FREQUENCY_BANDS)
   )
   const [bands, setBands] = useQueryState('bands', bandsParser)
+  const [blendMode, setBlendMode] = useQueryState(
+    'blendMode',
+    queryTypes.stringEnum(BLEND_MODES).withDefault(DEFAULT_BLEND_MODE)
+  )
+  const [backgroundColor, setBackgroundColor] = useQueryState('bgColor', { defaultValue: DEFAULT_BACKGROUND_COLOR })
 
   // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
@@ -157,6 +163,8 @@ export default function AudioPlotter() {
       'caps',
       'numBands',
       'bands',
+      'blendMode',
+      'bgColor',
     ])
 
     const urlParams = new URLSearchParams(window.location.search)
@@ -402,6 +410,35 @@ export default function AudioPlotter() {
                         </select>
                       </div>
 
+                      <div className="row mb-3">
+                        <div className="col">
+                          <label className="form-label small">blend mode</label>
+                          <select
+                            className="form-select"
+                            aria-label="choose blend mode"
+                            value={blendMode}
+                            onChange={(e) => setBlendMode(e.target.value, URL_UPDATE_OPTIONS)}
+                            required
+                          >
+                            {BLEND_MODES.map((mode) => (
+                              <option key={mode} value={mode}>
+                                {mode}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col">
+                          <label className="form-label small">background color</label>
+                          <input
+                            type="color"
+                            className="form-control form-control-color w-100"
+                            value={backgroundColor}
+                            onChange={(e) => setBackgroundColor(e.target.value, URL_UPDATE_OPTIONS)}
+                            title="Choose background color"
+                          />
+                        </div>
+                      </div>
+
                       <div className="mb-3">
                         <div className="row mb-2">
                           <div className="col">
@@ -559,6 +596,8 @@ export default function AudioPlotter() {
                             style={visStyle}
                             strokeWidth={strokeWidth}
                             withCaps={addCaps}
+                            backgroundColor={backgroundColor}
+                            blendMode={blendMode}
                           />
                         )}
                       </div>
