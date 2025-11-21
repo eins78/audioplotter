@@ -4,18 +4,28 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Enable corepack for pnpm
+RUN npm i -g corepack && pnpm -v
+
 # first, install deps (seperate step for caching)
-COPY package.json yarn.lock ./
-RUN yarn
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
 
 # build app
 FROM node:22-alpine AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+# Enable corepack for pnpm
+RUN npm i -g corepack && pnpm -v
+
+# Copy package files before installing
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
 COPY . .
 # disable build telemetry, see https://nextjs.org/telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
-RUN npm run build
+RUN pnpm run build
 
 # Production image, copy all the files and run next
 FROM node:22-alpine AS runner

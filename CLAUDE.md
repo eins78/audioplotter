@@ -8,22 +8,22 @@
 - **PWA**: Progressive Web App with offline support
 - **Homepage**: https://audioplotter.ars.is
 - **License**: GNU GPL v3
-- **Package Manager**: yarn 1.22.22
+- **Package Manager**: pnpm (via corepack)
 
 ## Build/Development Commands
 
 ### Development
 - `nvm use` - Switch to Node.js 22 (from .nvmrc)
-- `yarn install` - Install dependencies
-- `yarn dev` - Start Next.js development server (port 3000)
-- `yarn dev &` - Start dev server in background
-- `yarn dev-audio-server &` - Start local audio file server (port 57915, required for dev)
+- `pnpm install` - Install dependencies
+- `pnpm dev` - Start Next.js development server (port 3000)
+- `pnpm dev &` - Start dev server in background
+- `pnpm dev-audio-server &` - Start local audio file server (port 57915, required for dev)
 - `open http://localhost:3000` - Open browser to dev server
 
 ### Production
-- `yarn build` - Build for production
-- `yarn start` - Start production server
-- `yarn serve` - Static file server with CORS
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm serve` - Static file server with CORS
 
 ### Docker
 - `docker build -t audioplotter .` - Build production image
@@ -36,7 +36,7 @@
 - VNC access to test browser: `localhost:5901` (VNC) or `localhost:7901` (noVNC web viewer)
 
 ### Code Formatting
-- `yarn prettier --write .` - Format all files
+- `pnpm prettier --write .` - Format all files
 
 ### VS Code Tasks
 - Available tasks: "run dev" (composite), "run next dev", "run dev audio file server"
@@ -213,13 +213,13 @@ Toggle switch component using react-toggle with custom I/O icons.
 git clone https://github.com/eins78/audioplotter
 cd audioplotter
 nvm use
-yarn install
+pnpm install
 ```
 
 ### Daily Development
 ```bash
-yarn dev &                  # Start Next.js
-yarn dev-audio-server &     # Start local audio server
+pnpm dev &                  # Start Next.js
+pnpm dev-audio-server &     # Start local audio server
 open http://localhost:3000  # Open browser
 ```
 

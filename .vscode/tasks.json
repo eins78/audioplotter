@@ -9,8 +9,8 @@
     },
     {
       "label": "run next dev",
-      "type": "npm",
-      "script": "dev",
+      "type": "shell",
+      "command": "pnpm run dev",
       "detail": "next dev",
       "problemMatcher": [],
       "isBackground": true,
@@ -31,7 +31,7 @@
     {
       "label": "run dev audio file server",
       "type": "shell",
-      "command": "npm run dev-audio-server",
+      "command": "pnpm run dev-audio-server",
       "problemMatcher": [],
       "isBackground": true,
       "group": {
