@@ -255,6 +255,7 @@ export function AudioPeaks({
                   lowHz: band.lowHz,
                   highHz: band.highHz,
                   color: band.color,
+                  opacity: band.opacity,
                   peaks,
                 })
               }
