@@ -5,6 +5,7 @@ module.exports = withPWA({
   pwa: {
     dest: 'public',
     runtimeCaching,
+    buildExcludes: [/fallback/],
   },
   experimental: {
     // needed when building a Docker image for the app
