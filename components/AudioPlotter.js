@@ -73,10 +73,12 @@ const bandsParser = {
 }
 
 export default function AudioPlotter() {
-  // form state - URL persisted
+  // form state - URL persisted with validation
   const [url, setUrl] = useQueryState('url', { defaultValue: DEFAULT_AUDIO_URL })
-  const [imgHeight, setImgHeight] = useQueryState('height', queryTypes.integer.withDefault(DEFAULT_HEIGHT))
-  const [numBands, setNumBands] = useQueryState('points', queryTypes.integer.withDefault(DEFAULT_BANDS))
+  const [imgHeightRaw, setImgHeightRaw] = useQueryState('height', queryTypes.integer.withDefault(DEFAULT_HEIGHT))
+  const imgHeight = Math.max(1, Math.min(imgHeightRaw, MAX_HEIGHT)) // Clamp to valid range
+  const [numBandsRaw, setNumBandsRaw] = useQueryState('points', queryTypes.integer.withDefault(DEFAULT_BANDS))
+  const numBands = Math.max(MIN_BANDS, Math.min(numBandsRaw, MAX_BANDS)) // Clamp to valid range
   const [trimStart, setTrimStart] = useQueryState('trimStart', queryTypes.float.withDefault(DEFAULT_TRIM_POINTS[0]))
   const [trimEnd, setTrimEnd] = useQueryState('trimEnd', queryTypes.float.withDefault(DEFAULT_TRIM_POINTS[1]))
   const [doNormalize, setDoNormalize] = useQueryState('normalize', queryTypes.boolean.withDefault(true))
@@ -418,7 +420,7 @@ export default function AudioPlotter() {
                             id="inputHeight"
                             labelTxt="height"
                             value={imgHeight}
-                            onChange={(e) => setImgHeight(e.target.value, URL_UPDATE_OPTIONS)}
+                            onChange={(e) => setImgHeightRaw(e.target.value, URL_UPDATE_OPTIONS)}
                             required
                             min={1}
                             max={MAX_HEIGHT}
@@ -430,7 +432,7 @@ export default function AudioPlotter() {
                             labelTxt="points"
                             value={numBands}
                             onChange={(e) => {
-                              Try(() => setNumBands(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                              Try(() => setNumBandsRaw(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
                             }}
                             required
                             min={MIN_BANDS}
