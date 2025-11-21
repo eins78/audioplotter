@@ -13,7 +13,7 @@ import SvgFromAudioPeaks, {
 import CheckBox from './Form/CheckBox'
 import { debounce, Try, svgDomNodeToBlob } from '../util'
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = import.meta.env.MODE === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
 const SHOW_BLOB_DOWNLOAD = false // isDev
 

@@ -1,58 +1,40 @@
-# Install dependencies only when needed
-FROM node:22-alpine AS deps
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
-WORKDIR /app
-
-# Enable corepack for pnpm
-RUN npm i -g corepack && pnpm -v
-
-# first, install deps (seperate step for caching)
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
-
-# build app
+# Build stage
 FROM node:22-alpine AS builder
 WORKDIR /app
 
 # Enable corepack for pnpm
-RUN npm i -g corepack && pnpm -v
+RUN npm i -g corepack && corepack enable && pnpm -v
 
-# Copy package files before installing
+# Copy package files and install dependencies
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
+# Copy source code and build
 COPY . .
-# disable build telemetry, see https://nextjs.org/telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
-RUN pnpm run build
+RUN pnpm build
 
-# Production image, copy all the files and run next
-FROM node:22-alpine AS runner
-WORKDIR /app
+# Production stage with nginx
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-ENV NODE_ENV production
+# Remove default nginx files
+RUN rm -rf ./*
 
-# disable runtime telemetry, see https://nextjs.org/telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+# Copy built files from builder
+COPY --from=builder /app/dist .
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Copy nginx configuration (optional - nginx serves SPA by default)
+# For SPA routing, we need to ensure all routes fall back to index.html
+RUN echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-# You only need to copy next.config.js if you are NOT using the default configuration
-# COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+EXPOSE 80
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-
-ENV PORT 3000
-
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]

@@ -1,9 +1,9 @@
-@import '~bootstrap/scss/functions';
+@import 'bootstrap/scss/functions';
 
 $indigo: #6610f2;
 $primary: shade-color($indigo, 22%);
 
-@import '~bootstrap/scss/bootstrap';
+@import 'bootstrap/scss/bootstrap';
 
 // Dark mode customization
 [data-bs-theme='dark'] {
