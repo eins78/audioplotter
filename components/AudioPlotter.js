@@ -86,17 +86,22 @@ export default function AudioPlotter() {
     'style',
     queryTypes.stringEnum(VIS_STYLES).withDefault(DEFAULT_VIS_STYLE)
   )
-  const [strokeWidth, setStrokeWidthRaw] = useQueryState(
+  const [strokeWidthRaw, setStrokeWidthRaw] = useQueryState(
     'strokeWidth',
     queryTypes.float.withDefault(DEFAULT_STROKE_WIDTH)
   )
   const [addCaps, setAddCaps] = useQueryState('caps', queryTypes.boolean.withDefault(true))
 
-  // Multiband URL state
-  const [numFrequencyBands, setNumFrequencyBands] = useQueryState(
+  // Validate strokeWidth with dynamic max based on numBands
+  const maxStrokeWidth = calcMaxStrokeWidth(numBands)
+  const strokeWidth = Math.max(MIN_STROKE_WIDTH, Math.min(strokeWidthRaw, maxStrokeWidth))
+
+  // Multiband URL state with validation
+  const [numFrequencyBandsRaw, setNumFrequencyBandsRaw] = useQueryState(
     'numBands',
     queryTypes.integer.withDefault(DEFAULT_FREQUENCY_BANDS)
   )
+  const numFrequencyBands = Math.max(MIN_FREQUENCY_BANDS, Math.min(numFrequencyBandsRaw, MAX_FREQUENCY_BANDS))
   const [bands, setBands] = useQueryState('bands', bandsParser)
   const [blendMode, setBlendMode] = useQueryState(
     'blendMode',
@@ -190,12 +195,7 @@ export default function AudioPlotter() {
     }
   }, [])
 
-  // related fields:
-  // * stroke width
-  const maxStrokeWidth = calcMaxStrokeWidth(numBands)
-  function setStrokeWidth(num) {
-    setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth, URL_UPDATE_OPTIONS)
-  }
+  // Auto-adjust strokeWidth if numBands changes and it exceeds new max
   useEffect(() => {
     if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth, URL_UPDATE_OPTIONS)
   }, [numBands])
@@ -319,7 +319,7 @@ export default function AudioPlotter() {
                         labelTxt="number of bands"
                         value={numFrequencyBands}
                         onChange={(e) => {
-                          Try(() => setNumFrequencyBands(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                          Try(() => setNumFrequencyBandsRaw(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
                         }}
                         required
                         min={MIN_FREQUENCY_BANDS}
@@ -507,7 +507,7 @@ export default function AudioPlotter() {
                         labelTxt="stroke width"
                         value={strokeWidth}
                         onChange={({ target: { value: num } }) => {
-                          setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth, URL_UPDATE_OPTIONS)
+                          setStrokeWidthRaw(Math.max(MIN_STROKE_WIDTH, Math.min(num, maxStrokeWidth)), URL_UPDATE_OPTIONS)
                         }}
                         required
                         min={MIN_STROKE_WIDTH}
