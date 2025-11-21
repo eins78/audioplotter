@@ -1,6 +1,12 @@
-import React, { Fragment as F } from 'react'
+import React from 'react'
 
-const AppLayout = ({ version, menu, children }) => {
+interface AppLayoutProps {
+  version?: string
+  menu?: React.ReactNode
+  children: React.ReactNode
+}
+
+const AppLayout = ({ version, menu, children }: AppLayoutProps) => {
   return (
     <div className="app">
       {false && (

@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    // Base configuration (Total TypeScript recommendations)
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "target": "ES2022",
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "moduleDetection": "force",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    // Module configuration (Vite bundler)
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+
+    // Strictness (production-level)
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+
+    // DOM environment
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+
+    // Path resolution (no aliases per user preference)
+    "baseUrl": ".",
+    "paths": {},
+
+    // Additional strictness
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "dev-dist"]
+}

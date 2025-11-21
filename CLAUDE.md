@@ -3,7 +3,7 @@
 ## Project Overview
 **audioplotter** creates graphics for penplotters from audio files by generating waveform visualizations as downloadable SVGs.
 
-- **Tech Stack**: Vite 6, React 19, Node.js 22, Web Audio API, Bootstrap 5
+- **Tech Stack**: Vite 6, React 19, TypeScript 5.9, Node.js 22, Web Audio API, Bootstrap 5
 - **Architecture**: Client-side SPA (no backend audio processing)
 - **PWA**: Progressive Web App with offline support (vite-plugin-pwa)
 - **Deployment**: Vercel (production), Docker (CI/testing)
@@ -22,7 +22,8 @@
 - `open http://localhost:5173` - Open browser to dev server
 
 ### Production
-- `pnpm build` - Build for production (outputs to dist/)
+- `pnpm build` - Type check and build for production (outputs to dist/)
+- `pnpm type-check` - Run TypeScript type checking only
 - `pnpm preview` - Preview production build locally
 - `pnpm serve` - Serve dist/ folder with static server
 
@@ -66,20 +67,30 @@
 - **Single quotes**
 - **120 character line width**
 
+### TypeScript
+- **Strict mode enabled**: `strict: true`, `noUncheckedIndexedAccess: true`
+- **File extensions**: `.tsx` for components, `.ts` for utilities
+- **Import extensions**: Use `.js` in imports (TypeScript resolves to `.ts/.tsx`)
+- **Type imports**: Use `import type { Type } from './module.js'` for tree-shaking
+- **No enums**: Use `as const` instead (`export const STYLES = ['zigzag', 'saw'] as const`)
+- **Prefer `unknown` over `any`**: Use type guards for runtime validation
+- **No type assertions in production**: Avoid `as` and `!` unless absolutely necessary
+
 ### Components
 - **Functional components only** with React hooks
 - **No class components**
-- **File extension**: `.jsx` (required for Vite)
+- **File extension**: `.tsx` for components, `.ts` for utilities
 
 ### Naming Conventions
-- **PascalCase**: Components (`AudioPlotter`, `SvgFromAudioPeaks`)
+- **PascalCase**: Components (`AudioPlotter`, `SvgFromAudioPeaks`), Interfaces (`AudioBufferProps`)
 - **camelCase**: Functions, variables (`filterData`, `normalizeData`)
 - **UPPER_SNAKE_CASE**: Constants (`DEFAULT_HEIGHT`, `MAX_BANDS`)
 
 ### Imports
-- **Explicit extensions**: `import Component from './Component.jsx'`
-- Group by type: React, components, utilities
-- Example order: react → react-dom → components → utilities → styles
+- **Explicit extensions**: `import Component from './Component.js'` (resolves to `.tsx`)
+- **Type imports**: `import type { Props } from './Component.js'`
+- Group by type: React, type imports, components, utilities
+- Example order: react → type imports → components → utilities → styles
 
 ### Environment Variables
 - Use `import.meta.env.MODE` instead of `process.env.NODE_ENV`
@@ -103,10 +114,11 @@
 ### Key Directories
 ```
 /src                  - Source code (Vite standard)
-  /components         - React components (.jsx files)
+  /components         - React components (.tsx files)
     /Form             - Form components
   /styles             - SCSS styles
-  /util               - Utility functions
+  /types              - TypeScript type declarations for untyped libraries
+  /util               - Utility functions (.ts files)
 /public               - Static assets (served as-is)
   /icons              - PWA icons (multiple sizes)
 /spec                 - Test files (RSpec + Capybara)
@@ -117,6 +129,7 @@
 
 ### Key Files
 - `index.html` - Vite entry point (root)
+- `tsconfig.json` - TypeScript configuration (strict mode, ES2022)
 - `vite.config.js` - Vite config (React plugin, PWA plugin)
 - `vercel.json` - Vercel deployment config
 - `.nvmrc` - Node version (22)
@@ -126,7 +139,7 @@
 
 ## Key Components
 
-### AudioAnalyzer.jsx
+### AudioAnalyzer.tsx
 Audio processing and peak calculation using Web Audio API.
 
 **Exports:**
@@ -136,7 +149,7 @@ Audio processing and peak calculation using Web Audio API.
 
 **Process:** Fetch → Decode → Filter → Normalize
 
-### AudioPlotter.jsx
+### AudioPlotter.tsx
 Main application component with UI controls.
 
 **Features:**
@@ -151,7 +164,7 @@ Main application component with UI controls.
 - Trim: [32.78, 20.22] for Amen Break
 - Style: 'saw', Normalize: true, Caps: true
 
-### SvgFromAudioPeaks.jsx
+### SvgFromAudioPeaks.tsx
 Generates SVG visualization from audio peaks.
 
 **Waveform Styles:**
@@ -166,7 +179,7 @@ Generates SVG visualization from audio peaks.
 - Stroke width: 0.1-100 (dynamic max based on bands)
 - Colors: Black stroke (#222), white fill
 
-### App.jsx
+### App.tsx
 Main app component (entry point after main.jsx).
 
 **Responsibilities:**
@@ -175,7 +188,7 @@ Main app component (entry point after main.jsx).
 - Manages version display
 - Client-side only rendering (isClient check)
 
-### main.jsx
+### main.tsx
 React 19 entry point using createRoot.
 
 **Responsibilities:**
@@ -183,10 +196,10 @@ React 19 entry point using createRoot.
 - Uses React.StrictMode
 - Imports App.jsx and styles
 
-### AppLayout.jsx
+### AppLayout.tsx
 Main layout wrapper with header and content area.
 
-### Form/CheckBox.jsx
+### Form/CheckBox.tsx
 Toggle switch component using react-toggle with custom I/O icons.
 
 ## Core Features
@@ -355,14 +368,20 @@ bin/run-tests              # Run all tests
 
 ## Utilities
 
-### Try.js
-Error handling wrapper: `Try(() => fn(), (err) => handleErr(err))`
+### Try.ts
+Type-safe error handling wrapper with generics:
+```typescript
+Try<T>(fn: () => T, onErr?: (err: unknown) => void): T | undefined
+```
 
-### svgDomNodeToBlob.js
-Converts SVG DOM node to Blob for download.
+### svgDomNodeToBlob.ts
+Converts SVG DOM node to Blob for download:
+```typescript
+svgDomNodeToBlob(domNode: SVGSVGElement): Blob
+```
 
 ### debounce
-From lodash, used for trim point inputs (50ms delay).
+From lodash, used for trim point inputs (50ms delay). Fully typed with `@types/lodash.debounce`.
 
 ## Migration Notes (2025-11-21)
 
@@ -387,3 +406,15 @@ From lodash, used for trim point inputs (50ms delay).
 - **Production**: Vercel (automatic, no config changes needed)
 - **CI/Testing**: Docker Compose (updated to nginx on port 80)
 - **No Docker for prod**: Static files only, Vercel handles everything
+
+### To TypeScript 5.9
+- **Reason**: Better type safety, self-documenting code, improved DX
+- **Strictness**: Maximum (`strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`)
+- **Breaking Changes**: None (runtime behavior unchanged)
+- **Code Changes**:
+  - All `.jsx` → `.tsx`, `.js` → `.ts`
+  - Added interfaces for props and render props
+  - Fixed React 19 async useEffect compatibility
+  - Created type declarations for untyped libraries (audio-buffer-utils, react-svg-path, react-toggle)
+  - Import extensions use `.js` (TypeScript resolves to `.ts/.tsx`)
+- **Benefits**: Web Audio API type safety, render props contracts, array bounds checking

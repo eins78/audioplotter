@@ -1,13 +1,9 @@
 import React from 'react'
 
-import { Svg, Polyline, Quad } from 'react-svg-path'
+import { Polyline } from 'react-svg-path'
 
-export const STYLES = [
-  'zigzag',
-  'saw',
-  'bars',
-  // 'quad'
-]
+export const STYLES = ['zigzag', 'saw', 'bars'] as const
+export type VisStyle = (typeof STYLES)[number]
 export const DEFAULT_HEIGHT = 150
 export const DEFAULT_WIDTH = 1000
 export const DEFAULT_PADDING_X = 100
@@ -17,27 +13,29 @@ export const MIN_STROKE_WIDTH = 0.1
 export const MAX_STROKE_WIDTH = 100
 export const STROKE_WIDTH_STEP = 0.1
 
-export function calcMaxStrokeWidth(numBands) {
+export function calcMaxStrokeWidth(numBands: number): number {
   const relativeWidth = Math.ceil((2 / numBands) * 100 * 100)
   return Math.min(MAX_STROKE_WIDTH, relativeWidth)
 }
 
-export default React.forwardRef(function SvgFromAudioPeaks(
-  {
-    peaks,
-    height,
-    withCaps = true, // wrap in start- and endpoint?
-    style,
-    strokeWidth,
-    ...restProps
-  },
+interface SvgFromAudioPeaksProps {
+  peaks: readonly number[]
+  height: number
+  withCaps?: boolean
+  style: VisStyle
+  strokeWidth: number
+  className?: string
+}
+
+export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function SvgFromAudioPeaks(
+  { peaks, height, withCaps = true, style, strokeWidth, ...restProps },
   ref
 ) {
-  if (!height) throw new TypeError()
+  if (!height) throw new TypeError('height is required')
 
   const targetWidth = DEFAULT_WIDTH
   const paddingX = DEFAULT_PADDING_X
-  const targetHeight = parseInt(height, 10)
+  const targetHeight = parseInt(height.toString(), 10)
 
   const totalWidth = peaks.length + (withCaps ? 2 : 0)
   const distanceX = targetWidth / totalWidth
@@ -49,14 +47,14 @@ export default React.forwardRef(function SvgFromAudioPeaks(
     stroke: '#222',
     strokeWidth: strokeWidth,
     fill: 'white',
-    strokeLinecap: 'round',
-    strokeLinejoin: 'round',
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
   }
 
-  let points = [],
-    graph = null
+  let points: number[][] = []
+  let graph: React.ReactNode = null
 
-  if (!STYLES.includes(style)) throw new TypeError()
+  if (!STYLES.includes(style)) throw new TypeError(`Invalid style: ${style}`)
 
   if (style === 'zigzag') {
     points = peaks.map((peak, index) => {
@@ -85,7 +83,7 @@ export default React.forwardRef(function SvgFromAudioPeaks(
         [xPos, yUp],
         [xPos, yDown],
       ])
-    }, [])
+    }, [] as number[][])
 
     if (withCaps) {
       points = [startPos].concat(points, [endPos])
@@ -99,14 +97,14 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       const distance = (peak * targetHeight) / 2 // Divide by 2 since we want bars centered on middle
       const yUp = middleY - distance
       const yDown = middleY + distance
-      return <line key={index} x1={xPos} y1={yUp} x2={xPos} y2={yDown} {...strokeProps} />
+      return <line key={index} x1={xPos} y1={yUp} x2={xPos} y2={yDown} {...(strokeProps as any)} />
     })
 
     if (withCaps) {
       lines.unshift(
-        <line key="start" x1={startPos[0]} y1={startPos[1]} x2={startPos[0]} y2={startPos[1]} {...strokeProps} />
+        <line key="start" x1={startPos[0]} y1={startPos[1]} x2={startPos[0]} y2={startPos[1]} {...(strokeProps as any)} />
       )
-      lines.push(<line key="end" x1={endPos[0]} y1={endPos[1]} x2={endPos[0]} y2={endPos[1]} {...strokeProps} />)
+      lines.push(<line key="end" x1={endPos[0]} y1={endPos[1]} x2={endPos[0]} y2={endPos[1]} {...(strokeProps as any)} />)
     }
 
     graph = <>{lines}</>

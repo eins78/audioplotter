@@ -6,7 +6,8 @@
   "repository": "https://github.com/eins78/audioplotter",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc --noEmit && vite build",
+    "type-check": "tsc --noEmit",
     "preview": "vite preview",
     "serve": "serve dist -l 3000",
     "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/"
@@ -16,7 +17,6 @@
     "audio-context": "^1.0.3",
     "bootstrap": "^5.3.3",
     "lodash.debounce": "^4.0.8",
-    "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-helmet-async": "^2.0.5",
@@ -27,10 +27,16 @@
   },
   "devDependencies": {
     "@prettier/plugin-ruby": "^3.0.0",
+    "@types/audio-context": "^1.0.3",
+    "@types/lodash": "^4.17.20",
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "prettier": "^3.4.2",
     "sass": "^1.83.2",
     "serve": "^14.2.4",
+    "typescript": "^5.9.3",
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^0.21.1"
   },

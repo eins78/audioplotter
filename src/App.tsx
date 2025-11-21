@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import packageJson from '../package.json'
-import AppLayout from './components/AppLayout.jsx'
-import AudioPlotter from './components/AudioPlotter.jsx'
+import AppLayout from './components/AppLayout.js'
+import AudioPlotter from './components/AudioPlotter.js'
 import './styles/style.scss'
 
 const isDev = import.meta.env.MODE === 'development'
 
-const { version: PKG_VERSION, repository: SOURCE_URL } = packageJson
+const { version: PKG_VERSION, repository: SOURCE_URL } = packageJson as {
+  version: string
+  repository: string
+}
 
 const version = isDev ? 'dev' : `v${PKG_VERSION}`
 

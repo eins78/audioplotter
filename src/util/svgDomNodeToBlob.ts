@@ -1,5 +1,10 @@
-// from <https://stackoverflow.com/a/44320679>
-export default function svgDomNodeToBlob(domNode) {
+/**
+ * Convert an SVG DOM node to a Blob
+ * @param domNode - SVG element to convert
+ * @returns Blob containing the serialized SVG data
+ * @see https://stackoverflow.com/a/44320679
+ */
+export default function svgDomNodeToBlob(domNode: SVGSVGElement): Blob {
   const svgDocType = document.implementation.createDocumentType(
     'svg',
     '-//W3C//DTD SVG 1.1//EN',

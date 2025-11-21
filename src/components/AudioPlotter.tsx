@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import type { ChangeEvent } from 'react'
 
-import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
+import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer.js'
 import SvgFromAudioPeaks, {
   STYLES as VIS_STYLES,
   DEFAULT_HEIGHT,
@@ -9,15 +10,18 @@ import SvgFromAudioPeaks, {
   MIN_STROKE_WIDTH,
   STROKE_WIDTH_STEP,
   calcMaxStrokeWidth,
-} from './SvgFromAudioPeaks'
-import CheckBox from './Form/CheckBox'
-import { debounce, Try, svgDomNodeToBlob } from '../util'
+} from './SvgFromAudioPeaks.js'
+import type { VisStyle } from './SvgFromAudioPeaks.js'
+import CheckBox from './Form/CheckBox.js'
+import { debounce, Try, svgDomNodeToBlob } from '../util/index.js'
 
 const isDev = import.meta.env.MODE === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
 const SHOW_BLOB_DOWNLOAD = false // isDev
 
-const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
+type TrimPoints = readonly [number, number]
+
+const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS]: [string, TrimPoints] =
   isDev && !DEV_HTTP_FETCH
     ? // ['http://localhost:57915/The_Amen_Break.wav', [0, 0]]
       ['http://localhost:57915/The_Amen_Break%2C_in_context.ogg.mp3', [32.78, 20.31]]
@@ -26,47 +30,49 @@ const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
         [32.78, 20.22],
       ]
 
-const DEFAULT_VIS_STYLE = 'saw'
+const DEFAULT_VIS_STYLE: VisStyle = 'saw'
 
 export default function AudioPlotter() {
   // form state
-  const [url, setUrl] = useState(DEFAULT_AUDIO_URL)
-  const [imgHeight, setImgHeight] = useState(DEFAULT_HEIGHT)
-  const [numBands, setNumBands] = useState(DEFAULT_BANDS)
-  const [audioTrimPoints, setAudioTrimPoints] = useState(DEFAULT_TRIM_POINTS)
-  const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState(DEFAULT_TRIM_POINTS)
-  const [doNormalize, setDoNormalize] = useState(true)
-  const [visStyle, setVisStyle] = useState(DEFAULT_VIS_STYLE)
-  const [strokeWidth, setStrokeWidthRaw] = useState(DEFAULT_STROKE_WIDTH)
-  const [addCaps, setAddCaps] = useState(true)
+  const [url, setUrl] = useState<string>(DEFAULT_AUDIO_URL)
+  const [imgHeight, setImgHeight] = useState<number>(DEFAULT_HEIGHT)
+  const [numBands, setNumBands] = useState<number>(DEFAULT_BANDS)
+  const [audioTrimPoints, setAudioTrimPoints] = useState<TrimPoints>(DEFAULT_TRIM_POINTS)
+  const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState<TrimPoints>(DEFAULT_TRIM_POINTS)
+  const [doNormalize, setDoNormalize] = useState<boolean>(true)
+  const [visStyle, setVisStyle] = useState<VisStyle>(DEFAULT_VIS_STYLE)
+  const [strokeWidth, setStrokeWidthRaw] = useState<number>(DEFAULT_STROKE_WIDTH)
+  const [addCaps, setAddCaps] = useState<boolean>(true)
 
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
-  const [runAnalysis, setRunAnalysis] = useState(false)
+  const [runAnalysis, setRunAnalysis] = useState<boolean>(false)
   // other state
-  const [svgBlobURL, setSvgBlobURL] = useState(null)
-  const svgEl = useRef(null)
+  const [svgBlobURL, setSvgBlobURL] = useState<string | undefined>(undefined)
+  const svgEl = useRef<SVGSVGElement | null>(null)
 
   // related fields:
   // * stroke width
   const maxStrokeWidth = calcMaxStrokeWidth(numBands)
-  function setStrokeWidth(num) {
+  function setStrokeWidth(num: number) {
     setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth)
   }
   useEffect(() => {
     if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth)
-  }, [numBands])
+  }, [numBands, strokeWidth, maxStrokeWidth])
 
   // * audio trim points
   const debounceAudioTrimPoints = useCallback(
-    debounce((atp) => setAudioTrimPointsDebounced(atp), 50),
+    debounce((atp: TrimPoints) => setAudioTrimPointsDebounced(atp), 50),
     []
   )
-  const onChangeTrimStart = (event, where = 'start') => {
-    const val = Try(() => parseFloat(event.target.value, 10))
-    setAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
-    debounceAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
+  const onChangeTrimStart = (event: ChangeEvent<HTMLInputElement>, where: 'start' | 'end' = 'start') => {
+    const val = Try(() => parseFloat(event.target.value)) ?? 0
+    const atp = audioTrimPoints
+    const newTrimPoints: TrimPoints = where === 'start' ? [val, atp[1] ?? 0] : [atp[0] ?? 0, val]
+    setAudioTrimPoints(newTrimPoints)
+    debounceAudioTrimPoints(newTrimPoints)
   }
-  const onChangeTrimEnd = (event) => onChangeTrimStart(event, 'end')
+  const onChangeTrimEnd = (event: ChangeEvent<HTMLInputElement>) => onChangeTrimStart(event, 'end')
 
   // FIXME: does not work on initial render… either find the correct way to hook it up,
   //        or make a "display SVG with download button" wrapper that should be up to date always?
@@ -74,7 +80,7 @@ export default function AudioPlotter() {
   useEffect(
     function makeSVGBlobURL() {
       const node = svgEl.current
-      if (!node) return setSvgBlobURL(null)
+      if (!node) return setSvgBlobURL(undefined)
       const blob = svgDomNodeToBlob(node)
       setSvgBlobURL(URL.createObjectURL(blob))
 
@@ -100,7 +106,7 @@ export default function AudioPlotter() {
             className="form-control form-control-sm"
             type="text"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setUrl(e.target.value)}
             required
           />
         </div>
@@ -118,7 +124,7 @@ export default function AudioPlotter() {
 
       {url && runAnalysis && (
         <AudioBuffer url={url}>
-          {({ isFetching, fetchError, bufferLength, buffer }) => {
+          {({ isFetching, fetchError, buffer }) => {
             if (isFetching) return 'loading…'
             if (fetchError) return <ErrorMessage error={fetchError} />
 
@@ -139,7 +145,7 @@ export default function AudioPlotter() {
                       className="form-select"
                       aria-label="choose visualisation style"
                       value={visStyle}
-                      onChange={(e) => setVisStyle(e.target.value)}
+                      onChange={(e) => setVisStyle(e.target.value as VisStyle)}
                       required
                     >
                       {VIS_STYLES.map((s) => (
@@ -157,7 +163,7 @@ export default function AudioPlotter() {
                           id="inputHeight"
                           labelTxt="height"
                           value={imgHeight}
-                          onChange={(e) => setImgHeight(e.target.value)}
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setImgHeight(parseInt(e.target.value, 10))}
                           required
                           min={1}
                           max={MAX_HEIGHT}
@@ -168,7 +174,7 @@ export default function AudioPlotter() {
                           id="inputNumBands"
                           labelTxt="nr. of bands"
                           value={numBands}
-                          onChange={(e) => {
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => {
                             Try(() => setNumBands(parseInt(e.target.value, 10)))
                           }}
                           required
@@ -209,7 +215,8 @@ export default function AudioPlotter() {
                       id="inputStrokeWidth"
                       labelTxt="stroke width"
                       value={strokeWidth}
-                      onChange={({ target: { value: num } }) => {
+                      onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                        const num = parseFloat(e.target.value)
                         setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth)
                       }}
                       required
@@ -255,8 +262,8 @@ export default function AudioPlotter() {
                             normalize: doNormalize,
                             addCaps: addCaps,
                           })}
-                          disabled={!svgBlobURL}
-                          href={svgBlobURL}
+                          aria-disabled={!svgBlobURL}
+                          href={svgBlobURL ?? undefined}
                         >
                           Download SVG (from blob!)
                         </a>{' '}
@@ -317,7 +324,12 @@ export default function AudioPlotter() {
   )
 }
 
-const ErrorMessage = ({ error, children }) => (
+interface ErrorMessageProps {
+  error: string
+  children?: React.ReactNode
+}
+
+const ErrorMessage = ({ error, children }: ErrorMessageProps) => (
   <div className="card text-center text-dark bg-warning mb-3 m-auto" style={{ maxWidth: '42em' }}>
     <div className="card-body">
       <h5 className="card-title">Something went wrong…</h5>
@@ -327,7 +339,13 @@ const ErrorMessage = ({ error, children }) => (
   </div>
 )
 
-const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
+interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  id: string
+  labelTxt: string
+  helpTxt?: string
+}
+
+const FormField = ({ id, labelTxt, helpTxt, ...inputProps }: FormFieldProps) => (
   <>
     <label htmlFor={id} className="form-label small">
       {labelTxt}
@@ -341,21 +359,35 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
   </>
 )
 
-const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
+interface NumberSliderInputProps extends Omit<FormFieldProps, 'type' | 'className'> {
+  id: string
+  labelTxt: string
+}
+
+const NumberSliderInput = ({ id, labelTxt, ...inputProps }: NumberSliderInputProps) => (
   <div id={id} className="row mb-2">
     <div className="col">
       <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
     </div>
     <div className="col">
-      <FormField id={`${id}Nr`} type="number" {...inputProps} />
+      <FormField id={`${id}Nr`} type="number" labelTxt={labelTxt} {...inputProps} />
     </div>
   </div>
 )
 
-function generateFilename(audioUrl, settings) {
+interface AudioSettings {
+  height: number
+  bands: number
+  trimStart: number
+  trimEnd: number
+  normalize: boolean
+  addCaps: boolean
+}
+
+function generateFilename(audioUrl: string, settings: AudioSettings): string {
   // Extract base filename from URL
-  const urlPath = audioUrl.split('/').pop()
-  const basename = urlPath.split('?')[0].replace(/\.[^.]+$/, '') // remove query params and extension
+  const urlPath = audioUrl.split('/').pop() ?? 'audio'
+  const basename = urlPath.split('?')[0]?.replace(/\.[^.]+$/, '') ?? 'audio' // remove query params and extension
   const decodedBasename = decodeURIComponent(basename)
 
   // Normalize: lowercase, replace spaces/special chars with dashes, alphanumerics only
