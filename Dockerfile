@@ -1,3 +1,7 @@
+# Dockerfile for CI/testing and optional local development
+# Production deployment is handled by Vercel (automatic Vite detection)
+# This image is used by docker-compose for running E2E tests with Selenium
+
 # Build stage
 FROM node:22-alpine AS builder
 WORKDIR /app
