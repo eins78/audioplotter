@@ -2,13 +2,18 @@
 
 create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
-- analyses audio: calculate "peaks" (volume per time slot for N numbers of slots)
-- visualize peaks styles:
+## Features
+
+- **Audio Analysis:** Calculate "peaks" (volume per time slot for N numbers of slots)
+- **Multiple Visualization Styles:**
   - `zigzag`: alternates drawing points above and below the horizontal centerline.
     looks like a standard waveform from far, and like a frequency graph up close.
     _Not symmetric_
   - `saw`: follows a [Sawtooth wave](https://en.wikipedia.org/wiki/Sawtooth_wave) pattern.
     _Is symmetric but has more line density per bands._
+- **Dark Mode:** Automatic theme detection based on system preferences ([docs](docs/features/dark-mode.md))
+- **PWA Support:** Works offline as a Progressive Web App
+- **SVG Export:** Download high-quality vector graphics for plotting
 
 ## Ideas
 
