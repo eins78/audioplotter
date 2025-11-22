@@ -15,6 +15,7 @@
 # vite
 /dist
 /dist-ssr
+/dev-dist
 *.local
 
 # production
