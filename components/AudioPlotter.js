@@ -108,6 +108,7 @@ export default function AudioPlotter() {
     queryTypes.stringEnum(BLEND_MODES).withDefault(DEFAULT_BLEND_MODE)
   )
   const [backgroundColor, setBackgroundColor] = useQueryState('bgColor', { defaultValue: DEFAULT_BACKGROUND_COLOR })
+  const [spreadPeaks, setSpreadPeaks] = useQueryState('spreadPeaks', queryTypes.boolean.withDefault(false))
 
   // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
@@ -173,6 +174,7 @@ export default function AudioPlotter() {
       'bands',
       'blendMode',
       'bgColor',
+      'spreadPeaks',
     ])
 
     const urlParams = new URLSearchParams(window.location.search)
@@ -325,6 +327,25 @@ export default function AudioPlotter() {
                         min={MIN_FREQUENCY_BANDS}
                         max={MAX_FREQUENCY_BANDS}
                       />
+
+                      {numFrequencyBands > 1 && (
+                        <div className="mb-3 mt-3">
+                          <label className="form-label small">spread peaks</label>
+                          <div>
+                            <CheckBox
+                              checked={spreadPeaks}
+                              onChange={(e) => setSpreadPeaks(e.target.checked, URL_UPDATE_OPTIONS)}
+                              icons={{
+                                checked: 'Spread',
+                                unchecked: 'Stack',
+                              }}
+                            />
+                          </div>
+                          <small className="text-muted d-block mt-1">
+                            Interleave band peaks horizontally instead of stacking at same positions
+                          </small>
+                        </div>
+                      )}
 
                       {numFrequencyBands > 1 && bands && (
                         <div className="mt-3">
@@ -584,6 +605,7 @@ export default function AudioPlotter() {
                             trimEnd: audioTrimPoints[1],
                             normalize: doNormalize,
                             addCaps: addCaps,
+                            spreadPeaks: spreadPeaks,
                           })
                         )
                       }
@@ -616,6 +638,7 @@ export default function AudioPlotter() {
                             withCaps={addCaps}
                             backgroundColor={backgroundColor}
                             blendMode={blendMode}
+                            spreadPeaks={spreadPeaks}
                           />
                         )}
                       </div>
@@ -696,8 +719,9 @@ function generateFilename(audioSource, settings) {
   const te = `te${settings.trimEnd}`
   const norm = `norm${settings.normalize ? 'yes' : 'no'}`
   const caps = `caps${settings.addCaps ? 'yes' : 'no'}`
+  const spread = `spread${settings.spreadPeaks ? 'yes' : 'no'}`
 
-  return `audioplot-${normalizedBasename}-${h}-${p}-${numBands}-${ts}-${te}-${norm}-${caps}.svg`
+  return `audioplot-${normalizedBasename}-${h}-${p}-${numBands}-${ts}-${te}-${norm}-${caps}-${spread}.svg`
 }
 
 function downloadSVGNodeInDOM(filename = 'audioplot.svg') {

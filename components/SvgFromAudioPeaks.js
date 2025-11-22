@@ -27,8 +27,9 @@ export function calcMaxStrokeWidth(numBands) {
   return Math.min(MAX_STROKE_WIDTH, relativeWidth)
 }
 
-function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, color) {
-  const totalWidth = peaks.length + (withCaps ? 2 : 0)
+function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, color, spreadPeaks = false, bandIndex = 0, numBands = 1) {
+  const effectivePositions = spreadPeaks ? peaks.length * numBands : peaks.length
+  const totalWidth = effectivePositions + (withCaps ? 2 : 0)
   const distanceX = targetWidth / totalWidth
   const middleY = targetHeight / 2
   const startPos = [0, middleY]
@@ -48,7 +49,8 @@ function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, stro
     points = peaks.map((peak, index) => {
       const isEven = index % 2 === 0
       const isUp = totalWidth % 2 === 0 ? isEven : !isEven
-      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const globalIndex = spreadPeaks ? (index * numBands) + bandIndex : index
+      const xPos = globalIndex * distanceX + (withCaps ? distanceX : 0)
       const distance = peak * targetHeight
       const yPos = isUp ? middleY + distance : middleY - distance
       return [xPos, yPos]
@@ -63,7 +65,8 @@ function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, stro
 
   if (style === 'saw') {
     points = peaks.reduce((result, peak, index) => {
-      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const globalIndex = spreadPeaks ? (index * numBands) + bandIndex : index
+      const xPos = globalIndex * distanceX + (withCaps ? distanceX : 0)
       const distance = peak * targetHeight
       const yUp = middleY - distance
       const yDown = middleY + distance
@@ -81,7 +84,8 @@ function renderBandGraph(peaks, style, targetHeight, targetWidth, withCaps, stro
 
   if (style === 'bars') {
     const lines = peaks.map((peak, index) => {
-      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const globalIndex = spreadPeaks ? (index * numBands) + bandIndex : index
+      const xPos = globalIndex * distanceX + (withCaps ? distanceX : 0)
       const distance = (peak * targetHeight) / 2
       const yUp = middleY - distance
       const yDown = middleY + distance
@@ -110,6 +114,7 @@ export default React.forwardRef(function SvgFromAudioPeaks(
     strokeWidth,
     backgroundColor = DEFAULT_BACKGROUND_COLOR,
     blendMode = DEFAULT_BLEND_MODE,
+    spreadPeaks = false,
     ...restProps
   },
   ref
@@ -144,7 +149,18 @@ export default React.forwardRef(function SvgFromAudioPeaks(
       {/* Frequency bands */}
       {bandPeaks.map((band, index) => {
         const groupId = `band-${index + 1}-${band.name.toLowerCase()}-${band.lowHz}-${band.highHz}hz`
-        const graph = renderBandGraph(band.peaks, style, targetHeight, targetWidth, withCaps, strokeWidth, band.color)
+        const graph = renderBandGraph(
+          band.peaks,
+          style,
+          targetHeight,
+          targetWidth,
+          withCaps,
+          strokeWidth,
+          band.color,
+          spreadPeaks,
+          index,
+          bandPeaks.length
+        )
         const opacity = band.opacity !== undefined ? band.opacity : 1
 
         return (
