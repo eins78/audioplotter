@@ -35,10 +35,9 @@ const SHOW_BLOB_DOWNLOAD = false // isDev
 
 const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
   isDev && !DEV_HTTP_FETCH
-    ? ['http://localhost:57915/The_Amen_Break%2C_in_context.ogg.mp3', [32.78, 20.31]]
-    : // ['http://localhost:57915/The_Amen_Break.wav', [0, 0]]
-      [
-        // 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3',
+    ? ['http://localhost:57915/amen-break.mp3', [32.78, 20.31]]
+    : [
+        // Default to empty URL in production to let users choose
         '',
         [0, 0],
       ]

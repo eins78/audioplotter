@@ -9,7 +9,8 @@
     "build": "next build",
     "start": "next start",
     "serve": "serve",
-    "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/"
+    "dev-audio-server": "serve --cors -l 57915 tmp/dev",
+    "postinstall": "node scripts/download-dev-sample.js"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",
