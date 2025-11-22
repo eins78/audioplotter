@@ -5,6 +5,73 @@ $primary: shade-color($indigo, 22%);
 
 @import '~bootstrap/scss/bootstrap';
 
+// Dark mode customization
+[data-bs-theme='dark'] {
+  --bs-body-bg: #1a1a1a;
+  --bs-body-color: #e0e0e0;
+  --bs-emphasis-color: #ffffff;
+  --bs-border-color: #404040;
+  --bs-light-bg-subtle: #2d2d2d;
+  --bs-dark-bg-subtle: #1a1a1a;
+
+  // Card styling for dark mode
+  .card {
+    background-color: #2d2d2d;
+    border-color: #404040;
+  }
+
+  .card-header {
+    background-color: #242424 !important;
+    border-bottom-color: #404040;
+  }
+
+  // Form controls
+  .form-control,
+  .form-select {
+    background-color: #1a1a1a;
+    border-color: #404040;
+    color: #e0e0e0;
+
+    &:focus {
+      background-color: #242424;
+      border-color: $primary;
+      color: #e0e0e0;
+    }
+  }
+
+  // Buttons
+  .btn-outline-dark {
+    border-color: #e0e0e0;
+    color: #e0e0e0;
+
+    &:hover {
+      background-color: #e0e0e0;
+      color: #1a1a1a;
+    }
+  }
+
+  .btn-outline-primary {
+    border-color: $primary;
+    color: $primary;
+
+    &:hover {
+      background-color: $primary;
+      color: #ffffff;
+    }
+  }
+
+  // Range sliders
+  .form-range {
+    &::-webkit-slider-thumb {
+      background-color: $primary;
+    }
+
+    &::-moz-range-thumb {
+      background-color: $primary;
+    }
+  }
+}
+
 .font-sans-serif {
   font-family: $font-family-sans-serif;
 }
