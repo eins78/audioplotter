@@ -2,53 +2,51 @@
 
 **Version:** 1.0
 **Date:** 2025-11-21
-**Status:** Production Ready
 
 ## Overview
 
-Automatic dark mode support that follows your system's color scheme preference. The UI seamlessly switches between light and dark themes without requiring manual toggle or configuration.
+Dark mode detection follows the system's `prefers-color-scheme` setting. The app applies the theme automatically before page render, with no manual toggle or configuration.
 
 ## Features
 
-- **Automatic Detection:** Follows system preference via `prefers-color-scheme` media query
-- **No Toggle Needed:** Respects OS-level dark/light mode settings
-- **Instant Application:** Theme applied before page render (no flash)
-- **PWA Compatible:** Works offline
-- **Bootstrap 5 Native:** Built on Bootstrap's `data-bs-theme` attribute
+- **Automatic Detection:** Detects system preference via `prefers-color-scheme` media query
+- **No Configuration:** Uses OS-level dark/light mode settings directly
+- **No Flash:** Theme applies before page render
+- **Offline Support:** Works in PWA offline mode
+- **Bootstrap 5:** Uses Bootstrap's `data-bs-theme` attribute
 
 ## How It Works
 
-When the page loads, a small inline script detects your system's color scheme preference and applies the appropriate theme. The detection happens instantly, before React hydrates, preventing any flash of incorrect theme.
+An inline script detects the system color scheme preference and applies the theme before React hydrates, preventing a theme flash.
 
-**Light Mode (System Default)**
+**Light Mode**
 - White backgrounds (#ffffff)
 - Dark text (#212529)
 - Light gray cards (#f8f9fa)
-- Standard Bootstrap colors
 
-**Dark Mode (System Dark)**
+**Dark Mode**
 - Dark backgrounds (#1a1a1a, #2d2d2d)
 - Light text (#e0e0e0, #ffffff)
 - Dark cards with subtle borders
-- Purple accent color maintained (#500cbd)
+- Purple accent (#500cbd)
 
 ## Styled Components
 
 All UI elements adapt automatically:
 
 - **Cards:** Dark background (#2d2d2d), subtle borders
-- **Form Controls:** Dark inputs with light text, purple focus border
-- **Buttons:** Inverted outline colors for dark backgrounds
-- **Range Sliders:** Purple thumbs for consistency
-- **Collapsible Sections:** Dark headers with proper contrast
+- **Form Controls:** Dark input backgrounds with light text and purple focus border
+- **Buttons:** Inverted outline colors
+- **Range Sliders:** Purple thumbs
+- **Collapsible Sections:** Dark headers with contrast
 
 ## SVG Preview
 
-The SVG preview area is **independent** of UI theme:
+The SVG preview area uses independent styling:
 
-- Background color controlled by "Preview Settings"
-- Blend modes work in both UI themes
-- Download includes your custom background, not UI theme
+- Background color controlled by Preview Settings
+- Blend modes work in both themes
+- Downloaded SVG includes the custom background, not UI theme colors
 
 ## Technical Details
 
@@ -90,43 +88,34 @@ The SVG preview area is **independent** of UI theme:
 
 ## Browser Support
 
-Works in all modern browsers with:
-- CSS custom properties
+Requires:
+- CSS custom properties support
 - `prefers-color-scheme` media query support
 - Chrome 76+, Firefox 67+, Safari 12.1+, Edge 79+
 
 ## Changing Your Theme
 
-**macOS:**
-- System Preferences → General → Appearance → Dark/Light
+**macOS:** System Preferences → General → Appearance
 
-**Windows:**
-- Settings → Personalization → Colors → Choose your color
+**Windows:** Settings → Personalization → Colors
 
-**Linux (GNOME):**
-- Settings → Appearance → Dark/Light
+**Linux (GNOME):** Settings → Appearance
 
-**iOS/iPadOS:**
-- Settings → Display & Brightness → Dark/Light
+**iOS/iPadOS:** Settings → Display & Brightness
 
-**Android:**
-- Settings → Display → Dark theme
+**Android:** Settings → Display → Dark theme
 
-The app will update automatically when you change your system preference.
+The app updates automatically when you change your system preference.
 
 ## Future Enhancements
 
-Possible additions (not currently implemented):
-- Manual override toggle (independent of system preference)
-- localStorage persistence for manual override
-- Multiple theme options (not just light/dark)
-- Smooth theme transition animations
+Possible additions:
+- Manual theme toggle override
+- localStorage persistence for overrides
+- Additional theme options
+- Smooth theme transitions
 
 ## Files Modified
 
 - `pages/_app.js` - Theme detection script
 - `styles/style.scss` - Dark mode component styles
-
----
-
-**Respects your preferences, no configuration needed** 🌙
