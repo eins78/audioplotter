@@ -20,12 +20,12 @@ interface ToggleProps extends Omit<ReactToggleProps, 'icons'> {
 }
 
 export const Toggle = ({ id, labelTxt, icons = true, className, ...inputProps }: ToggleProps) => {
-  let resolvedIcons: ReactToggleProps['icons'] = false
-  if (icons === true) {
-    resolvedIcons = { checked: <ToggleIcon t={'I'} />, unchecked: <ToggleIcon t={'O'} /> }
-  } else if (typeof icons === 'object') {
-    resolvedIcons = icons
-  }
+  const resolvedIcons: ReactToggleProps['icons'] =
+    icons === true
+      ? { checked: <ToggleIcon t={'I'} />, unchecked: <ToggleIcon t={'O'} /> }
+      : typeof icons === 'object'
+        ? icons
+        : false
 
   return (
     <div className={className}>
