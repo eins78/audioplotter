@@ -6,7 +6,7 @@ This document describes the technologies used in **audioplotter** and why we cho
 
 ## Core Technologies
 
-### [Vite 6](https://vite.dev/) (v6.4.1)
+### [Vite 6](https://vite.dev/) (v6.0.5)
 **Next-generation frontend build tool**
 
 Vite provides instant dev server startup (<1s) and blazing-fast Hot Module Replacement using native ES modules. We chose Vite over Next.js because audioplotter is a simple static SPA that doesn't need server-side rendering or API routes - Vite gives us 10x faster development and 40% smaller bundles without the framework overhead.
@@ -23,7 +23,7 @@ Vite provides instant dev server startup (<1s) and blazing-fast Hot Module Repla
 
 ---
 
-### [React 19](https://react.dev/) (v19.2.0)
+### [React 19](https://react.dev/) (v19.0.0)
 **JavaScript library for building user interfaces**
 
 React 19 (released December 2024) brings modern concurrent features, improved performance, and simplified APIs. We upgraded from React 17 to get the latest features, better hooks behavior, and automatic batching for improved performance.
@@ -162,7 +162,7 @@ Provides ready-to-use UI components, responsive grid system, and utility classes
 
 ---
 
-### [Sass](https://sass-lang.com/) (v1.94.2)
+### [Sass](https://sass-lang.com/) (v1.83.2)
 **CSS preprocessor with superpowers**
 
 Sass enables Bootstrap customization through variables, functions, and imports. We use it to override Bootstrap's default theme with our brand color.
@@ -190,7 +190,7 @@ $primary: shade-color($indigo, 22%);
 
 ---
 
-### [Prettier 3](https://prettier.io/) (v3.6.2)
+### [Prettier 3](https://prettier.io/) (v3.4.2)
 **Opinionated code formatter**
 
 Automatically formats JavaScript, CSS, and Ruby code with consistent style. We use Prettier to maintain code quality across the project.
@@ -342,11 +342,11 @@ Tests verify the app loads correctly and basic UI elements render.
 - Prettier 2.5.1
 
 **To:**
-- Vite 6.4.1
-- React 19.2.0
+- Vite 6.0.5
+- React 19.0.0
 - vite-plugin-pwa 0.21.1
 - Bootstrap 5.3.8
-- Prettier 3.6.2
+- Prettier 3.4.2
 
 **Results:**
 - 10x faster dev server
