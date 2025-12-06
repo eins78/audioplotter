@@ -10,7 +10,14 @@
     "preview": "vite preview",
     "serve": "serve dist -l 3000",
     "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:all": "pnpm test && pnpm test:browser && pnpm test:e2e"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",
@@ -27,18 +34,26 @@
     "workbox-window": "^7.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
     "@prettier/plugin-ruby": "^3.0.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
     "@total-typescript/ts-reset": "^0.6.1",
     "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/browser": "^4.0.15",
+    "@vitest/browser-playwright": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
     "prettier": "^3.4.2",
     "sass": "^1.83.2",
     "serve": "^14.2.4",
     "typescript": "^5.9.3",
     "vite": "^6.0.5",
-    "vite-plugin-pwa": "^0.21.1"
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.0.15",
+    "vitest-browser-react": "^2.0.2"
   },
   "prettier": {
     "semi": false,

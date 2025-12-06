@@ -1,6 +1,0 @@
-#!/bin/bash
-
-touch Gemfile.lock
-docker compose build rspec
-docker compose run --rm --no-deps rspec \
-  bundle
