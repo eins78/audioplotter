@@ -300,6 +300,31 @@ bin/run-tests              # Run all tests
 - **Current Branch**: `main` (development)
 - **PR Target**: `next` (main branch for pull requests)
 
+#### Committing Changes
+**For multi-line commit messages**, always use a temporary file to avoid shell quoting issues:
+
+```bash
+# Write commit message to temp file
+cat > /tmp/commit-msg.txt <<'EOF'
+fix: descriptive summary
+
+- Detailed explanation point 1
+- Detailed explanation point 2
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+EOF
+
+# Commit using the file
+git commit -F /tmp/commit-msg.txt
+```
+
+**For single-line messages**, use `-m` directly:
+```bash
+git commit -m "fix: short description"
+```
+
 ## Deployment Workflow
 
 ### Vercel (Production)
