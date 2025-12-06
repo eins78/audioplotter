@@ -9,7 +9,18 @@ export const STYLES = [
   // 'quad'
 ] as const
 
-export type StyleType = typeof STYLES[number]
+export const DEFAULT_STYLE: StyleType = 'saw'
+
+export type StyleType = (typeof STYLES)[number]
+
+export function isStyleType(value: unknown): value is StyleType {
+  return typeof value === 'string' && STYLES.includes(value as StyleType)
+}
+
+export function ensureStyleType(value: unknown): StyleType {
+  if (isStyleType(value)) return value
+  return DEFAULT_STYLE
+}
 
 export const DEFAULT_HEIGHT = 150
 export const DEFAULT_WIDTH = 1000

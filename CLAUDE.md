@@ -3,7 +3,7 @@
 ## Project Overview
 **audioplotter** creates graphics for penplotters from audio files by generating waveform visualizations as downloadable SVGs.
 
-- **Tech Stack**: Vite 6, React 19, Node.js 22, Web Audio API, Bootstrap 5
+- **Tech Stack**: Vite 6, React 19, TypeScript 5.9, Node.js 24, Web Audio API, Bootstrap 5
 - **Architecture**: Client-side SPA (no backend audio processing)
 - **PWA**: Progressive Web App with offline support (vite-plugin-pwa)
 - **Deployment**: Vercel (production), Docker (CI/testing)
@@ -14,7 +14,7 @@
 ## Build/Development Commands
 
 ### Development
-- `nvm use` - Switch to Node.js 22 (from .nvmrc)
+- `nvm use` - Switch to Node.js 24 (from .nvmrc)
 - `pnpm install` - Install dependencies
 - `pnpm dev` - Start Vite development server (port 5173)
 - `pnpm dev &` - Start dev server in background
@@ -69,7 +69,7 @@
 ### Components
 - **Functional components only** with React hooks
 - **No class components**
-- **File extension**: `.jsx` (required for Vite)
+- **File extension**: `.tsx` for components, `.ts` for utilities
 
 ### Naming Conventions
 - **PascalCase**: Components (`AudioPlotter`, `SvgFromAudioPeaks`)
@@ -77,7 +77,7 @@
 - **UPPER_SNAKE_CASE**: Constants (`DEFAULT_HEIGHT`, `MAX_BANDS`)
 
 ### Imports
-- **Explicit extensions**: `import Component from './Component.jsx'`
+- **No extensions needed**: `import Component from './Component'` (Vite resolves .tsx/.ts)
 - Group by type: React, components, utilities
 - Example order: react → react-dom → components → utilities → styles
 
@@ -86,8 +86,47 @@
 - Use `import.meta.env.VITE_*` for custom env vars
 
 ### Error Handling
-- Use custom `Try` utility from `/src/util/Try.js`
+- Use custom `Try` utility from `/src/util/Try.ts`
 - Example: `Try(() => riskyFunction(), (err) => handleError(err))`
+
+### TypeScript Patterns
+
+#### Type-Safe Enums (const arrays)
+Use const arrays instead of TypeScript enums (enforced by `erasableSyntaxOnly: true`):
+
+```typescript
+// Define the const array, default, and derive the type
+export const STYLES = ['zigzag', 'saw', 'bars'] as const
+export const DEFAULT_STYLE: StyleType = 'saw'
+export type StyleType = (typeof STYLES)[number]
+
+// Type guard for runtime validation
+export function isStyleType(value: unknown): value is StyleType {
+  return typeof value === 'string' && STYLES.includes(value as StyleType)
+}
+
+// Safe assertion function - returns default for invalid values
+export function ensureStyleType(value: unknown): StyleType {
+  if (isStyleType(value)) return value
+  return DEFAULT_STYLE  // Fallback instead of throwing
+}
+```
+
+**Usage in components:**
+```typescript
+// ❌ WRONG: Type casting bypasses runtime validation
+onChange={(e) => setValue(e.target.value as StyleType)}
+
+// ✅ CORRECT: Runtime validation with clear error on invalid input
+onChange={(e) => setValue(ensureStyleType(e.target.value))}
+```
+
+**Why this pattern:**
+- `as const` creates a readonly tuple with literal types
+- Derived type stays in sync with the array automatically
+- `ensureFoo` returns safe default instead of throwing (graceful degradation)
+- Type guards (`isFoo`) useful for conditional checks
+- No runtime overhead from TypeScript enums
 
 ### State Management
 - React hooks only: `useState`, `useEffect`, `useRef`, `useCallback`
@@ -103,10 +142,11 @@
 ### Key Directories
 ```
 /src                  - Source code (Vite standard)
-  /components         - React components (.jsx files)
+  /components         - React components (.tsx files)
     /Form             - Form components
   /styles             - SCSS styles
-  /util               - Utility functions
+  /util               - Utility functions (.ts files)
+  /types              - Custom type declarations for untyped packages
 /public               - Static assets (served as-is)
   /icons              - PWA icons (multiple sizes)
 /spec                 - Test files (RSpec + Capybara)
@@ -119,14 +159,15 @@
 - `index.html` - Vite entry point (root)
 - `vite.config.js` - Vite config (React plugin, PWA plugin)
 - `vercel.json` - Vercel deployment config
-- `.nvmrc` - Node version (22)
+- `.nvmrc` - Node version (24)
+- `tsconfig.json` - TypeScript configuration (strict mode)
 - `Dockerfile` - CI/testing build (nginx-based)
 - `package.json` - Dependencies and scripts
 - `public/manifest.json` - PWA manifest (theme: #500cbd purple)
 
 ## Key Components
 
-### AudioAnalyzer.jsx
+### AudioAnalyzer.tsx
 Audio processing and peak calculation using Web Audio API.
 
 **Exports:**
@@ -136,7 +177,7 @@ Audio processing and peak calculation using Web Audio API.
 
 **Process:** Fetch → Decode → Filter → Normalize
 
-### AudioPlotter.jsx
+### AudioPlotter.tsx
 Main application component with UI controls.
 
 **Features:**
@@ -151,7 +192,7 @@ Main application component with UI controls.
 - Trim: [32.78, 20.22] for Amen Break
 - Style: 'saw', Normalize: true, Caps: true
 
-### SvgFromAudioPeaks.jsx
+### SvgFromAudioPeaks.tsx
 Generates SVG visualization from audio peaks.
 
 **Waveform Styles:**
@@ -166,8 +207,8 @@ Generates SVG visualization from audio peaks.
 - Stroke width: 0.1-100 (dynamic max based on bands)
 - Colors: Black stroke (#222), white fill
 
-### App.jsx
-Main app component (entry point after main.jsx).
+### App.tsx
+Main app component (entry point after main.tsx).
 
 **Responsibilities:**
 - Merges old _app.js and index.js logic
@@ -175,18 +216,18 @@ Main app component (entry point after main.jsx).
 - Manages version display
 - Client-side only rendering (isClient check)
 
-### main.jsx
+### main.tsx
 React 19 entry point using createRoot.
 
 **Responsibilities:**
 - Mounts React app to DOM
 - Uses React.StrictMode
-- Imports App.jsx and styles
+- Imports App.tsx and styles
 
-### AppLayout.jsx
+### AppLayout.tsx
 Main layout wrapper with header and content area.
 
-### Form/CheckBox.jsx
+### Form/CheckBox.tsx
 Toggle switch component using react-toggle with custom I/O icons.
 
 ## Core Features
@@ -226,6 +267,8 @@ Toggle switch component using react-toggle with custom I/O icons.
 - `workbox-build`, `workbox-window` (^7.3.0) - Service worker tooling
 
 ### Development
+- `typescript` (^5.9.3) - TypeScript compiler
+- `@types/react`, `@types/react-dom` - React type definitions
 - `@vitejs/plugin-react` (^4.3.4) - Vite React plugin
 - `prettier` (^3.4.2) - Code formatter
 - `sass` (^1.83.2) - SCSS compiler
@@ -380,18 +423,25 @@ git commit -m "fix: short description"
 
 ## Utilities
 
-### Try.js
+### Try.ts
 Error handling wrapper: `Try(() => fn(), (err) => handleErr(err))`
 
-### svgDomNodeToBlob.js
+### svgDomNodeToBlob.ts
 Converts SVG DOM node to Blob for download.
 
 ### debounce
 From lodash, used for trim point inputs (50ms delay).
 
-## Migration Notes (2025-11-21)
+## Migration Notes
 
-### From Next.js 12 to Vite 6
+### TypeScript Migration (2025-12)
+- **Added**: TypeScript 5.9.3 with strict mode
+- **Files**: All `.jsx` → `.tsx`, all `.js` → `.ts`
+- **Config**: `tsconfig.json` with `erasableSyntaxOnly: true` (no enums/namespaces)
+- **Build**: `pnpm build` now runs `tsc --noEmit` before Vite build
+- **Types**: Custom declarations in `/src/types/` for untyped packages
+
+### From Next.js 12 to Vite 6 (2025-11)
 - **Reason**: Next.js was overkill for static SPA
 - **Benefits**: 10x faster dev server, 5x faster builds, 40% smaller bundles
 - **Breaking Changes**: None (all component code unchanged)

@@ -3,7 +3,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
 import SvgFromAudioPeaks, {
   STYLES as VIS_STYLES,
-  type StyleType,
+  DEFAULT_STYLE as DEFAULT_VIS_STYLE,
+  ensureStyleType,
   DEFAULT_HEIGHT,
   MAX_HEIGHT,
   DEFAULT_STROKE_WIDTH,
@@ -26,8 +27,6 @@ const [DEFAULT_AUDIO_URL, DEFAULT_TRIM_POINTS] =
         'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3',
         [32.78, 20.22],
       ]
-
-const DEFAULT_VIS_STYLE = 'saw'
 
 export default function AudioPlotter() {
   // form state
@@ -141,7 +140,7 @@ export default function AudioPlotter() {
                       className="form-select"
                       aria-label="choose visualisation style"
                       value={visStyle}
-                      onChange={(e) => setVisStyle(e.target.value as StyleType)}
+                      onChange={(e) => setVisStyle(ensureStyleType(e.target.value))}
                       required
                     >
                       {VIS_STYLES.map((s) => (
@@ -302,7 +301,7 @@ export default function AudioPlotter() {
                             className="img-fluid w-100 rounded"
                             peaks={peaks}
                             height={imgHeight}
-                            style={visStyle as StyleType}
+                            style={visStyle}
                             strokeWidth={strokeWidth}
                             withCaps={addCaps}
                           />
