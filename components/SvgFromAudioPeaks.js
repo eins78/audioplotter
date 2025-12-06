@@ -10,7 +10,7 @@ export const STYLES = [
 ]
 
 export const BLEND_MODES = ['normal', 'multiply', 'screen', 'darken', 'lighten', 'overlay']
-export const DEFAULT_BLEND_MODE = 'normal'
+export const DEFAULT_BLEND_MODE = 'multiply'
 export const DEFAULT_BACKGROUND_COLOR = '#FFFFFF'
 
 export const DEFAULT_HEIGHT = 150
