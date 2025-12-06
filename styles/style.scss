@@ -14,6 +14,16 @@ $primary: shade-color($indigo, 22%);
   --bs-light-bg-subtle: #2d2d2d;
   --bs-dark-bg-subtle: #1a1a1a;
 
+  // Lightened primary using OKLCH color space
+  // Original: oklch(41% 0.19 292) = #500cbd
+  // Dark mode: oklch(68% 0.19 292) ≈ #9d6fff
+  --bs-primary: #9d6fff;
+  --bs-primary-rgb: 157, 111, 255;
+
+  // Link colors - use lightened primary for better visibility
+  --bs-link-color: #9d6fff;
+  --bs-link-hover-color: #a57bff;
+
   // Card styling for dark mode
   .card {
     background-color: #2d2d2d;
@@ -34,7 +44,7 @@ $primary: shade-color($indigo, 22%);
 
     &:focus {
       background-color: #242424;
-      border-color: $primary;
+      border-color: var(--bs-primary);
       color: #e0e0e0;
     }
   }
@@ -51,11 +61,11 @@ $primary: shade-color($indigo, 22%);
   }
 
   .btn-outline-primary {
-    border-color: $primary;
-    color: $primary;
+    border-color: var(--bs-primary);
+    color: var(--bs-primary);
 
     &:hover {
-      background-color: $primary;
+      background-color: var(--bs-primary);
       color: #ffffff;
     }
   }
@@ -63,11 +73,11 @@ $primary: shade-color($indigo, 22%);
   // Range sliders
   .form-range {
     &::-webkit-slider-thumb {
-      background-color: $primary;
+      background-color: var(--bs-primary);
     }
 
     &::-moz-range-thumb {
-      background-color: $primary;
+      background-color: var(--bs-primary);
     }
   }
 }

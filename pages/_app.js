@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import Head from 'next/head'
 
 import '../styles/style.scss'
@@ -30,6 +31,22 @@ function pwaHead() {
 }
 
 function MyApp({ Component, pageProps }) {
+  // Listen for system theme changes and update in real-time
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+
+    const handleThemeChange = (e) => {
+      const newTheme = e.matches ? 'dark' : 'light'
+      document.documentElement.setAttribute('data-bs-theme', newTheme)
+    }
+
+    // addEventListener is supported in all modern browsers
+    // Chrome 45+, Firefox 55+, Safari 14+, Edge 79+
+    mediaQuery.addEventListener('change', handleThemeChange)
+
+    return () => mediaQuery.removeEventListener('change', handleThemeChange)
+  }, [])
+
   return (
     <>
       <Head>

@@ -59,3 +59,31 @@ $toggle-color-checked-hover: tint-color($primary, 20%);
     box-shadow: 0px 0px 2px 3px $toggle-color-checked-hover;
   }
 }
+
+// Dark mode: use lightened primary color
+[data-bs-theme='dark'] {
+  .react-toggle {
+    &.react-toggle--checked {
+      .react-toggle-thumb {
+        border-color: var(--bs-primary);
+      }
+      .react-toggle-track {
+        background-color: var(--bs-primary);
+      }
+
+      &:hover:not(.react-toggle--disabled) {
+        .react-toggle-track {
+          // Slightly lighter on hover (70% lightness)
+          background-color: #a57bff;
+        }
+        .react-toggle-thumb {
+          border-color: #a57bff;
+        }
+      }
+    }
+
+    &.react-toggle--focus .react-toggle-thumb {
+      box-shadow: 0px 0px 2px 3px #a57bff;
+    }
+  }
+}
