@@ -294,7 +294,13 @@ export default function AudioPlotter() {
       {/* Start Analysis Section */}
       {(url || audioFile) && !runAnalysis && (
         <div className="text-center mb-3 mt-5">
-          <button className="btn btn-primary btn-lg" onClick={() => setRunAnalysis(true)}>
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={() => {
+              setRunAnalysis(true)
+              setShowAudioFile(false)
+            }}
+          >
             Generate Waveform
           </button>
           <div className="text-muted small mt-3" style={{ maxWidth: '500px', margin: '12px auto 0' }}>
