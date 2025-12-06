@@ -14,6 +14,7 @@ node_modules
 
 # Build artifacts (will be generated in Docker)
 dist
+dev-dist
 dist-ssr
 .next
 out

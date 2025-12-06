@@ -14,6 +14,7 @@
 
 # vite
 /dist
+/dev-dist
 /dist-ssr
 *.local
 
