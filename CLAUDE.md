@@ -10,6 +10,28 @@
 - **License**: GNU GPL v3
 - **Package Manager**: pnpm (via corepack)
 
+## Documentation Structure
+
+### docs/features/ - User-Facing Features
+- **Purpose**: Document features from end-user perspective
+- **Audience**: Users, designers, non-technical stakeholders
+- **Content**: What features do, how to use them, expected behavior
+- **Format**: Simple explanations, OS-specific instructions, no code
+- **Exclude**: Implementation details, file paths, code examples, debugging info
+
+**Examples:** dark-mode.md explains how users experience dark mode and how to change OS settings
+
+### docs/development/ - Development Documentation
+- **Purpose**: Technical documentation for developers and AI agents
+- **Audience**: Developers, technical contributors, AI agents working on codebase
+- **Content**: Implementation details, architecture, code examples, debugging procedures
+- **Format**: Code blocks, file paths, line numbers, technical reference, troubleshooting
+- **Include**: Everything developers need to understand, modify, and debug the code
+
+**Examples:** theme-and-colors.md contains CSS architecture, OKLCH color system, file structure
+
+**Rule for AI Agents:** When documenting features, create user-facing docs in `docs/features/` and technical docs in `docs/development/`. Keep them separate.
+
 ## Build/Development Commands
 
 ### Development

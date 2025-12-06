@@ -1,9 +1,81 @@
 @import '~bootstrap/scss/functions';
 
+// ============================================================================
+// SASS VARIABLES (Compile-time Bootstrap compatibility)
+// ============================================================================
+// Bootstrap's Sass functions (shade-color, tint-color) cannot process CSS
+// variables, so we define these for compilation. Our CSS custom properties
+// below will override these values at runtime.
 $indigo: #6610f2;
 $primary: shade-color($indigo, 22%);
 
 @import '~bootstrap/scss/bootstrap';
+
+// ============================================================================
+// CSS CUSTOM PROPERTIES (Runtime Color System)
+// ============================================================================
+// IMPORTANT: This :root block must come AFTER the Bootstrap import to win
+// the CSS cascade. Bootstrap defines its own :root { --bs-primary: #... }
+// which would override ours if we defined it before the import.
+//
+// Define base brand color and all derived colors using modern CSS.
+// These override Bootstrap's compiled colors at runtime.
+:root {
+  // Base brand accent color (original Bootstrap indigo)
+  // OKLCH: oklch(47% 0.23 292)
+  --brand-accent-color: #6610f2;
+
+  // Light mode primary: darken by ~6% lightness for contrast
+  // Target: #500cbd = oklch(41% 0.19 292)
+  // Uses relative color syntax to inherit chroma and hue from base
+  --bs-primary: oklch(from var(--brand-accent-color) calc(l - 0.06) c h);
+
+  // Light mode hover: slightly lighter than primary
+  // Target: oklch(43% 0.19 292)
+  --bs-primary-hover: oklch(from var(--brand-accent-color) calc(l - 0.04) c h);
+
+  // Link colors (Bootstrap 5.2 expects these)
+  --bs-link-color: var(--bs-primary);
+  --bs-link-hover-color: var(--bs-primary-hover);
+}
+
+// ============================================================================
+// LIGHT MODE COMPONENT STYLES
+// ============================================================================
+
+// Buttons - use accent color for outline buttons
+.btn-outline-dark {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary);
+
+  &:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #ffffff;
+  }
+}
+
+.btn-outline-primary {
+  border-color: var(--bs-primary);
+  color: var(--bs-primary);
+
+  &:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #ffffff;
+  }
+}
+
+// Range sliders - use accent color for thumb
+.form-range {
+  &::-webkit-slider-thumb {
+    background-color: var(--bs-primary);
+  }
+
+  &::-moz-range-thumb {
+    background-color: var(--bs-primary);
+  }
+}
 
 // Dark mode customization
 [data-bs-theme='dark'] {
@@ -14,15 +86,17 @@ $primary: shade-color($indigo, 22%);
   --bs-light-bg-subtle: #2d2d2d;
   --bs-dark-bg-subtle: #1a1a1a;
 
-  // Lightened primary using OKLCH color space
-  // Original: oklch(41% 0.19 292) = #500cbd
-  // Dark mode: oklch(68% 0.19 292) ≈ #9d6fff
-  // Hover:     oklch(70% 0.19 292) ≈ #a57bff
-  --bs-primary: #9d6fff;
-  --bs-primary-rgb: 157, 111, 255;
-  --bs-primary-hover: #a57bff;
+  // Dark mode: derive from brand color using OKLCH relative colors
+  // Fixed 68% lightness for visibility on dark backgrounds
+  // Inherits chroma and hue from --brand-accent-color
+  // Result: oklch(68% 0.23 292) ≈ #9d6fff
+  --bs-primary: oklch(from var(--brand-accent-color) 0.68 c h);
 
-  // Link colors - use lightened primary for better visibility
+  // Hover: 70% lightness for better interactivity
+  // Result: oklch(70% 0.23 292) ≈ #a57bff
+  --bs-primary-hover: oklch(from var(--brand-accent-color) 0.70 c h);
+
+  // Link colors - use derived primary for consistency
   --bs-link-color: var(--bs-primary);
   --bs-link-hover-color: var(--bs-primary-hover);
 
