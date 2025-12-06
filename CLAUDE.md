@@ -305,7 +305,7 @@ bin/run-tests              # Run all tests
 
 ```bash
 # Write commit message to temp file
-cat > /tmp/commit-msg.txt <<'EOF'
+cat > ./tmp/commit-msg.txt <<'EOF'
 fix: descriptive summary
 
 - Detailed explanation point 1
@@ -317,7 +317,7 @@ Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 EOF
 
 # Commit using the file
-git commit -F /tmp/commit-msg.txt
+git commit -F ./tmp/commit-msg.txt
 ```
 
 **For single-line messages**, use `-m` directly:
