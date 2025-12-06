@@ -6,7 +6,7 @@ This document describes the technologies used in **audioplotter** and why we cho
 
 ## Core Technologies
 
-### [Vite 6](https://vite.dev/) (v6.4.1)
+### [Vite 6](https://vite.dev/) (v6.0.5)
 **Next-generation frontend build tool**
 
 Vite provides instant dev server startup (<1s) and blazing-fast Hot Module Replacement using native ES modules. We chose Vite over Next.js because audioplotter is a simple static SPA that doesn't need server-side rendering or API routes - Vite gives us 10x faster development and 40% smaller bundles without the framework overhead.
@@ -15,7 +15,8 @@ Vite provides instant dev server startup (<1s) and blazing-fast Hot Module Repla
 - Native ESM in development (no bundling needed)
 - Instant server startup and HMR
 - Optimized production builds with Rollup
-- Built-in support for TypeScript, JSX, and CSS preprocessors
+- First-class TypeScript support (zero config)
+- Built-in support for TSX, JSX, and CSS preprocessors
 
 **Resources:**
 - [Why Vite](https://vite.dev/guide/why)
@@ -23,8 +24,8 @@ Vite provides instant dev server startup (<1s) and blazing-fast Hot Module Repla
 
 ---
 
-### [React 19](https://react.dev/) (v19.2.0)
-**JavaScript library for building user interfaces**
+### [React 19](https://react.dev/) (v19.0.0)
+**Library for building user interfaces**
 
 React 19 (released December 2024) brings modern concurrent features, improved performance, and simplified APIs. We upgraded from React 17 to get the latest features, better hooks behavior, and automatic batching for improved performance.
 
@@ -46,27 +47,73 @@ React 19 (released December 2024) brings modern concurrent features, improved pe
 
 ---
 
-### [Node.js 22](https://nodejs.org/) (LTS)
+### [Node.js 24](https://nodejs.org/) (LTS)
 **JavaScript runtime built on Chrome's V8 engine**
 
-Node.js 22 entered Long Term Support (LTS) in October 2024 with codename "Jod". Currently in Maintenance LTS, supported until April 2027.
+Node.js 24 is the current LTS version (codename "Noam"). It brings native TypeScript support and modern JavaScript features.
 
-**Why Node.js 22:**
-- LTS support through 2027
+**Why Node.js 24:**
+- Current LTS with long-term support
 - Required for Vite 6 (supports Node 18, 20, 22+)
+- Native TypeScript execution (`--experimental-strip-types`)
 - Modern JavaScript features (ES modules, top-level await)
-- V8 12.x with faster JIT compilation
+- V8 13.x with improved performance
 
 **Key Features:**
-- Built-in WebSocket client
+- Built-in TypeScript support (type stripping)
+- Native WebSocket client
 - Stable watch mode for development
 - Script runner (`node --run`)
-- Type stripping enabled by default (v22.18.0+)
-- OpenSSL 3.5.2 for security
+- Enhanced security with latest OpenSSL
 
 **Resources:**
-- [Node.js 22 Release Announcement](https://nodejs.org/en/blog/announcements/v22-release-announce)
-- [Node.js LTS Schedule](https://nodejs.org/en/about/previous-releases)
+- [Node.js Releases](https://nodejs.org/en/about/previous-releases)
+- [Node.js Documentation](https://nodejs.org/docs/latest/api/)
+
+---
+
+### [TypeScript 5.9](https://www.typescriptlang.org/) (v5.9.3)
+**Typed superset of JavaScript**
+
+TypeScript adds static type checking to JavaScript, catching errors at compile time rather than runtime. The entire codebase uses TypeScript with strict mode enabled for maximum type safety.
+
+**Why TypeScript:**
+- Catch bugs before runtime (type errors, null checks)
+- Better IDE support (autocomplete, refactoring)
+- Self-documenting code through type annotations
+- Safer refactoring with compiler verification
+
+**Configuration Highlights (tsconfig.json):**
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  }
+}
+```
+
+**Key Strictness Settings:**
+- `strict`: Enable all strict type checks
+- `noUncheckedIndexedAccess`: Array/object index access may be undefined
+- `erasableSyntaxOnly`: Prevent enums/namespaces (use modern alternatives)
+- `verbatimModuleSyntax`: Enforce explicit import/export types
+
+**Build Integration:**
+```bash
+pnpm build  # Runs: tsc --noEmit && vite build
+```
+
+Type checking happens before every production build, ensuring type safety.
+
+**Resources:**
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/)
+- [Total TypeScript tsconfig Guide](https://www.totaltypescript.com/tsconfig-cheat-sheet)
 
 ---
 
@@ -121,7 +168,7 @@ Provides automatic service worker generation, offline support, and Web App Manif
 
 ---
 
-### [Workbox 7](https://developer.chrome.com/docs/workbox/) (v7.4.0)
+### [Workbox 7](https://developer.chrome.com/docs/workbox/) (v7.3.0)
 **Production-ready service worker toolkit by Google**
 
 Workbox simplifies service worker implementation with pre-built caching strategies, precaching, and routing. vite-plugin-pwa uses Workbox's `generateSW` strategy to automatically create optimized service workers.
@@ -139,7 +186,7 @@ Workbox simplifies service worker implementation with pre-built caching strategi
 
 ## UI & Styling
 
-### [Bootstrap 5.3](https://getbootstrap.com/) (v5.3.8)
+### [Bootstrap 5.3](https://getbootstrap.com/) (v5.3.3)
 **Popular CSS framework for responsive design**
 
 Provides ready-to-use UI components, responsive grid system, and utility classes. We use Bootstrap's Sass source for deep customization with our brand color (#500cbd purple).
@@ -162,7 +209,7 @@ Provides ready-to-use UI components, responsive grid system, and utility classes
 
 ---
 
-### [Sass](https://sass-lang.com/) (v1.94.2)
+### [Sass](https://sass-lang.com/) (v1.83.2)
 **CSS preprocessor with superpowers**
 
 Sass enables Bootstrap customization through variables, functions, and imports. We use it to override Bootstrap's default theme with our brand color.
@@ -190,10 +237,10 @@ $primary: shade-color($indigo, 22%);
 
 ---
 
-### [Prettier 3](https://prettier.io/) (v3.6.2)
+### [Prettier 3](https://prettier.io/) (v3.4.2)
 **Opinionated code formatter**
 
-Automatically formats JavaScript, CSS, and Ruby code with consistent style. We use Prettier to maintain code quality across the project.
+Automatically formats TypeScript, JavaScript, CSS, and Ruby code with consistent style. We use Prettier to maintain code quality across the project.
 
 **Configuration:**
 ```json
@@ -253,7 +300,7 @@ The Web Audio API provides powerful audio processing capabilities entirely in th
 
 ## Supporting Libraries
 
-### [react-toggle](https://www.npmjs.com/package/react-toggle) (v4.1.3)
+### [react-toggle](https://www.npmjs.com/package/react-toggle) (v4.1.2)
 Elegant toggle switches used for normalize and caps controls. Customized with Bootstrap theme colors.
 
 ### [react-svg-path](https://www.npmjs.com/package/react-svg-path) (v1.11.0)
@@ -332,6 +379,29 @@ Tests verify the app loads correctly and basic UI elements render.
 
 ## Migration History
 
+### December 2025: TypeScript Migration
+
+**Added:**
+- TypeScript 5.9.3 with strict mode
+- Custom type declarations for untyped packages
+- Type-checking integrated into build process
+- tsconfig.json with modern best practices
+
+**Changes:**
+- All `.jsx` files renamed to `.tsx`
+- All `.js` files renamed to `.ts`
+- Added `@types/react`, `@types/react-dom`, `@types/lodash.debounce`
+- Build script now runs `tsc --noEmit` before Vite build
+- Node.js upgraded from 22 to 24 LTS
+
+**Results:**
+- Zero runtime type errors
+- Better IDE autocomplete and refactoring
+- Compile-time error detection
+- Self-documenting codebase
+
+---
+
 ### November 2025: Next.js → Vite Migration
 
 **From:**
@@ -342,11 +412,11 @@ Tests verify the app loads correctly and basic UI elements render.
 - Prettier 2.5.1
 
 **To:**
-- Vite 6.4.1
-- React 19.2.0
+- Vite 6.0.5
+- React 19.0.0
 - vite-plugin-pwa 0.21.1
-- Bootstrap 5.3.8
-- Prettier 3.6.2
+- Bootstrap 5.3.3
+- Prettier 3.4.2
 
 **Results:**
 - 10x faster dev server
@@ -356,21 +426,6 @@ Tests verify the app loads correctly and basic UI elements render.
 - Better PWA support
 
 **See:** `CLAUDE.md` for detailed migration notes.
-
----
-
-## Future Considerations
-
-### TypeScript Migration
-Vite has first-class TypeScript support - just rename files from `.jsx` to `.tsx` and add type annotations. Zero configuration needed.
-
-**Steps:**
-1. `pnpm add -D typescript @types/react @types/react-dom`
-2. Rename files: `.jsx` → `.tsx`
-3. Add type annotations gradually
-4. Vite handles everything automatically
-
-**Estimated Effort:** 8-16 hours for full codebase
 
 ---
 
