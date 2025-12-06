@@ -1,10 +1,16 @@
 @use 'sass:color';
-@import 'bootstrap/scss/functions';
 
+// Override Bootstrap variables before importing
 $indigo: #6610f2;
 $primary: color.mix(black, $indigo, 22%);
 
-@import 'bootstrap/scss/bootstrap';
+// Use the new @use syntax for Bootstrap
+@use 'bootstrap/scss/bootstrap' with (
+  $primary: $primary
+);
+
+// Import toggle styles (must be after @use for bootstrap to access variables)
+@use './toggle.scss';
 
 // Dark mode customization
 [data-bs-theme='dark'] {
@@ -35,7 +41,7 @@ $primary: color.mix(black, $indigo, 22%);
 
     &:focus {
       background-color: #242424;
-      border-color: $primary;
+      border-color: bootstrap.$primary;
       color: #e0e0e0;
     }
   }
@@ -52,11 +58,11 @@ $primary: color.mix(black, $indigo, 22%);
   }
 
   .btn-outline-primary {
-    border-color: $primary;
-    color: $primary;
+    border-color: bootstrap.$primary;
+    color: bootstrap.$primary;
 
     &:hover {
-      background-color: $primary;
+      background-color: bootstrap.$primary;
       color: #ffffff;
     }
   }
@@ -64,17 +70,15 @@ $primary: color.mix(black, $indigo, 22%);
   // Range sliders
   .form-range {
     &::-webkit-slider-thumb {
-      background-color: $primary;
+      background-color: bootstrap.$primary;
     }
 
     &::-moz-range-thumb {
-      background-color: $primary;
+      background-color: bootstrap.$primary;
     }
   }
 }
 
 .font-sans-serif {
-  font-family: $font-family-sans-serif;
+  font-family: bootstrap.$font-family-sans-serif;
 }
-
-@import './toggle.scss';

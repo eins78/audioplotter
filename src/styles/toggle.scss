@@ -1,9 +1,13 @@
+@use 'sass:color';
+@use 'bootstrap/scss/bootstrap' as bootstrap;
+
+// CSS imports are still used for plain CSS files
 @import 'react-toggle/style.css';
 
-$toggle-color-unchecked: $gray-600;
-$toggle-color-unchecked-hover: $gray-500;
-$toggle-color-checked: $primary;
-$toggle-color-checked-hover: tint-color($primary, 20%);
+$toggle-color-unchecked: bootstrap.$gray-600;
+$toggle-color-unchecked-hover: bootstrap.$gray-500;
+$toggle-color-checked: bootstrap.$primary;
+$toggle-color-checked-hover: color.mix(white, bootstrap.$primary, 20%);
 
 .react-toggle {
   margin-right: 8px;

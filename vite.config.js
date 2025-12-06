@@ -6,6 +6,14 @@ export default defineConfig({
   server: {
     port: 40210
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        quietDeps: true,
+        silenceDeprecations: ['import', 'global-builtin', 'color-functions']
+      }
+    }
+  },
   plugins: [
     react(),
     VitePWA({
