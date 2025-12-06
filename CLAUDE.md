@@ -32,10 +32,13 @@
 - **Note**: Production uses Vercel, not Docker
 
 ### Testing
-- `cd spec && bin/build` - Build test Docker images
-- `cd spec && bin/rspec features/example_spec.rb` - Run specific test
-- `cd spec && bin/run-tests` - Build and run all tests
-- VNC access to test browser: `localhost:5901` (VNC) or `localhost:7901` (noVNC web viewer)
+- `pnpm test` - Run unit tests (fast)
+- `pnpm test:watch` - Unit tests in watch mode
+- `pnpm test:browser` - Component tests in browser
+- `pnpm test:e2e` - E2E tests with Playwright
+- `pnpm test:e2e:ui` - E2E tests with Playwright UI (debugging)
+- `pnpm test:all` - Run all tests
+- **📖 Full guide:** [docs/development/testing.md](docs/development/testing.md)
 
 ### Code Formatting
 - `pnpm prettier --write .` - Format all files
@@ -54,10 +57,11 @@
 - **No server needed**: Static files served from dist/
 
 ### CI/Testing (GitHub Actions)
-- **Workflow**: `.github/workflows/ci-integration-tests.yml`
-- **Environment**: Docker Compose with web + selenium-firefox + rspec
-- **Web Service**: Builds Dockerfile, serves on port 80 (nginx)
-- **Tests**: RSpec + Capybara E2E tests against running container
+- **Workflows**: `.github/workflows/test-unit.yml` and `.github/workflows/test-e2e.yml`
+- **Parallel jobs**: Unit/component tests run separately from E2E tests
+- **Unit tests**: Vitest in Node.js + Vitest Browser Mode with Playwright
+- **E2E tests**: Playwright against production build, uploads artifacts on failure
+- **Runtime**: ~3 min total (parallel execution)
 
 ## Code Style
 
