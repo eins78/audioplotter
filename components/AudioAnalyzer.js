@@ -14,17 +14,17 @@ export const MIN_FREQUENCY_BANDS = 1
 export const MAX_FREQUENCY_BANDS = 8
 export const DEFAULT_FREQUENCY_BANDS = 1
 
-export const DEFAULT_BAND_COLORS = [
-  '#000000', // Black (backwards compatible - single band only)
-  '#E74C3C', // Red
-  '#3498DB', // Blue
-  '#2ECC71', // Green
-  '#F39C12', // Orange
-  '#9B59B6', // Purple
-  '#00BCD4', // Turquoise (Lamy ink)
-  '#E91E63', // Pink/Magenta
-  '#FFC107', // Yellow/Amber
-]
+export const DEFAULT_BAND_COLORS = Object.values({
+  black: '#000000', // Single band only (backwards compatible)
+  red: '#E74C3C',
+  blue: '#3498DB',
+  green: '#2ECC71',
+  orange: '#F39C12',
+  purple: '#9B59B6',
+  turquoise: '#00BCD4', // Lamy ink
+  pink: '#E91E63',
+  yellow: '#FFC107',
+})
 
 export const FREQUENCY_PRESETS = {
   1: [{ name: 'Full', low: 20, high: 20000 }],
