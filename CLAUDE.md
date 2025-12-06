@@ -91,6 +91,36 @@
 
 ### TypeScript Patterns
 
+#### Custom Type Helpers
+
+**Don't add type-fest as a dependency.** Copy types as needed instead:
+
+1. **Check if built-in works** - Try `Omit`, `Pick`, `Partial`, etc. first
+2. **Copy from type-fest** - If you need advanced types, copy from [type-fest](https://github.com/sindresorhus/type-fest) into `/src/types/`
+3. **Keep it minimal** - Only copy what you actually use
+
+**Example:** If you need `PartialDeep`:
+```typescript
+// src/types/helpers.ts
+// Copied from type-fest (MIT/CC0)
+type PartialDeep<T> = T extends object
+  ? { [P in keyof T]?: PartialDeep<T[P]> }
+  : T
+```
+
+**Why copy instead of depend:**
+- Smaller bundle (only what you use)
+- No version conflicts
+- Easier to customize
+- Matches type-fest's philosophy ("no credit required")
+
+**When you might copy from type-fest:**
+- `Except<T, K>` - stricter than `Omit` (requires key exists)
+- `PartialDeep<T>` - recursive `Partial`
+- `RequireAtLeastOne<T>` - enforce at least one property
+- `Jsonify<T>` - model JSON serialization
+- `Tagged<T, Tag>` - branded/opaque types
+
 #### Type-Safe Enums (const arrays)
 Use const arrays instead of TypeScript enums (enforced by `erasableSyntaxOnly: true`):
 
