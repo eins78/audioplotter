@@ -128,6 +128,53 @@ onChange={(e) => setValue(ensureStyleType(e.target.value))}
 - Type guards (`isFoo`) useful for conditional checks
 - No runtime overhead from TypeScript enums
 
+#### Runtime-Safe Null Handling
+
+Never use `!` non-null assertions or type casts (`as`) in `/src` - they bypass runtime safety. Use these patterns instead:
+
+**Tuple destructuring with defaults** (for fixed-length arrays):
+```typescript
+// State initialized as tuple
+const [audioTrimPoints, setAudioTrimPoints] = useState<[number, number]>([0, 100])
+
+// ❌ WRONG: Non-null assertion bypasses runtime safety
+const start = audioTrimPoints[0]!
+
+// ✅ CORRECT: Destructure with defaults for type-safe access
+const [trimStart = 0, trimEnd = 0] = audioTrimPoints
+```
+
+**`.at()` with nullish coalescing** (for dynamic array access):
+```typescript
+// ❌ WRONG: Non-null assertion
+const first = array[0]!
+
+// ✅ CORRECT: Safe access with fallback
+const first = array.at(0) ?? defaultValue
+```
+
+**`ensureDefined()`** (for nullable values needing defaults):
+```typescript
+import { ensureDefined } from '../util'
+
+// ❌ WRONG: Non-null assertion
+buffer!.slice()
+
+// ✅ CORRECT: Provide fallback value
+ensureDefined(buffer, emptyBuffer).slice()
+```
+
+**Early return guard** (for control flow):
+```typescript
+// ✅ CORRECT: Guard clause with early return
+if (!buffer) return
+
+// Now TypeScript knows buffer is defined
+buffer.slice()
+```
+
+**Test files exception:** Non-null assertions (`!`) and type casts (`as`) are allowed in `/spec` test files to reduce verbosity while still testing production code correctly.
+
 ### State Management
 - React hooks only: `useState`, `useEffect`, `useRef`, `useCallback`
 - No external state management libraries

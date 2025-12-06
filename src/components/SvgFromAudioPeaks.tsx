@@ -64,8 +64,8 @@ export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function 
   const totalWidth = peaks.length + (withCaps ? 2 : 0)
   const distanceX = targetWidth / totalWidth
   const middleY = targetHeight / 2
-  const startPos = [0, middleY]
-  const endPos = [targetWidth, middleY]
+  const [startX, startY] = [0, middleY]
+  const [endX, endY] = [targetWidth, middleY]
 
   const strokeProps = {
     stroke: '#222',
@@ -91,7 +91,7 @@ export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function 
     })
 
     if (withCaps) {
-      points = [startPos].concat(points, [endPos])
+      points = [[startX, startY]].concat(points, [[endX, endY]])
     }
 
     graph = <Polyline points={points} {...strokeProps} />
@@ -110,7 +110,7 @@ export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function 
     }, [])
 
     if (withCaps) {
-      points = [startPos].concat(points, [endPos])
+      points = [[startX, startY]].concat(points, [[endX, endY]])
     }
     graph = <Polyline points={points} {...strokeProps} />
   }
@@ -126,9 +126,9 @@ export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function 
 
     if (withCaps) {
       lines.unshift(
-        <line key="start" x1={startPos[0]!} y1={startPos[1]!} x2={startPos[0]!} y2={startPos[1]!} {...strokeProps} />
+        <line key="start" x1={startX} y1={startY} x2={startX} y2={startY} {...strokeProps} />
       )
-      lines.push(<line key="end" x1={endPos[0]!} y1={endPos[1]!} x2={endPos[0]!} y2={endPos[1]!} {...strokeProps} />)
+      lines.push(<line key="end" x1={endX} y1={endY} x2={endX} y2={endY} {...strokeProps} />)
     }
 
     graph = <>{lines}</>

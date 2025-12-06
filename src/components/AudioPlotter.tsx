@@ -56,14 +56,15 @@ export default function AudioPlotter() {
     if (strokeWidth > maxStrokeWidth) setStrokeWidthRaw(maxStrokeWidth)
   }, [numBands])
 
-  // * audio trim points
+  // * audio trim points - destructure with defaults for type-safe access
+  const [trimStart = 0, trimEnd = 0] = audioTrimPoints
   const debounceAudioTrimPoints = useCallback(
     debounce((atp: [number, number]) => setAudioTrimPointsDebounced(atp)),
     []
   )
   const onChangeTrimStart = (event: React.ChangeEvent<HTMLInputElement>, where: 'start' | 'end' = 'start') => {
     const val = Try(() => parseFloat(event.target.value)) ?? 0
-    const newPoints: [number, number] = where === 'start' ? [val, audioTrimPoints[1]!] : [audioTrimPoints[0]!, val]
+    const newPoints: [number, number] = where === 'start' ? [val, trimEnd] : [trimStart, val]
     setAudioTrimPoints(newPoints)
     debounceAudioTrimPoints(newPoints)
   }
@@ -184,7 +185,7 @@ export default function AudioPlotter() {
                         <NumberSliderInput
                           id="inputTrimStart"
                           labelTxt="trim start"
-                          value={audioTrimPoints[0]!}
+                          value={trimStart}
                           onChange={onChangeTrimStart}
                           required
                           min={0}
@@ -196,7 +197,7 @@ export default function AudioPlotter() {
                         <NumberSliderInput
                           id="inputTrimEnd"
                           labelTxt="trim end"
-                          value={audioTrimPoints[1]!}
+                          value={trimEnd}
                           onChange={onChangeTrimEnd}
                           required
                           min={0}
@@ -252,8 +253,8 @@ export default function AudioPlotter() {
                           download={generateFilename(url, {
                             height: imgHeight,
                             bands: numBands,
-                            trimStart: audioTrimPoints[0]!,
-                            trimEnd: audioTrimPoints[1]!,
+                            trimStart,
+                            trimEnd,
                             normalize: doNormalize,
                             addCaps: addCaps,
                           })}
@@ -271,8 +272,8 @@ export default function AudioPlotter() {
                           generateFilename(url, {
                             height: imgHeight,
                             bands: numBands,
-                            trimStart: audioTrimPoints[0]!,
-                            trimEnd: audioTrimPoints[1]!,
+                            trimStart,
+                            trimEnd,
                             normalize: doNormalize,
                             addCaps: addCaps,
                           })
@@ -382,7 +383,7 @@ interface FileSettings {
 function generateFilename(audioUrl: string, settings: FileSettings): string {
   // Extract base filename from URL
   const urlPath = audioUrl.split('/').pop() || 'audioplot'
-  const basename = urlPath.split('?')[0]!.replace(/\.[^.]+$/, '') // remove query params and extension
+  const basename = (urlPath.split('?').at(0) ?? urlPath).replace(/\.[^.]+$/, '') // remove query params and extension
   const decodedBasename = decodeURIComponent(basename)
 
   // Normalize: lowercase, replace spaces/special chars with dashes, alphanumerics only

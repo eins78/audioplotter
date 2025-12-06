@@ -97,13 +97,13 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
 
   useEffect(() => {
     function calculatePeaks() {
-      if (!(audioContext && bufferLength > 0)) {
+      if (!(audioContext && bufferLength > 0 && buffer)) {
         return setPeaks(null)
       }
 
       // NOTE: no `await`, Safari only supports the callback style
       audioContext.decodeAudioData(
-        buffer!.slice(),
+        buffer.slice(),
         function onSuccess(audioData) {
           const filteredData = filterData(audioData, bands, trimPoints)
           const peaks = normalize ? normalizeData(filteredData) : filteredData
@@ -124,9 +124,10 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
 }
 
 function filterData(audioBufferTotal: AudioBuffer, numSamples: number, trimPoints: [number, number]): number[] {
+  const [trimStart = 0, trimEnd = 0] = trimPoints
   const bufferLength = audioBufferTotal.length
-  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimPoints[0]!), 1)
-  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimPoints[1]!), bufferLength)
+  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimStart), 1)
+  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimEnd), bufferLength)
 
   if (bufferLength - bufferStart - bufferEnd < 1) return []
 
@@ -142,7 +143,7 @@ function filterData(audioBufferTotal: AudioBuffer, numSamples: number, trimPoint
     let blockStart = blockSize * i // the location of the first sample in the block
     let sum = 0
     for (let j = 0; j < blockSize; j++) {
-      sum = sum + Math.abs(rawData[blockStart + j]!) // find the sum of all the samples in the block
+      sum = sum + Math.abs(rawData.at(blockStart + j) ?? 0) // find the sum of all the samples in the block
     }
     filteredData.push(sum / blockSize) // divide the sum by the block size to get the average
   }
