@@ -10,8 +10,8 @@ Dark mode detection follows the system's `prefers-color-scheme` setting. The app
 ## Features
 
 - **Automatic Detection:** Detects system preference via `prefers-color-scheme` media query
-- **No Configuration:** Uses OS-level dark/light mode settings directly
-- **No Flash:** Theme applies before page render
+- **Zero Configuration:** Uses OS-level dark/light mode settings directly
+- **Instant Theme:** Theme applies before page render
 - **Offline Support:** Works in PWA offline mode
 - **Bootstrap 5:** Uses Bootstrap's `data-bs-theme` attribute
 
@@ -109,7 +109,7 @@ The app updates automatically when you change your system preference.
 
 ## Future Enhancements
 
-Possible additions:
+Future additions:
 - Manual theme toggle override
 - localStorage persistence for overrides
 - Additional theme options

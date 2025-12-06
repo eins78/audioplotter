@@ -8,7 +8,7 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 - **Multiple Visualization Styles:**
   - `zigzag`: alternates drawing points above and below the horizontal centerline.
     looks like a standard waveform from far, and like a frequency graph up close.
-    _Not symmetric_
+    _Asymmetric_
   - `saw`: follows a [Sawtooth wave](https://en.wikipedia.org/wiki/Sawtooth_wave) pattern.
     _Is symmetric but has more line density per bands._
 - **Dark Mode:** Automatic theme detection based on system preferences ([docs](docs/features/dark-mode.md))
@@ -17,11 +17,11 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
 
 ## Ideas
 
-- addCaps: also add line of configurable length to start and end (like starting with silence, but just a horixontal line)
+- addCaps: add horizontal lines of configurable length to start and end
 - playback of the audio
 - show audio file info
-- better download option
-- options to trim start/endpoint of audio (needed for amen break demo, wikimedia hosted file hast context around it)
+- enhanced download: format selection, quality settings
+- trim audio start and end points (needed for Amen Break demo: the Wikimedia file has audio before and after the break)
 - separate frequencies, create 1 graph per band in different colors (low/red,mid/green,high/yellow)
 
 ## Credits
@@ -45,7 +45,7 @@ pnpm test:all      # Run all tests
 
 ## Development
 
-Built with [Vite](https://vite.dev/), React 19, and TypeScript.
+audioplotter uses [Vite](https://vite.dev/), React 19, and TypeScript.
 
 ### Getting Started
 

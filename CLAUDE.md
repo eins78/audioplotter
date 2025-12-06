@@ -1,10 +1,10 @@
-# CLAUDE.md - Guidelines for audioplotter
+# CLAUDE.md - audioplotter Guidelines
 
 ## Project Overview
 **audioplotter** creates graphics for penplotters from audio files by generating waveform visualizations as downloadable SVGs.
 
 - **Tech Stack**: Vite 6, React 19, TypeScript 5.9, Node.js 24, Web Audio API, Bootstrap 5
-- **Architecture**: Client-side SPA (no backend audio processing)
+- **Architecture**: Client-side SPA (audio processing in browser)
 - **PWA**: Progressive Web App with offline support (vite-plugin-pwa)
 - **Deployment**: Vercel (production), Docker (CI/testing)
 - **Homepage**: https://audioplotter.ars.is
@@ -29,7 +29,7 @@
 ### Docker (CI/Testing Only)
 - `docker build -t audioplotter .` - Build test image (nginx-based)
 - `docker run -p 80:80 audioplotter` - Run test container
-- **Note**: Production uses Vercel, not Docker
+- **Note**: Production uses Vercel; Docker serves CI/testing only
 
 ### Testing
 - `pnpm test` - Run unit tests (fast)
@@ -54,7 +54,7 @@
 - **Configuration**: `vercel.json` (framework: vite, output: dist/)
 - **Build Command**: `pnpm build`
 - **Install Command**: `pnpm install`
-- **No server needed**: Static files served from dist/
+- **No server needed**: Vercel serves static files from dist/
 
 ### CI/Testing (GitHub Actions)
 - **Workflows**: `.github/workflows/test-unit.yml` and `.github/workflows/test-e2e.yml`
@@ -66,13 +66,12 @@
 ## Code Style
 
 ### Formatting (Prettier)
-- **No semicolons**
+- **Omit semicolons**
 - **Single quotes**
 - **120 character line width**
 
 ### Components
-- **Functional components only** with React hooks
-- **No class components**
+- **Use functional components exclusively** with React hooks
 - **File extension**: `.tsx` for components, `.ts` for utilities
 
 ### Naming Conventions
@@ -81,7 +80,7 @@
 - **UPPER_SNAKE_CASE**: Constants (`DEFAULT_HEIGHT`, `MAX_BANDS`)
 
 ### Imports
-- **No extensions needed**: `import Component from './Component'` (Vite resolves .tsx/.ts)
+- **Omit extensions**: `import Component from './Component'` (Vite resolves .tsx/.ts)
 - Group by type: React, components, utilities
 - Example order: react → react-dom → components → utilities → styles
 
@@ -226,7 +225,6 @@ We use [`@total-typescript/ts-reset`](https://www.totaltypescript.com/ts-reset) 
 
 ### State Management
 - React hooks only: `useState`, `useEffect`, `useRef`, `useCallback`
-- No external state management libraries
 
 ### Testing
 - RSpec with Capybara for E2E tests
@@ -292,7 +290,7 @@ Main application component with UI controls.
 Generates SVG visualization from audio peaks.
 
 **Waveform Styles:**
-1. `zigzag` - Alternates above/below centerline (not symmetric)
+1. `zigzag` - Asymmetric pattern alternating above/below centerline
 2. `saw` - Sawtooth wave pattern (symmetric, higher density)
 3. `bars` - Vertical bars centered on middle (symmetric)
 4. `circle` - Circles above/below centerline (radius = amplitude)
@@ -338,7 +336,7 @@ Toggle switch component using react-toggle with custom I/O icons.
 ### Trimming
 - **Trim Start**: Remove % from beginning (0-99.99%)
 - **Trim End**: Remove % from end (0-99.99%)
-- Useful for isolating specific sections (e.g., drum breaks)
+- Isolates sections like drum breaks
 
 ### SVG Download
 **Filename Format:**
@@ -441,7 +439,7 @@ bin/run-tests              # Run all tests
 - **PR Target**: `next` (main branch for pull requests)
 
 #### Committing Changes
-**For multi-line commit messages**, always use a temporary file to avoid shell quoting issues:
+**For multi-line commit messages**, use a temporary file to avoid shell quoting issues:
 
 ```bash
 # Write commit message to temp file

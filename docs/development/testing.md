@@ -1,6 +1,6 @@
 # Testing Guide
 
-Audioplotter uses a modern, JavaScript-native testing stack with three layers:
+Audioplotter uses a JavaScript-native testing stack (Vitest + Playwright):
 
 1. **Unit Tests** - Fast, isolated tests for pure functions
 2. **Component Tests** - React components rendered in real browsers
@@ -26,7 +26,7 @@ pnpm test:e2e:ui       # E2E tests with Playwright UI
 
 ### Unit Tests (Vitest in Node.js)
 
-**Purpose:** Test pure JavaScript/TypeScript functions without DOM overhead
+Tests pure JavaScript/TypeScript functions without DOM overhead
 
 **Config:** `vitest.config.ts`
 
@@ -48,12 +48,12 @@ describe('Try', () => {
 
 **When to use:**
 - Pure functions (math, data transformation)
-- Utilities that don't depend on DOM/browser APIs
+- Utilities independent of DOM/browser APIs
 - Business logic
 
 ### Component Tests (Vitest Browser Mode)
 
-**Purpose:** Test React components with actual DOM rendering
+Tests React components with actual DOM rendering
 
 **Config:** `vitest.browser.config.ts`
 
@@ -84,11 +84,11 @@ describe('SvgFromAudioPeaks', () => {
 - DOM manipulation
 - Browser-specific APIs
 
-**Note:** `render()` is async in Vitest Browser Mode - always use `await render()`
+**Note:** Vitest Browser Mode makes `render()` async - always use `await render()`
 
 ### E2E Tests (Playwright)
 
-**Purpose:** Test complete user workflows in real browsers
+Tests complete user workflows in real browsers
 
 **Config:** `playwright.config.ts`
 

@@ -1,6 +1,6 @@
 # Tech Stack Documentation
 
-This document describes the technologies used in **audioplotter** and why we chose them.
+**audioplotter** uses these technologies:
 
 ---
 
@@ -50,7 +50,7 @@ React 19 (released December 2024) brings modern concurrent features, improved pe
 ### [Node.js 24](https://nodejs.org/) (LTS)
 **JavaScript runtime built on Chrome's V8 engine**
 
-Node.js 24 is the current LTS version (codename "Noam"). It brings native TypeScript support and modern JavaScript features.
+Node.js 24 is the current LTS version (codename "Noam"). It brings native TypeScript support, ES modules, and top-level await.
 
 **Why Node.js 24:**
 - Current LTS with long-term support
@@ -147,7 +147,7 @@ Corepack automatically uses the correct pnpm version specified in package.json, 
 ### [vite-plugin-pwa](https://vite-pwa-org.netlify.app/) (v0.21.1)
 **Zero-config PWA plugin for Vite**
 
-Provides automatic service worker generation, offline support, and Web App Manifest integration. We chose this over next-pwa because next-pwa is unmaintained and incompatible with modern frameworks.
+vite-plugin-pwa provides automatic service worker generation, offline support, and Web App Manifest integration. We chose this over next-pwa because next-pwa is unmaintained and incompatible with Next.js 15 and Vite.
 
 **Why vite-plugin-pwa:**
 - Actively maintained (next-pwa abandoned in 2024)
@@ -224,7 +224,7 @@ $primary: shade-color($indigo, 22%);
 **Why Sass:**
 - Bootstrap's source is written in Sass
 - Color manipulation functions (`shade-color`, `tint-color`)
-- Full customization without bloated CSS
+- Full customization without unused CSS rules
 
 **Vite Integration:**
 - Zero config needed (just install `sass` package)
@@ -339,7 +339,7 @@ Docker is used exclusively for integration testing via Docker Compose. Productio
 - Used by GitHub Actions for E2E tests
 - Runs alongside Selenium Firefox for automated testing
 
-**Note:** The Dockerfile is for CI/testing only, not production deployment.
+**Note:** The Dockerfile serves CI/testing exclusively. Production uses Vercel.
 
 ---
 
@@ -431,7 +431,7 @@ Tests verify the app loads correctly and basic UI elements render.
 
 ## Technology Selection Criteria
 
-When choosing technologies for audioplotter, we prioritize:
+We prioritize:
 
 1. **Simplicity**: Minimal configuration, sensible defaults
 2. **Performance**: Fast development, optimized production
