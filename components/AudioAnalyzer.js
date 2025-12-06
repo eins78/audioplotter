@@ -15,7 +15,7 @@ export const MAX_FREQUENCY_BANDS = 8
 export const DEFAULT_FREQUENCY_BANDS = 1
 
 export const DEFAULT_BAND_COLORS = [
-  '#000000', // Black (backwards compatible)
+  '#000000', // Black (backwards compatible - single band only)
   '#E74C3C', // Red
   '#3498DB', // Blue
   '#2ECC71', // Green
@@ -23,6 +23,7 @@ export const DEFAULT_BAND_COLORS = [
   '#9B59B6', // Purple
   '#00BCD4', // Turquoise (Lamy ink)
   '#E91E63', // Pink/Magenta
+  '#FFC107', // Yellow/Amber
 ]
 
 export const FREQUENCY_PRESETS = {

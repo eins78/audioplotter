@@ -123,14 +123,18 @@ export default function AudioPlotter() {
   useEffect(() => {
     const currentBands = bands || []
     const targetCount = numFrequencyBands || DEFAULT_FREQUENCY_BANDS
+    const previousCount = currentBands.length
 
-    if (currentBands.length !== targetCount) {
+    if (previousCount !== targetCount) {
       const newBands = []
+      // Always reset to default colors when band count changes
+      // For multiband mode (2+), skip black (index 0) which is reserved for single-band
+      const isMultiband = targetCount > 1
+
       for (let i = 0; i < targetCount; i++) {
-        // Keep existing color and opacity if available, otherwise use defaults
         newBands.push({
-          color: currentBands[i]?.color || DEFAULT_BAND_COLORS[i],
-          opacity: currentBands[i]?.opacity !== undefined ? currentBands[i].opacity : 1,
+          color: isMultiband ? DEFAULT_BAND_COLORS[i + 1] : DEFAULT_BAND_COLORS[i],
+          opacity: 1,
         })
       }
       setBands(newBands, URL_UPDATE_OPTIONS)
