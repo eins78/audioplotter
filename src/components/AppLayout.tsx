@@ -1,4 +1,4 @@
-import React, { Fragment as F } from 'react'
+import React from 'react'
 
 interface AppLayoutProps {
   version?: string

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import packageJson from '../package.json'
 import AppLayout from './components/AppLayout.tsx'
 import AudioPlotter from './components/AudioPlotter.tsx'

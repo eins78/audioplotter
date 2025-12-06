@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { Svg, Polyline } from 'react-svg-path'
+import { Polyline } from 'react-svg-path'
 
 export const STYLES = [
   'zigzag',

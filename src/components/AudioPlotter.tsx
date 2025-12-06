@@ -120,7 +120,7 @@ export default function AudioPlotter() {
 
       {url && runAnalysis && (
         <AudioBuffer url={url}>
-          {({ isFetching, fetchError, bufferLength, buffer }) => {
+          {({ isFetching, fetchError, buffer }) => {
             if (isFetching) return 'loading…'
             if (fetchError) return <ErrorMessage error={fetchError} />
 
