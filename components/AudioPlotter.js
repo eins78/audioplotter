@@ -293,17 +293,15 @@ export default function AudioPlotter() {
 
       {/* Start Analysis Section */}
       {(url || audioFile) && !runAnalysis && (
-        <div className="card border-0 shadow-sm mb-3">
-          <div className="card-body text-center">
-            <button className="btn btn-primary btn-lg" onClick={() => setRunAnalysis(true)}>
-              Start Analysis
-            </button>
-            <div className="text-muted small mt-3" style={{ maxWidth: '500px', margin: '12px auto 0' }}>
-              <strong>Why do I need to click?</strong>
-              <br />
-              Your browser requires user interaction before playing audio or processing audio files.
-              This button starts the analysis when you're ready.
-            </div>
+        <div className="text-center mb-3 mt-5">
+          <button className="btn btn-primary btn-lg" onClick={() => setRunAnalysis(true)}>
+            Generate Waveform
+          </button>
+          <div className="text-muted small mt-3" style={{ maxWidth: '500px', margin: '12px auto 0' }}>
+            <strong>Why do I need to click?</strong>
+            <br />
+            Your browser requires user interaction before playing audio or processing audio files.
+            This button starts the analysis when you're ready.
           </div>
         </div>
       )}
