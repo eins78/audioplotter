@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "serve": "serve dist -l 3000",
-    "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/"
+    "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",
@@ -27,10 +28,14 @@
   },
   "devDependencies": {
     "@prettier/plugin-ruby": "^3.0.0",
+    "@types/lodash.debounce": "^4.0.9",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^4.3.4",
     "prettier": "^3.4.2",
     "sass": "^1.83.2",
     "serve": "^14.2.4",
+    "typescript": "^5.9.3",
     "vite": "^6.0.5",
     "vite-plugin-pwa": "^0.21.1"
   },

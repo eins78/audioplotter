@@ -1,5 +1,5 @@
 // from <https://stackoverflow.com/a/44320679>
-export default function svgDomNodeToBlob(domNode) {
+export default function svgDomNodeToBlob(domNode: SVGElement): Blob {
   const svgDocType = document.implementation.createDocumentType(
     'svg',
     '-//W3C//DTD SVG 1.1//EN',

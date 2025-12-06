@@ -9,6 +9,18 @@ export const MIN_BANDS = 1
 export const MAX_BANDS = 2048
 export const DEFAULT_BANDS = 1024
 
+interface AudioBufferData {
+  isFetching: boolean
+  fetchError: string | null
+  bufferLength: number
+  buffer: ArrayBuffer | null
+}
+
+interface AudioBufferProps {
+  url: string
+  children: (data: AudioBufferData) => React.ReactNode
+}
+
 // unused, just showing how to plug those 2 parts together…
 // export default function AudioAnalyzer({ url, ...restProps }) {
 //   return (
@@ -23,10 +35,10 @@ export const DEFAULT_BANDS = 1024
 //   )
 // }
 
-export function AudioBuffer({ url, children } = {}) {
+export function AudioBuffer({ url, children }: AudioBufferProps) {
   const [isFetching, setIsFetching] = useState(false)
-  const [fetchError, setFetchError] = useState(undefined)
-  const buffer = useRef(new ArrayBuffer())
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const buffer = useRef<ArrayBuffer | null>(new ArrayBuffer())
   const bufferLength = buffer.current ? buffer.current.byteLength : 0
 
   useEffect(() => {
@@ -34,7 +46,8 @@ export function AudioBuffer({ url, children } = {}) {
       buffer.current = null
       setFetchError(null)
       setIsFetching(true)
-      let buf, err
+      let buf: ArrayBuffer | undefined
+      let err = false
       try {
         const response = await fetch(url)
         const { ok, statusText } = response
@@ -44,7 +57,7 @@ export function AudioBuffer({ url, children } = {}) {
         err = true
         setFetchError(String(error))
       }
-      if (!err) buffer.current = buf
+      if (!err && buf) buffer.current = buf
       setIsFetching(false)
     }
     fetchData()
@@ -55,10 +68,23 @@ export function AudioBuffer({ url, children } = {}) {
     : children({ isFetching, fetchError, bufferLength, buffer: buffer.current })
 }
 
-export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize = true, children } = {}) {
-  const [audioContext, setAudioContext] = useState()
-  const [decodeError, setDecodeError] = useState(undefined)
-  const [peaks, setPeaks] = useState(undefined)
+interface AudioPeaksData {
+  peaks: number[] | null
+  decodeError: string | null
+}
+
+interface AudioPeaksProps {
+  buffer: ArrayBuffer | null
+  bands?: number
+  trimPoints?: [number, number]
+  normalize?: boolean
+  children: (data: AudioPeaksData) => React.ReactNode
+}
+
+export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize = true, children }: AudioPeaksProps) {
+  const [audioContext, setAudioContext] = useState<AudioContext | undefined>(undefined)
+  const [decodeError, setDecodeError] = useState<string | null>(null)
+  const [peaks, setPeaks] = useState<number[] | null>(null)
 
   const bufferLength = buffer ? buffer.byteLength : 0
 
@@ -77,7 +103,7 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
 
       // NOTE: no `await`, Safari only supports the callback style
       audioContext.decodeAudioData(
-        buffer.slice(),
+        buffer!.slice(),
         function onSuccess(audioData) {
           const filteredData = filterData(audioData, bands, trimPoints)
           const peaks = normalize ? normalizeData(filteredData) : filteredData
@@ -97,10 +123,10 @@ export function AudioPeaks({ buffer, bands = 100, trimPoints = [0, 0], normalize
   return typeof children !== 'function' ? null : children(data)
 }
 
-function filterData(audioBufferTotal, numSamples, trimPoints) {
+function filterData(audioBufferTotal: AudioBuffer, numSamples: number, trimPoints: [number, number]): number[] {
   const bufferLength = audioBufferTotal.length
-  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimPoints[0]), 1)
-  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimPoints[1]), bufferLength)
+  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimPoints[0]!), 1)
+  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimPoints[1]!), bufferLength)
 
   if (bufferLength - bufferStart - bufferEnd < 1) return []
 
@@ -111,12 +137,12 @@ function filterData(audioBufferTotal, numSamples, trimPoints) {
 
   const blockSize = Math.floor(rawData.length / numSamples) // the number of samples in each subdivision
 
-  const filteredData = []
+  const filteredData: number[] = []
   for (let i = 0; i < numSamples; i++) {
     let blockStart = blockSize * i // the location of the first sample in the block
     let sum = 0
     for (let j = 0; j < blockSize; j++) {
-      sum = sum + Math.abs(rawData[blockStart + j]) // find the sum of all the samples in the block
+      sum = sum + Math.abs(rawData[blockStart + j]!) // find the sum of all the samples in the block
     }
     filteredData.push(sum / blockSize) // divide the sum by the block size to get the average
   }
@@ -124,7 +150,7 @@ function filterData(audioBufferTotal, numSamples, trimPoints) {
   return filteredData
 }
 
-function normalizeData(filteredData) {
+function normalizeData(filteredData: number[]): number[] {
   const multiplier = Math.pow(Math.max(...filteredData), -1)
   return filteredData.map((n) => n * multiplier)
 }

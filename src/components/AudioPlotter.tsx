@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { AudioBuffer, AudioPeaks, MIN_BANDS, MAX_BANDS, DEFAULT_BANDS } from './AudioAnalyzer'
 import SvgFromAudioPeaks, {
   STYLES as VIS_STYLES,
+  type StyleType,
   DEFAULT_HEIGHT,
   MAX_HEIGHT,
   DEFAULT_STROKE_WIDTH,
@@ -43,13 +44,13 @@ export default function AudioPlotter() {
   // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
   const [runAnalysis, setRunAnalysis] = useState(false)
   // other state
-  const [svgBlobURL, setSvgBlobURL] = useState(null)
-  const svgEl = useRef(null)
+  const [svgBlobURL, setSvgBlobURL] = useState<string | null>(null)
+  const svgEl = useRef<SVGSVGElement>(null)
 
   // related fields:
   // * stroke width
   const maxStrokeWidth = calcMaxStrokeWidth(numBands)
-  function setStrokeWidth(num) {
+  function setStrokeWidth(num: number) {
     setStrokeWidthRaw(num < maxStrokeWidth ? num : maxStrokeWidth)
   }
   useEffect(() => {
@@ -58,15 +59,16 @@ export default function AudioPlotter() {
 
   // * audio trim points
   const debounceAudioTrimPoints = useCallback(
-    debounce((atp) => setAudioTrimPointsDebounced(atp), 50),
+    debounce((atp: [number, number]) => setAudioTrimPointsDebounced(atp)),
     []
   )
-  const onChangeTrimStart = (event, where = 'start') => {
-    const val = Try(() => parseFloat(event.target.value, 10))
-    setAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
-    debounceAudioTrimPoints((atp) => (where === 'start' ? [val, atp[1]] : [atp[0], val]))
+  const onChangeTrimStart = (event: React.ChangeEvent<HTMLInputElement>, where: 'start' | 'end' = 'start') => {
+    const val = Try(() => parseFloat(event.target.value)) ?? 0
+    const newPoints: [number, number] = where === 'start' ? [val, audioTrimPoints[1]!] : [audioTrimPoints[0]!, val]
+    setAudioTrimPoints(newPoints)
+    debounceAudioTrimPoints(newPoints)
   }
-  const onChangeTrimEnd = (event) => onChangeTrimStart(event, 'end')
+  const onChangeTrimEnd = (event: React.ChangeEvent<HTMLInputElement>) => onChangeTrimStart(event, 'end')
 
   // FIXME: does not work on initial render… either find the correct way to hook it up,
   //        or make a "display SVG with download button" wrapper that should be up to date always?
@@ -139,7 +141,7 @@ export default function AudioPlotter() {
                       className="form-select"
                       aria-label="choose visualisation style"
                       value={visStyle}
-                      onChange={(e) => setVisStyle(e.target.value)}
+                      onChange={(e) => setVisStyle(e.target.value as StyleType)}
                       required
                     >
                       {VIS_STYLES.map((s) => (
@@ -157,7 +159,7 @@ export default function AudioPlotter() {
                           id="inputHeight"
                           labelTxt="height"
                           value={imgHeight}
-                          onChange={(e) => setImgHeight(e.target.value)}
+                          onChange={(e) => setImgHeight(parseInt(e.target.value, 10))}
                           required
                           min={1}
                           max={MAX_HEIGHT}
@@ -183,7 +185,7 @@ export default function AudioPlotter() {
                         <NumberSliderInput
                           id="inputTrimStart"
                           labelTxt="trim start"
-                          value={audioTrimPoints[0]}
+                          value={audioTrimPoints[0]!}
                           onChange={onChangeTrimStart}
                           required
                           min={0}
@@ -195,7 +197,7 @@ export default function AudioPlotter() {
                         <NumberSliderInput
                           id="inputTrimEnd"
                           labelTxt="trim end"
-                          value={audioTrimPoints[1]}
+                          value={audioTrimPoints[1]!}
                           onChange={onChangeTrimEnd}
                           required
                           min={0}
@@ -209,7 +211,8 @@ export default function AudioPlotter() {
                       id="inputStrokeWidth"
                       labelTxt="stroke width"
                       value={strokeWidth}
-                      onChange={({ target: { value: num } }) => {
+                      onChange={(e) => {
+                        const num = parseFloat(e.target.value)
                         setStrokeWidth(num < maxStrokeWidth ? num : maxStrokeWidth)
                       }}
                       required
@@ -245,18 +248,18 @@ export default function AudioPlotter() {
                     {!!SHOW_BLOB_DOWNLOAD && (
                       <>
                         <a
-                          className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
+                          className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning disabled'}
                           target="_blank"
                           download={generateFilename(url, {
                             height: imgHeight,
                             bands: numBands,
-                            trimStart: audioTrimPoints[0],
-                            trimEnd: audioTrimPoints[1],
+                            trimStart: audioTrimPoints[0]!,
+                            trimEnd: audioTrimPoints[1]!,
                             normalize: doNormalize,
                             addCaps: addCaps,
                           })}
-                          disabled={!svgBlobURL}
-                          href={svgBlobURL}
+                          href={svgBlobURL || undefined}
+                          onClick={(e) => !svgBlobURL && e.preventDefault()}
                         >
                           Download SVG (from blob!)
                         </a>{' '}
@@ -269,8 +272,8 @@ export default function AudioPlotter() {
                           generateFilename(url, {
                             height: imgHeight,
                             bands: numBands,
-                            trimStart: audioTrimPoints[0],
-                            trimEnd: audioTrimPoints[1],
+                            trimStart: audioTrimPoints[0]!,
+                            trimEnd: audioTrimPoints[1]!,
                             normalize: doNormalize,
                             addCaps: addCaps,
                           })
@@ -287,7 +290,7 @@ export default function AudioPlotter() {
                   buffer={buffer}
                   bands={numBands}
                   normalize={doNormalize}
-                  trimPoints={audioTrimPointsDebounced}
+                  trimPoints={audioTrimPointsDebounced as [number, number]}
                 >
                   {({ peaks, decodeError }) => {
                     if (decodeError) return <ErrorMessage error={decodeError} />
@@ -299,7 +302,7 @@ export default function AudioPlotter() {
                             className="img-fluid w-100 rounded"
                             peaks={peaks}
                             height={imgHeight}
-                            style={visStyle}
+                            style={visStyle as StyleType}
                             strokeWidth={strokeWidth}
                             withCaps={addCaps}
                           />
@@ -317,7 +320,12 @@ export default function AudioPlotter() {
   )
 }
 
-const ErrorMessage = ({ error, children }) => (
+interface ErrorMessageProps {
+  error: string
+  children?: React.ReactNode
+}
+
+const ErrorMessage = ({ error, children }: ErrorMessageProps) => (
   <div className="card text-center text-dark bg-warning mb-3 m-auto" style={{ maxWidth: '42em' }}>
     <div className="card-body">
       <h5 className="card-title">Something went wrong…</h5>
@@ -327,7 +335,13 @@ const ErrorMessage = ({ error, children }) => (
   </div>
 )
 
-const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
+interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  id: string
+  labelTxt: string
+  helpTxt?: string
+}
+
+const FormField = ({ id, labelTxt, helpTxt, ...inputProps }: FormFieldProps) => (
   <>
     <label htmlFor={id} className="form-label small">
       {labelTxt}
@@ -341,21 +355,35 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
   </>
 )
 
-const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
+interface NumberSliderInputProps extends Omit<FormFieldProps, 'helpTxt'> {
+  id: string
+  labelTxt: string
+}
+
+const NumberSliderInput = ({ id, labelTxt, ...inputProps }: NumberSliderInputProps) => (
   <div id={id} className="row mb-2">
     <div className="col">
       <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
     </div>
     <div className="col">
-      <FormField id={`${id}Nr`} type="number" {...inputProps} />
+      <FormField id={`${id}Nr`} type="number" labelTxt="" {...inputProps} />
     </div>
   </div>
 )
 
-function generateFilename(audioUrl, settings) {
+interface FileSettings {
+  height: number
+  bands: number
+  trimStart: number
+  trimEnd: number
+  normalize: boolean
+  addCaps: boolean
+}
+
+function generateFilename(audioUrl: string, settings: FileSettings): string {
   // Extract base filename from URL
-  const urlPath = audioUrl.split('/').pop()
-  const basename = urlPath.split('?')[0].replace(/\.[^.]+$/, '') // remove query params and extension
+  const urlPath = audioUrl.split('/').pop() || 'audioplot'
+  const basename = urlPath.split('?')[0]!.replace(/\.[^.]+$/, '') // remove query params and extension
   const decodedBasename = decodeURIComponent(basename)
 
   // Normalize: lowercase, replace spaces/special chars with dashes, alphanumerics only
@@ -377,7 +405,7 @@ function generateFilename(audioUrl, settings) {
   return `audioplot-${normalizedBasename}-${h}-${b}-${ts}-${te}-${norm}-${caps}.svg`
 }
 
-function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
+function downloadSVGNodeInDOM(filename: string = 'audioplot.svg'): void {
   // NOTE: goes around React straight to the DOM
   const node = document.querySelector('svg')
   if (!node) return
