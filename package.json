@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@prettier/plugin-ruby": "^3.0.0",
+    "@total-typescript/ts-reset": "^0.6.1",
     "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

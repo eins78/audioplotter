@@ -175,6 +175,21 @@ buffer.slice()
 
 **Test files exception:** Non-null assertions (`!`) and type casts (`as`) are allowed in `/spec` test files to reduce verbosity while still testing production code correctly.
 
+#### ts-reset for Safer Built-in Types
+
+We use [`@total-typescript/ts-reset`](https://www.totaltypescript.com/ts-reset) to make TypeScript's built-in types stricter:
+
+**Improvements:**
+- `JSON.parse()` returns `unknown` instead of `any` (must validate before use)
+- `.filter(Boolean)` properly removes falsy values from types
+- `.includes()` works ergonomically on readonly arrays
+- `fetch().json()` returns `unknown` for safer response handling
+- `localStorage` returns `unknown` (prevents unsafe property access)
+
+**Usage:** Automatically applied via `/src/reset.d.ts` - no imports needed in code.
+
+**Why:** Continues our runtime safety philosophy by making built-in APIs type-safe by default.
+
 ### State Management
 - React hooks only: `useState`, `useEffect`, `useRef`, `useCallback`
 - No external state management libraries
@@ -315,6 +330,7 @@ Toggle switch component using react-toggle with custom I/O icons.
 
 ### Development
 - `typescript` (^5.9.3) - TypeScript compiler
+- `@total-typescript/ts-reset` (^0.6.1) - Improved built-in TypeScript types
 - `@types/react`, `@types/react-dom` - React type definitions
 - `@vitejs/plugin-react` (^4.3.4) - Vite React plugin
 - `prettier` (^3.4.2) - Code formatter
