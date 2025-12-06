@@ -17,12 +17,14 @@ $primary: shade-color($indigo, 22%);
   // Lightened primary using OKLCH color space
   // Original: oklch(41% 0.19 292) = #500cbd
   // Dark mode: oklch(68% 0.19 292) ≈ #9d6fff
+  // Hover:     oklch(70% 0.19 292) ≈ #a57bff
   --bs-primary: #9d6fff;
   --bs-primary-rgb: 157, 111, 255;
+  --bs-primary-hover: #a57bff;
 
   // Link colors - use lightened primary for better visibility
-  --bs-link-color: #9d6fff;
-  --bs-link-hover-color: #a57bff;
+  --bs-link-color: var(--bs-primary);
+  --bs-link-hover-color: var(--bs-primary-hover);
 
   // Card styling for dark mode
   .card {

@@ -73,17 +73,16 @@ $toggle-color-checked-hover: tint-color($primary, 20%);
 
       &:hover:not(.react-toggle--disabled) {
         .react-toggle-track {
-          // Slightly lighter on hover (70% lightness)
-          background-color: #a57bff;
+          background-color: var(--bs-primary-hover);
         }
         .react-toggle-thumb {
-          border-color: #a57bff;
+          border-color: var(--bs-primary-hover);
         }
       }
     }
 
     &.react-toggle--focus .react-toggle-thumb {
-      box-shadow: 0px 0px 2px 3px #a57bff;
+      box-shadow: 0px 0px 2px 3px var(--bs-primary-hover);
     }
   }
 }
