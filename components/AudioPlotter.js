@@ -334,10 +334,7 @@ export default function AudioPlotter() {
                             <CheckBox
                               checked={spreadPeaks}
                               onChange={(e) => setSpreadPeaks(e.target.checked, URL_UPDATE_OPTIONS)}
-                              icons={{
-                                checked: 'Spread',
-                                unchecked: 'Stack',
-                              }}
+                            
                             />
                           </div>
                           <small className="text-muted d-block mt-1">

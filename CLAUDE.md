@@ -144,7 +144,9 @@ Generates SVG visualization from audio peaks.
 Main layout wrapper with header and content area.
 
 ### Form/CheckBox.js
-Toggle switch component using react-toggle with custom I/O icons.
+Toggle switch component using react-toggle.
+
+**Important:** The custom I/O icons (ToggleIcon component) may not render correctly due to positioning and font rendering issues. Use `icons={false}` or the react-toggle defaults instead. If using custom icons, always verify they render properly in the browser.
 
 ## Core Features
 
