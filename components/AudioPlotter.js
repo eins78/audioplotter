@@ -287,17 +287,26 @@ export default function AudioPlotter() {
                 }}
               />
             </div>
-
-            {!runAnalysis && (
-              <div style={{ textAlign: 'center' }}>
-                <button className="btn btn-outline-dark" onClick={() => setRunAnalysis(true)}>
-                  Go!
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>
+
+      {/* Start Analysis Section */}
+      {(url || audioFile) && !runAnalysis && (
+        <div className="card border-0 shadow-sm mb-3">
+          <div className="card-body text-center">
+            <button className="btn btn-primary btn-lg" onClick={() => setRunAnalysis(true)}>
+              Start Analysis
+            </button>
+            <div className="text-muted small mt-3" style={{ maxWidth: '500px', margin: '12px auto 0' }}>
+              <strong>Why do I need to click?</strong>
+              <br />
+              Your browser requires user interaction before playing audio or processing audio files.
+              This button starts the analysis when you're ready.
+            </div>
+          </div>
+        </div>
+      )}
 
       {(url || audioFile) && runAnalysis && (
         <AudioBuffer url={url} file={audioFile}>
