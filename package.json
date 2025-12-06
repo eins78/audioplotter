@@ -17,7 +17,9 @@
     "test:browser": "vitest run --config vitest.browser.config.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "test:all": "pnpm test && pnpm test:browser && pnpm test:e2e"
+    "test:all": "pnpm test && pnpm test:browser && pnpm test:e2e",
+    "lint": "prettier --check .",
+    "ci": "pnpm lint && pnpm test && pnpm test:browser && pnpm build && pnpm test:e2e"
   },
   "dependencies": {
     "audio-buffer-utils": "^5.1.2",
