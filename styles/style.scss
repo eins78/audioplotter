@@ -162,4 +162,145 @@ $primary: shade-color($indigo, 22%);
   font-family: $font-family-sans-serif;
 }
 
+// ============================================================================
+// STICKY RESIZABLE PREVIEW PANEL
+// ============================================================================
+
+.controls-section {
+  // Space for bottom sticky preview on all devices
+  padding-bottom: calc(var(--preview-height, 40vh) + 1rem);
+}
+
+.preview-panel {
+  // Safe area padding (for notched devices, with minimum fallback)
+  --preview-panel-padding-left: max(0.5rem, env(safe-area-inset-left));
+  --preview-panel-padding-right: max(0.5rem, env(safe-area-inset-right));
+
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  height: var(--preview-height, 40vh);
+  min-height: 200px;
+  max-height: 80vh;
+  overflow: hidden;
+  z-index: 100;
+  background: var(--bs-body-bg);
+  border-top: 1px solid var(--bs-border-color);
+
+  // Apple safe area insets for notched devices
+  padding-left: var(--preview-panel-padding-left);
+  padding-right: var(--preview-panel-padding-right);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.drag-handle {
+  cursor: ns-resize;
+  height: 8px;
+  background: var(--bs-border-color);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+
+  // Extend into parent padding to fill full width
+  margin-left: calc(-1 * var(--preview-panel-padding-left));
+  margin-right: calc(-1 * var(--preview-panel-padding-right));
+  padding-left: var(--preview-panel-padding-left);
+  padding-right: var(--preview-panel-padding-right);
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 4px;
+    background: repeating-linear-gradient(
+      to right,
+      var(--bs-secondary) 0px,
+      var(--bs-secondary) 3px,
+      transparent 3px,
+      transparent 6px
+    );
+    border-radius: 2px;
+  }
+
+  &:hover,
+  &:focus {
+    background-color: var(--bs-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+  }
+
+  &:focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+.preview-content {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 8px); // Subtract drag handle height
+  overflow: auto;
+  overscroll-behavior: contain; // Prevent rubber-band bounce effect
+
+  // Enable native touch gestures for pan and pinch-zoom
+  touch-action: pan-x pan-y pinch-zoom;
+
+  // Minimal padding to prevent edge clipping
+  padding: 0.5rem;
+}
+
+.preview-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: auto;
+  height: auto;
+  background-color: var(--bs-light-bg-subtle);
+  border: 2px dashed var(--bs-border-color);
+  border-radius: 0.375rem;
+  color: var(--bs-secondary-color);
+  margin: 1rem;
+  padding: 1.5rem;
+}
+
+// Prevent text selection during drag
+body.preview-dragging {
+  user-select: none;
+  cursor: ns-resize !important;
+
+  * {
+    cursor: ns-resize !important;
+  }
+}
+
+// Reduced motion support
+@media (prefers-reduced-motion: reduce) {
+  .preview-content,
+  .preview-zoom-container {
+    scroll-behavior: auto;
+    transition: none;
+  }
+
+  .zoom-controls button {
+    transition: none;
+  }
+}
+
+// Dark mode adjustments
+[data-bs-theme='dark'] {
+  .zoom-controls {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
 @import './toggle.scss';

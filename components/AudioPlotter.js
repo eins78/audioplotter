@@ -119,6 +119,105 @@ export default function AudioPlotter() {
   const [showWaveformSettings, setShowWaveformSettings] = useState(false)
   const [showPreviewSettings, setShowPreviewSettings] = useState(false)
 
+  // Preview panel resize state
+  const [previewHeight, setPreviewHeight] = useState(() => {
+    if (typeof window === 'undefined') return '40vh'
+    return localStorage.getItem('previewHeight') || '40vh'
+  })
+  const [isDragging, setIsDragging] = useState(false)
+
+  // Resize handlers
+  const handleDragStart = useCallback((e) => {
+    e.preventDefault()
+    setIsDragging(true)
+    document.body.classList.add('preview-dragging')
+  }, [])
+
+  const handleDragMove = useCallback(
+    (e) => {
+      if (!isDragging || !previewPanelRef.current) return
+
+      // Cancel previous frame if still pending
+      if (dragAnimationFrameRef.current) {
+        cancelAnimationFrame(dragAnimationFrameRef.current)
+      }
+
+      // Use requestAnimationFrame to throttle to 60fps max
+      dragAnimationFrameRef.current = requestAnimationFrame(() => {
+        const viewportHeight = window.innerHeight
+        const mouseY = e.clientY || e.touches?.[0]?.clientY
+        if (!mouseY) return
+
+        const newHeightPx = viewportHeight - mouseY
+        const newHeightVh = (newHeightPx / viewportHeight) * 100
+        const clampedVh = Math.max(20, Math.min(80, newHeightVh))
+
+        // Update CSS custom property directly (no React state update during drag)
+        previewPanelRef.current.style.setProperty('--preview-height', `${clampedVh}vh`)
+      })
+    },
+    [isDragging]
+  )
+
+  const handleDragEnd = useCallback(() => {
+    if (isDragging && previewPanelRef.current) {
+      setIsDragging(false)
+      document.body.classList.remove('preview-dragging')
+
+      // Cancel any pending animation frame
+      if (dragAnimationFrameRef.current) {
+        cancelAnimationFrame(dragAnimationFrameRef.current)
+      }
+
+      // Save final height to state and localStorage
+      const finalHeight = previewPanelRef.current.style.getPropertyValue('--preview-height') || '40vh'
+      setPreviewHeight(finalHeight)
+      localStorage.setItem('previewHeight', finalHeight)
+    }
+  }, [isDragging])
+
+  const handleKeyboardResize = useCallback(
+    (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        const currentVh = parseFloat(previewHeight)
+        const delta = e.key === 'ArrowUp' ? -5 : 5
+        const newVh = Math.max(20, Math.min(80, currentVh + delta))
+        const newHeight = `${newVh}vh`
+        setPreviewHeight(newHeight)
+        localStorage.setItem('previewHeight', newHeight)
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        setPreviewHeight('40vh')
+        localStorage.setItem('previewHeight', '40vh')
+      }
+    },
+    [previewHeight]
+  )
+
+  // Attach drag event listeners
+  useEffect(() => {
+    if (isDragging) {
+      const handleMove = (e) => handleDragMove(e)
+      const handleEnd = () => handleDragEnd()
+
+      document.addEventListener('mousemove', handleMove)
+      document.addEventListener('mouseup', handleEnd)
+      document.addEventListener('touchmove', handleMove)
+      document.addEventListener('touchend', handleEnd)
+
+      return () => {
+        document.removeEventListener('mousemove', handleMove)
+        document.removeEventListener('mouseup', handleEnd)
+        document.removeEventListener('touchmove', handleMove)
+        document.removeEventListener('touchend', handleEnd)
+      }
+    }
+  }, [isDragging, handleDragMove, handleDragEnd])
+
+  // Reference to preview content for scrolling
+  const previewContentRef = useRef(null)
+
   // Initialize/update bands array when numFrequencyBands changes
   useEffect(() => {
     const currentBands = bands || []
@@ -153,11 +252,70 @@ export default function AudioPlotter() {
         }))
       : null
 
-  // NOTE: The "Go" button is needed, because we can use Browser audio API only after a user interaction!
-  const [runAnalysis, setRunAnalysis] = useState(false)
+  // Preview panel state management
+  // States: 'no-audio' | 'ready' | 'loading' | 'error' | 'success'
+  const [previewState, setPreviewState] = useState('no-audio')
+  const [previewError, setPreviewError] = useState(null)
+
+  // Update preview state when audio source changes
+  useEffect(() => {
+    if (url || audioFile) {
+      // Audio is loaded, set to ready if not already processing/showing
+      if (previewState === 'no-audio') {
+        setPreviewState('ready')
+      }
+    } else {
+      // No audio, reset to initial state
+      setPreviewState('no-audio')
+      setPreviewError(null)
+      setHasWaveform(false)
+    }
+  }, [url, audioFile])
+
+  // Reset hasWaveform when starting new generation
+  useEffect(() => {
+    if (previewState === 'loading') {
+      setHasWaveform(false)
+    }
+  }, [previewState])
+
+  // Auto-regenerate when settings change (if already showing success)
+  const settingsHash = JSON.stringify({
+    numBands,
+    imgHeight,
+    visStyle,
+    strokeWidth,
+    doNormalize,
+    addCaps,
+    numFrequencyBands,
+    bands,
+    blendMode,
+    backgroundColor,
+    spreadPeaks,
+    trim: audioTrimPointsDebounced,
+  })
+  const prevSettingsHash = useRef(settingsHash)
+
+  useEffect(() => {
+    if (previewState === 'success' && prevSettingsHash.current !== settingsHash) {
+      setPreviewState('loading')
+    }
+    prevSettingsHash.current = settingsHash
+  }, [settingsHash, previewState])
+
   // other state
   const [svgBlobURL, setSvgBlobURL] = useState(null)
   const svgEl = useRef(null)
+  const previewPanelRef = useRef(null)
+  const dragAnimationFrameRef = useRef(null)
+  const [hasWaveform, setHasWaveform] = useState(false)
+
+  // Transition to success when bandPeaks become available
+  useEffect(() => {
+    if (hasWaveform && previewState === 'loading') {
+      setPreviewState('success')
+    }
+  }, [hasWaveform, previewState])
 
   // Clean unknown URL params on mount only
   useEffect(() => {
@@ -240,8 +398,10 @@ export default function AudioPlotter() {
   )
 
   return (
-    <div>
-      {/* Audio File Section - Collapsible */}
+    <>
+      {/* Controls Section */}
+      <div className="controls-section">
+        {/* Audio File Section - Collapsible */}
       <div className="card border-0 shadow-sm mb-3">
         <div
           className="card-header text-start font-monospace py-2 bg-light"
@@ -291,32 +451,22 @@ export default function AudioPlotter() {
         )}
       </div>
 
-      {/* Start Analysis Section */}
-      {(url || audioFile) && !runAnalysis && (
-        <div className="text-center mb-3 mt-5">
-          <button
-            className="btn btn-primary btn-lg"
-            onClick={() => {
-              setRunAnalysis(true)
-              setShowAudioFile(false)
-            }}
-          >
-            Generate Waveform
-          </button>
-          <div className="text-muted small mt-3" style={{ maxWidth: '500px', margin: '12px auto 0' }}>
-            <strong>Why do I need to click?</strong>
-            <br />
-            Your browser requires user interaction before playing audio or processing audio files.
-            This button starts the analysis when you're ready.
-          </div>
-        </div>
-      )}
-
-      {(url || audioFile) && runAnalysis && (
+      {/* Controls only show when generating/generated */}
+      {(previewState === 'loading' || previewState === 'success') && (
         <AudioBuffer url={url} file={audioFile}>
           {({ isFetching, fetchError, bufferLength, buffer }) => {
-            if (isFetching) return 'loading…'
-            if (fetchError) return <ErrorMessage error={fetchError} />
+            // Handle fetch errors
+            if (fetchError) {
+              if (previewState !== 'error') {
+                setTimeout(() => {
+                  setPreviewError(fetchError)
+                  setPreviewState('error')
+                }, 0)
+              }
+              return null
+            }
+
+            if (isFetching) return null
 
             return (
               <>
@@ -628,42 +778,114 @@ export default function AudioPlotter() {
                   </div>
                   <hr />
                 </div>
-
-                <AudioPeaks
-                  buffer={buffer}
-                  bands={numBands}
-                  normalize={doNormalize}
-                  trimPoints={audioTrimPointsDebounced}
-                  frequencyBands={frequencyBands}
-                >
-                  {({ bandPeaks, decodeError }) => {
-                    if (decodeError) return <ErrorMessage error={decodeError} />
-                    return (
-                      <div className="shadow-sm p-2 mb-5 bg-body rounded border">
-                        {!!bandPeaks && (
-                          <SvgFromAudioPeaks
-                            ref={svgEl}
-                            className="img-fluid w-100 rounded"
-                            bandPeaks={bandPeaks}
-                            height={imgHeight}
-                            style={visStyle}
-                            strokeWidth={strokeWidth}
-                            withCaps={addCaps}
-                            backgroundColor={backgroundColor}
-                            blendMode={blendMode}
-                            spreadPeaks={spreadPeaks}
-                          />
-                        )}
-                      </div>
-                    )
-                  }}
-                </AudioPeaks>
               </>
             )
           }}
         </AudioBuffer>
       )}
-    </div>
+      </div>
+      {/* End Controls Section */}
+
+      {/* Unified Preview Panel - Always visible, shows different states */}
+      <div ref={previewPanelRef} className="preview-panel" style={{ ["--preview-height"]: previewHeight }}>
+        <div
+          className="drag-handle"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize preview panel"
+          aria-valuenow={parseFloat(previewHeight)}
+          aria-valuemin={20}
+          aria-valuemax={80}
+          tabIndex={0}
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          onKeyDown={handleKeyboardResize}
+        />
+        <div ref={previewContentRef} className="preview-content">
+          {previewState === 'no-audio' && <EmptyState />}
+          {previewState === 'ready' && (
+            <ReadyState
+              onGenerate={() => {
+                setPreviewState('loading')
+                setShowAudioFile(false)
+              }}
+            />
+          )}
+          {(previewState === 'loading' || previewState === 'success') && (
+            <AudioBuffer url={url} file={audioFile}>
+              {({ isFetching, fetchError, bufferLength, buffer }) => {
+                // Handle fetch errors
+                if (fetchError) {
+                  if (previewState !== 'error') {
+                    setTimeout(() => {
+                      setPreviewError(fetchError)
+                      setPreviewState('error')
+                    }, 0)
+                  }
+                  return null
+                }
+
+                if (isFetching) return <LoadingState />
+
+                return (
+                  <AudioPeaks
+                    buffer={buffer}
+                    bands={numBands}
+                    normalize={doNormalize}
+                    trimPoints={audioTrimPointsDebounced}
+                    frequencyBands={frequencyBands}
+                  >
+                    {({ bandPeaks, decodeError }) => {
+                      // Handle decode errors
+                      if (decodeError) {
+                        if (previewState !== 'error') {
+                          setTimeout(() => {
+                            setPreviewError(decodeError)
+                            setPreviewState('error')
+                          }, 0)
+                        }
+                        return null
+                      }
+
+                      // Update hasWaveform flag when bandPeaks available
+                      if (bandPeaks && !hasWaveform) {
+                        // Use queueMicrotask to defer state update outside render
+                        queueMicrotask(() => setHasWaveform(true))
+                      }
+
+                      // Render waveform at full size
+                      return !!bandPeaks ? (
+                        <SvgFromAudioPeaks
+                          ref={svgEl}
+                          className="img-fluid w-100"
+                          bandPeaks={bandPeaks}
+                          height={imgHeight}
+                          style={visStyle}
+                          strokeWidth={strokeWidth}
+                          withCaps={addCaps}
+                          backgroundColor={backgroundColor}
+                          blendMode={blendMode}
+                          spreadPeaks={spreadPeaks}
+                        />
+                      ) : null
+                    }}
+                  </AudioPeaks>
+                )
+              }}
+            </AudioBuffer>
+          )}
+          {previewState === 'error' && (
+            <ErrorState
+              error={previewError}
+              onRetry={() => {
+                setPreviewState('loading')
+                setPreviewError(null)
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </>
   )
 }
 
@@ -673,6 +895,59 @@ const ErrorMessage = ({ error, children }) => (
       <h5 className="card-title">Something went wrong…</h5>
       <pre className="card-text">{error}</pre>
       {children}
+    </div>
+  </div>
+)
+
+const EmptyState = () => (
+  <div className="preview-placeholder">
+    <div className="text-center">
+      <div className="mb-3" style={{ fontSize: '3rem' }}>
+        🎵
+      </div>
+      <h5>Upload an audio file to begin</h5>
+    </div>
+  </div>
+)
+
+const ReadyState = ({ onGenerate }) => (
+  <div className="preview-placeholder">
+    <div className="text-center">
+      <div className="mb-3" style={{ fontSize: '2rem' }}>
+        🎵
+      </div>
+      <p className="mb-3">Ready to generate your waveform</p>
+      <button className="btn btn-primary btn-lg" onClick={onGenerate} type="button">
+        Generate Waveform
+      </button>
+    </div>
+  </div>
+)
+
+const LoadingState = () => (
+  <div className="preview-placeholder">
+    <div className="text-center">
+      <div className="mb-3">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <p className="text-muted">Generating...</p>
+    </div>
+  </div>
+)
+
+const ErrorState = ({ error, onRetry }) => (
+  <div className="preview-placeholder">
+    <div className="text-center">
+      <div className="mb-3" style={{ fontSize: '2rem' }}>
+        ⚠️
+      </div>
+      <h5 className="text-danger mb-2">Error</h5>
+      <p className="text-muted small mb-3">{error || 'Something went wrong'}</p>
+      <button className="btn btn-outline-primary" onClick={onRetry} type="button">
+        Retry
+      </button>
     </div>
   </div>
 )
