@@ -28,6 +28,8 @@ import SvgFromAudioPeaks, {
 } from './SvgFromAudioPeaks'
 import CheckBox from './Form/CheckBox'
 import { debounce, Try, svgDomNodeToBlob } from '../util'
+import Panzoom from '@panzoom/panzoom'
+import { useLocalStorage } from 'usehooks-ts'
 
 const isDev = process.env.NODE_ENV === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
@@ -108,10 +110,7 @@ export default function AudioPlotter() {
   )
   const [backgroundColor, setBackgroundColor] = useQueryState('bgColor', { defaultValue: DEFAULT_BACKGROUND_COLOR })
   const [spreadPeaks, setSpreadPeaks] = useQueryState('spreadPeaks', queryTypes.boolean.withDefault(false))
-  const [stickyPreview, setStickyPreview] = useState(() => {
-    if (typeof window === 'undefined') return true
-    return localStorage.getItem('stickyPreview') !== 'false'
-  })
+  const [stickyPreview, setStickyPreview] = useLocalStorage('stickyPreview', true)
 
   // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
@@ -124,10 +123,7 @@ export default function AudioPlotter() {
   const [showPreviewSettings, setShowPreviewSettings] = useState(false)
 
   // Preview panel resize state
-  const [previewHeight, setPreviewHeight] = useState(() => {
-    if (typeof window === 'undefined') return '40vh'
-    return localStorage.getItem('previewHeight') || '40vh'
-  })
+  const [previewHeight, setPreviewHeight] = useLocalStorage('previewHeight', '40vh')
   const [isDragging, setIsDragging] = useState(false)
 
   // Resize handlers
@@ -173,10 +169,9 @@ export default function AudioPlotter() {
         cancelAnimationFrame(dragAnimationFrameRef.current)
       }
 
-      // Save final height to state and localStorage
+      // Save final height to state (useLocalStorage handles persistence)
       const finalHeight = previewPanelRef.current.style.getPropertyValue('--preview-height') || '40vh'
       setPreviewHeight(finalHeight)
-      localStorage.setItem('previewHeight', finalHeight)
     }
   }, [isDragging])
 
@@ -187,13 +182,10 @@ export default function AudioPlotter() {
         const currentVh = parseFloat(previewHeight)
         const delta = e.key === 'ArrowUp' ? -5 : 5
         const newVh = Math.max(20, Math.min(80, currentVh + delta))
-        const newHeight = `${newVh}vh`
-        setPreviewHeight(newHeight)
-        localStorage.setItem('previewHeight', newHeight)
+        setPreviewHeight(`${newVh}vh`)
       } else if (e.key === 'Enter') {
         e.preventDefault()
         setPreviewHeight('40vh')
-        localStorage.setItem('previewHeight', '40vh')
       }
     },
     [previewHeight]
@@ -314,12 +306,53 @@ export default function AudioPlotter() {
   const dragAnimationFrameRef = useRef(null)
   const [hasWaveform, setHasWaveform] = useState(false)
 
+  // Panzoom state
+  const panzoomContainerRef = useRef(null)
+  const panzoomInstanceRef = useRef(null)
+
   // Transition to success when bandPeaks become available
   useEffect(() => {
     if (hasWaveform && previewState === 'loading') {
       setPreviewState('success')
     }
   }, [hasWaveform, previewState])
+
+  // Initialize panzoom when waveform is available
+  useEffect(() => {
+    const container = panzoomContainerRef.current
+    if (!container || !hasWaveform) return
+
+    const panzoom = Panzoom(container, {
+      maxScale: 10,
+      minScale: 0.1,
+      animate: true,
+      duration: 200,
+      excludeClass: 'panzoom-exclude',
+    })
+    panzoomInstanceRef.current = panzoom
+
+    // Enable mouse wheel zooming on the parent (preview-content)
+    const parent = container.parentElement
+    const handleWheel = (e) => {
+      e.preventDefault()
+      panzoom.zoomWithWheel(e)
+    }
+    parent.addEventListener('wheel', handleWheel, { passive: false })
+
+    // Cleanup
+    return () => {
+      parent.removeEventListener('wheel', handleWheel)
+      panzoom.destroy()
+      panzoomInstanceRef.current = null
+    }
+  }, [hasWaveform])
+
+  // Zoom control handlers
+  const handleZoomIn = useCallback(() => panzoomInstanceRef.current?.zoomIn(), [])
+  const handleZoomOut = useCallback(() => panzoomInstanceRef.current?.zoomOut(), [])
+  const handleFitAll = useCallback(() => {
+    panzoomInstanceRef.current?.reset({ animate: false })
+  }, [])
 
   // Clean unknown URL params on mount only
   useEffect(() => {
@@ -737,10 +770,7 @@ export default function AudioPlotter() {
                           labelTxt="sticky preview"
                           id="inputStickyPreview"
                           checked={stickyPreview}
-                          onChange={(e) => {
-                            setStickyPreview(e.target.checked)
-                            localStorage.setItem('stickyPreview', e.target.checked)
-                          }}
+                          onChange={(e) => setStickyPreview(e.target.checked)}
                         />
                         <small className="text-muted d-block mt-1">
                           Keep preview visible at bottom while scrolling
@@ -876,20 +906,91 @@ export default function AudioPlotter() {
                         queueMicrotask(() => setHasWaveform(true))
                       }
 
-                      // Render waveform at full size
+                      // Render waveform with panzoom and toolbars
                       return !!bandPeaks ? (
-                        <SvgFromAudioPeaks
-                          ref={svgEl}
-                          className="img-fluid w-100"
-                          bandPeaks={bandPeaks}
-                          height={imgHeight}
-                          style={visStyle}
-                          strokeWidth={strokeWidth}
-                          withCaps={addCaps}
-                          backgroundColor={backgroundColor}
-                          blendMode={blendMode}
-                          spreadPeaks={spreadPeaks}
-                        />
+                        <>
+                          {/* Left toolbar: Zoom controls */}
+                          <div className="preview-toolbar preview-toolbar-left panzoom-exclude">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={handleZoomIn}
+                              title="Zoom in"
+                              aria-label="Zoom in"
+                            >
+                              +
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={handleZoomOut}
+                              title="Zoom out"
+                              aria-label="Zoom out"
+                            >
+                              −
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={handleFitAll}
+                              title="Fit all"
+                              aria-label="Fit all"
+                            >
+                              ⊡
+                            </button>
+                          </div>
+
+                          {/* Panzoom container wrapping SVG */}
+                          <div ref={panzoomContainerRef} className="panzoom-container">
+                            <SvgFromAudioPeaks
+                              ref={svgEl}
+                              className="img-fluid"
+                              bandPeaks={bandPeaks}
+                              height={imgHeight}
+                              style={visStyle}
+                              strokeWidth={strokeWidth}
+                              withCaps={addCaps}
+                              backgroundColor={backgroundColor}
+                              blendMode={blendMode}
+                              spreadPeaks={spreadPeaks}
+                            />
+                          </div>
+
+                          {/* Right toolbar: Unstick + Download */}
+                          <div className="preview-toolbar preview-toolbar-right panzoom-exclude">
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() => setStickyPreview(!stickyPreview)}
+                              title={stickyPreview ? 'Unstick preview' : 'Stick preview'}
+                              aria-label={stickyPreview ? 'Unstick preview' : 'Stick preview'}
+                            >
+                              {stickyPreview ? '📌' : '📍'}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-secondary"
+                              onClick={() =>
+                                downloadSVGNodeInDOM(
+                                  generateFilename(audioFile || url, {
+                                    height: imgHeight,
+                                    points: numBands,
+                                    numBands: numFrequencyBands,
+                                    trimStart: audioTrimPoints[0],
+                                    trimEnd: audioTrimPoints[1],
+                                    normalize: doNormalize,
+                                    addCaps: addCaps,
+                                    spreadPeaks: spreadPeaks,
+                                  })
+                                )
+                              }
+                              title="Download SVG"
+                              aria-label="Download SVG"
+                            >
+                              ⬇
+                            </button>
+                          </div>
+                        </>
                       ) : null
                     }}
                   </AudioPeaks>
