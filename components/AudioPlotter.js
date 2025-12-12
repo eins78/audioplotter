@@ -108,6 +108,10 @@ export default function AudioPlotter() {
   )
   const [backgroundColor, setBackgroundColor] = useQueryState('bgColor', { defaultValue: DEFAULT_BACKGROUND_COLOR })
   const [spreadPeaks, setSpreadPeaks] = useQueryState('spreadPeaks', queryTypes.boolean.withDefault(false))
+  const [stickyPreview, setStickyPreview] = useState(() => {
+    if (typeof window === 'undefined') return true
+    return localStorage.getItem('stickyPreview') !== 'false'
+  })
 
   // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
@@ -400,7 +404,7 @@ export default function AudioPlotter() {
   return (
     <>
       {/* Controls Section */}
-      <div className="controls-section">
+      <div className={stickyPreview ? 'controls-section' : ''}>
         {/* Audio File Section - Collapsible */}
       <div className="card border-0 shadow-sm mb-3">
         <div
@@ -727,6 +731,21 @@ export default function AudioPlotter() {
                           />
                         </div>
                       </div>
+
+                      <div className="mb-3">
+                        <CheckBox
+                          labelTxt="sticky preview"
+                          id="inputStickyPreview"
+                          checked={stickyPreview}
+                          onChange={(e) => {
+                            setStickyPreview(e.target.checked)
+                            localStorage.setItem('stickyPreview', e.target.checked)
+                          }}
+                        />
+                        <small className="text-muted d-block mt-1">
+                          Keep preview visible at bottom while scrolling
+                        </small>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -787,7 +806,11 @@ export default function AudioPlotter() {
       {/* End Controls Section */}
 
       {/* Unified Preview Panel - Always visible, shows different states */}
-      <div ref={previewPanelRef} className="preview-panel" style={{ ["--preview-height"]: previewHeight }}>
+      <div
+        ref={previewPanelRef}
+        className={stickyPreview ? 'preview-panel' : 'preview-panel-inline'}
+        style={stickyPreview ? { ['--preview-height']: previewHeight } : {}}
+      >
         <div
           className="drag-handle"
           role="separator"

@@ -196,6 +196,18 @@ $primary: shade-color($indigo, 22%);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
+.preview-panel-inline {
+  // Non-sticky version - flows inline with content
+  width: 100%;
+  background: var(--bs-body-bg);
+  padding: 0.5rem;
+  margin-top: 1rem;
+
+  .drag-handle {
+    display: none; // Hide resize handle when not sticky
+  }
+}
+
 .drag-handle {
   cursor: ns-resize;
   height: 8px;
