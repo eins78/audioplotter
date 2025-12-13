@@ -1,7 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useQueryState, queryTypes } from 'next-usequerystate'
 import { z } from 'zod'
+import createDebug from 'debug'
+
+// Debug loggers - enable with localStorage.debug = 'audioplotter:*'
+const debugFreqBands = createDebug('audioplotter:frequencyBands')
+const debugRender = createDebug('audioplotter:render')
 
 import {
   AudioBuffer,
@@ -261,16 +266,18 @@ export default function AudioPlotter() {
   }, [numFrequencyBands])
 
   // Build frequencyBands config from presets + colors + opacity
-  const frequencyBands =
-    numFrequencyBands > 1
-      ? FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => ({
-          name: preset.name,
-          lowHz: preset.low,
-          highHz: preset.high,
-          color: bands?.[i]?.color || DEFAULT_BAND_COLORS[i],
-          opacity: bands?.[i]?.opacity !== undefined ? bands[i].opacity : 1,
-        }))
-      : null
+  // Memoized to prevent unnecessary AudioPeaks recalculation when unrelated state changes
+  const frequencyBands = useMemo(() => {
+    debugFreqBands('RECALCULATING frequencyBands (numFrequencyBands=%d)', numFrequencyBands)
+    if (numFrequencyBands <= 1) return null
+    return FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => ({
+      name: preset.name,
+      lowHz: preset.low,
+      highHz: preset.high,
+      color: bands?.[i]?.color || DEFAULT_BAND_COLORS[i],
+      opacity: bands?.[i]?.opacity !== undefined ? bands[i].opacity : 1,
+    }))
+  }, [numFrequencyBands, bands])
 
   // Preview panel state management
   // States: 'no-audio' | 'ready' | 'loading' | 'error' | 'success'

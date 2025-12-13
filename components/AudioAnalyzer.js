@@ -4,6 +4,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
 import AudioUtil from 'audio-buffer-utils'
+import createDebug from 'debug'
+
+// Debug logger - enable with localStorage.debug = 'audioplotter:*'
+const debugPeaks = createDebug('audioplotter:peaks')
 
 export const MIN_BANDS = 1
 export const MAX_BANDS = 2048
@@ -221,6 +225,8 @@ export function AudioPeaks({
 
   useEffect(
     async function calculatePeaks() {
+      debugPeaks('RECALCULATING peaks (bands=%d normalize=%s frequencyBands=%s)', bands, normalize, frequencyBands ? frequencyBands.length : 0)
+
       if (!(audioContext && bufferLength > 0)) {
         return setBandPeaks(null)
       }
