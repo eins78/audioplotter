@@ -1,48 +1,44 @@
+# Dockerfile for CI/testing and optional local development
+# Production deployment is handled by Vercel (automatic Vite detection)
+# This image is used by docker-compose for running E2E tests with Selenium
+
 # Build stage
-FROM node:22-alpine AS builder
-RUN apk add --no-cache libc6-compat
+FROM node:24-alpine AS builder
 WORKDIR /app
 
-# Enable pnpm
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN npm i -g corepack && pnpm -v
+# Enable corepack for pnpm
+RUN npm i -g corepack && corepack enable && pnpm -v
 
-# Fetch dependencies (only needs lockfile, maximizes layer caching)
-COPY pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
+# Copy package files and install dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Copy all files (including scripts/ for postinstall)
+# Copy source code and build
 COPY . .
+RUN pnpm build
 
-# Install dependencies (offline from fetched packages, skip postinstall - dev sample not needed)
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --offline --frozen-lockfile --ignore-scripts
+# Production stage with nginx
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-# Build app
-ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm run build
+# Remove default nginx files
+RUN rm -rf ./*
 
-# Production image
-FROM node:22-alpine AS runner
-WORKDIR /app
+# Copy built files from builder
+COPY --from=builder /app/dist .
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Copy nginx configuration (optional - nginx serves SPA by default)
+# For SPA routing, we need to ensure all routes fall back to index.html
+RUN echo 'server { \
+    listen 80; \
+    server_name localhost; \
+    root /usr/share/nginx/html; \
+    index index.html; \
+    location / { \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+EXPOSE 80
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
-
-# Copy standalone build output
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
-EXPOSE 3000
-ENV PORT=3000
-
-CMD ["node", "server.js"]
+CMD ["nginx", "-g", "daemon off;"]

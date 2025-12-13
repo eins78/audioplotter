@@ -1,0 +1,90 @@
+@import 'react-toggle/style.css';
+
+// ============================================================================
+// REACT-TOGGLE CUSTOMIZATION
+// ============================================================================
+// Uses CSS custom properties for colors (no Sass variables).
+// Gray colors use Bootstrap's built-in CSS variables.
+// Primary colors inherit from theme system defined in style.scss.
+
+.react-toggle {
+  margin-right: 8px;
+  vertical-align: middle;
+
+  .react-toggle-thumb {
+    width: 18px;
+    height: 18px;
+    border-color: var(--bs-gray-600);
+  }
+  .react-toggle-track {
+    width: 40px;
+    height: 20px;
+    border-radius: 20px;
+    background-color: var(--bs-gray-600);
+  }
+  .react-toggle-track-check {
+    left: 10px;
+  }
+  .react-toggle-track-x {
+    right: 7px;
+  }
+
+  &:hover:not(.react-toggle--disabled) {
+    .react-toggle-track {
+      background-color: var(--bs-gray-500);
+    }
+    .react-toggle-thumb {
+      border-color: var(--bs-gray-500);
+    }
+  }
+
+  &.react-toggle--checked {
+    .react-toggle-thumb {
+      left: 21px;
+      border-color: var(--bs-primary);
+    }
+    .react-toggle-track {
+      background-color: var(--bs-primary);
+    }
+
+    &:hover:not(.react-toggle--disabled) {
+      .react-toggle-track {
+        background-color: var(--bs-primary-hover);
+      }
+      .react-toggle-thumb {
+        border-color: var(--bs-primary-hover);
+      }
+    }
+  }
+
+  &.react-toggle--focus .react-toggle-thumb {
+    box-shadow: 0px 0px 2px 3px var(--bs-primary-hover);
+  }
+}
+
+// Dark mode: use lightened primary color
+[data-bs-theme='dark'] {
+  .react-toggle {
+    &.react-toggle--checked {
+      .react-toggle-thumb {
+        border-color: var(--bs-primary);
+      }
+      .react-toggle-track {
+        background-color: var(--bs-primary);
+      }
+
+      &:hover:not(.react-toggle--disabled) {
+        .react-toggle-track {
+          background-color: var(--bs-primary-hover);
+        }
+        .react-toggle-thumb {
+          border-color: var(--bs-primary-hover);
+        }
+      }
+    }
+
+    &.react-toggle--focus .react-toggle-thumb {
+      box-shadow: 0px 0px 2px 3px var(--bs-primary-hover);
+    }
+  }
+}
