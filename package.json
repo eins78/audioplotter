@@ -29,6 +29,7 @@
     "bootstrap": "^5.3.3",
     "debug": "^4.4.3",
     "lodash.debounce": "^4.0.8",
+    "nuqs": "^2.8.5",
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
     "react-bootstrap-icons": "^1.11.6",
