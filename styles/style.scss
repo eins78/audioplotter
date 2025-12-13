@@ -172,10 +172,6 @@ $primary: shade-color($indigo, 22%);
 }
 
 .preview-panel {
-  // Safe area padding (for notched devices, with minimum fallback)
-  --preview-panel-padding-left: max(0.5rem, env(safe-area-inset-left));
-  --preview-panel-padding-right: max(0.5rem, env(safe-area-inset-right));
-
   position: sticky;
   bottom: 0;
   left: 0;
@@ -189,22 +185,13 @@ $primary: shade-color($indigo, 22%);
   z-index: 100;
   background: var(--bs-body-bg);
   border-top: 1px solid var(--bs-border-color);
-
-  // Apple safe area insets for notched devices
-  padding-left: var(--preview-panel-padding-left);
-  padding-right: var(--preview-panel-padding-right);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 .preview-panel-inline {
-  // Use same CSS variables as sticky version for toolbar margins
-  --preview-panel-padding-left: 0.5rem;
-  --preview-panel-padding-right: 0.5rem;
-
   // Non-sticky version - flows inline with content
   width: 100%;
   background: var(--bs-body-bg);
-  padding: 0.5rem;
   margin-top: 1rem;
 
   .drag-handle {
@@ -221,12 +208,6 @@ $primary: shade-color($indigo, 22%);
   align-items: center;
   justify-content: center;
   transition: background-color 0.15s ease;
-
-  // Extend into parent padding to fill full width
-  margin-left: calc(-1 * var(--preview-panel-padding-left));
-  margin-right: calc(-1 * var(--preview-panel-padding-right));
-  padding-left: var(--preview-panel-padding-left);
-  padding-right: var(--preview-panel-padding-right);
 
   &::before {
     content: '';
@@ -293,6 +274,8 @@ $primary: shade-color($indigo, 22%);
 }
 
 // Preview toolbars (left and right)
+// Buttons extend to screen edges and may overlap safe area insets on notched devices.
+// Button width must be at least 2x the safe inset to ensure adequate touch target.
 .preview-toolbar {
   display: flex;
   flex-direction: column;
@@ -334,18 +317,20 @@ $primary: shade-color($indigo, 22%);
 
 .preview-toolbar-left {
   border-left: none;
-  // Extend into parent padding
-  margin-left: calc(-1 * var(--preview-panel-padding-left));
-  padding-left: var(--preview-panel-padding-left);
-  min-width: calc(32px + var(--preview-panel-padding-left));
+
+  button {
+    // Min 32px, or 2x safe-area-inset-left (whichever is larger) for notched devices
+    width: max(32px, calc(2 * env(safe-area-inset-left, 0px)));
+  }
 }
 
 .preview-toolbar-right {
   border-right: none;
-  // Extend into parent padding
-  margin-right: calc(-1 * var(--preview-panel-padding-right));
-  padding-right: var(--preview-panel-padding-right);
-  min-width: calc(32px + var(--preview-panel-padding-right));
+
+  button {
+    // Min 32px, or 2x safe-area-inset-right (whichever is larger) for notched devices
+    width: max(32px, calc(2 * env(safe-area-inset-right, 0px)));
+  }
 }
 
 .preview-placeholder {
