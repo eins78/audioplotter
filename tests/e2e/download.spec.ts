@@ -44,8 +44,8 @@ test.describe('SVG Download', () => {
     await page.click('button:has-text("Generate Waveform")')
     await page.waitForSelector('svg[width="1000"]')
 
-    // Expand Waveform Settings
-    await page.click('button:has-text("Waveform Settings")')
+    // Expand Waveform Settings (div with role=button, not actual button)
+    await page.click('[role="button"]:has-text("Waveform Settings")')
 
     // Change settings (select has no id, height input is inputHeightNr)
     await page.selectOption('select', 'bars')

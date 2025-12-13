@@ -29,8 +29,8 @@ test.describe('Audio Workflow', () => {
     await page.click('button:has-text("Generate Waveform")')
     await page.waitForSelector('svg[width="1000"]')
 
-    // Expand Waveform Settings section
-    await page.click('button:has-text("Waveform Settings")')
+    // Expand Waveform Settings section (div with role=button, not actual button)
+    await page.click('[role="button"]:has-text("Waveform Settings")')
 
     // Find style select (no id, just select element)
     const styleSelect = page.locator('select')
@@ -50,8 +50,8 @@ test.describe('Audio Workflow', () => {
     // Get initial waveform SVG content
     const initialSvg = await page.locator('svg[width="1000"]').innerHTML()
 
-    // Expand Waveform Settings section
-    await page.click('button:has-text("Waveform Settings")')
+    // Expand Waveform Settings section (div with role=button, not actual button)
+    await page.click('[role="button"]:has-text("Waveform Settings")')
 
     // Adjust trim start using the correct ID (now inputTrimStartNr)
     const trimStart = page.locator('input#inputTrimStartNr')
