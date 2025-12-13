@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useQueryState, queryTypes } from 'next-usequerystate'
 import { z } from 'zod'
 
@@ -139,6 +140,12 @@ export default function AudioPlotter() {
   // Preview panel resize state
   const [previewHeight, setPreviewHeight] = useLocalStorage('previewHeight', '40vh')
   const [isDragging, setIsDragging] = useState(false)
+
+  // Portal root for preview panel (renders outside Bootstrap grid structure)
+  const [portalRoot, setPortalRoot] = useState(null)
+  useEffect(() => {
+    setPortalRoot(document.getElementById('preview-portal-root'))
+  }, [])
 
   // Resize handlers
   const handleDragStart = useCallback((e) => {
@@ -867,12 +874,14 @@ export default function AudioPlotter() {
       </div>
       {/* End Controls Section */}
 
-      {/* Unified Preview Panel - Always visible, shows different states */}
-      <div
-        ref={previewPanelRef}
-        className={stickyPreview ? 'preview-panel' : 'preview-panel-inline'}
-        style={stickyPreview ? { ['--preview-height']: previewHeight } : {}}
-      >
+      {/* Preview Panel - rendered via portal when sticky to escape Bootstrap grid */}
+      {(() => {
+        const previewPanel = (
+          <div
+            ref={previewPanelRef}
+            className={stickyPreview ? 'preview-panel' : 'preview-panel-inline'}
+            style={stickyPreview ? { ['--preview-height']: previewHeight } : {}}
+          >
         <div
           className="drag-handle"
           role="separator"
@@ -1048,6 +1057,17 @@ export default function AudioPlotter() {
           )}
         </div>
       </div>
+        )
+
+        // Use portal for sticky mode to render outside Bootstrap grid structure
+        // This prevents the main content row from covering the panel edges
+        if (stickyPreview && portalRoot) {
+          return createPortal(previewPanel, portalRoot)
+        }
+
+        // Inline mode: render in place
+        return previewPanel
+      })()}
     </>
   )
 }
