@@ -42,8 +42,8 @@ import {
   ZoomIn,
   ZoomOut,
   Fullscreen,
-  PinFill,
   PinAngle,
+  BoxArrowInUp,
   Download,
 } from 'react-bootstrap-icons'
 
@@ -1032,10 +1032,10 @@ export default function AudioPlotter() {
                 type="button"
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => setStickyPreview(false)}
-                title="Close preview panel"
-                aria-label="Close preview panel"
+                title="Inline preview"
+                aria-label="Inline preview"
               >
-                <PinFill size={16} aria-hidden="true" focusable="false" />
+                <BoxArrowInUp size={16} aria-hidden="true" focusable="false" />
               </button>
               <button
                 type="button"
