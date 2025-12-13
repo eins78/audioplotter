@@ -15,9 +15,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
 # Copy all files (including scripts/ for postinstall)
 COPY . .
 
-# Install dependencies (offline from fetched packages)
+# Install dependencies (offline from fetched packages, skip postinstall - dev sample not needed)
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --offline --frozen-lockfile
+    pnpm install --offline --frozen-lockfile --ignore-scripts
 
 # Build app
 ENV NEXT_TELEMETRY_DISABLED=1
