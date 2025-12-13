@@ -5,7 +5,7 @@ test.describe('SVG Download', () => {
     await page.goto('/')
 
     // Load audio
-    await page.click('button:has-text("Go")')
+    await page.click('button:has-text("Generate Waveform")')
     await page.waitForSelector('svg')
 
     // Set up download listener
@@ -41,7 +41,7 @@ test.describe('SVG Download', () => {
     await page.goto('/')
 
     // Load audio
-    await page.click('button:has-text("Go")')
+    await page.click('button:has-text("Generate Waveform")')
     await page.waitForSelector('svg')
 
     // Change settings

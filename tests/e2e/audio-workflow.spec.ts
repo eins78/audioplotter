@@ -4,11 +4,11 @@ test.describe('Audio Workflow', () => {
   test('loads default Amen Break and renders SVG', async ({ page }) => {
     await page.goto('/')
 
-    // Check main heading exists
-    await expect(page.locator('main h1')).toContainText('audioplotter')
+    // Check main heading exists (in header banner, not main)
+    await expect(page.locator('h1')).toContainText('audioplotter')
 
-    // Click the Go button to load audio
-    await page.click('button:has-text("Go")')
+    // Click the Generate Waveform button to load audio
+    await page.click('button:has-text("Generate Waveform")')
 
     // Wait for SVG to render
     await page.waitForSelector('svg', { timeout: 10000 })
@@ -26,7 +26,7 @@ test.describe('Audio Workflow', () => {
     await page.goto('/')
 
     // Load audio
-    await page.click('button:has-text("Go")')
+    await page.click('button:has-text("Generate Waveform")')
     await page.waitForSelector('svg')
 
     // Find style select (it's the first select on the page)
@@ -41,7 +41,7 @@ test.describe('Audio Workflow', () => {
     await page.goto('/')
 
     // Load audio
-    await page.click('button:has-text("Go")')
+    await page.click('button:has-text("Generate Waveform")')
     await page.waitForSelector('svg')
 
     // Get initial SVG content

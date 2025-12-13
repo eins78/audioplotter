@@ -34,7 +34,7 @@
     "react-bootstrap-icons": "^1.11.6",
     "react-dom": "^19.0.0",
     "react-helmet-async": "^2.0.5",
-    "react-svg-path": "^2.0.0",
+    "react-svg-path": "^1.13.3",
     "react-toggle": "^4.1.2",
     "usehooks-ts": "^3.1.1",
     "workbox-build": "^7.3.0",
