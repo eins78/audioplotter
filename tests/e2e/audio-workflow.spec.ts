@@ -33,10 +33,7 @@ test.describe('Audio Workflow', () => {
     const styleSelect = page.locator('select').first()
     await styleSelect.selectOption('zigzag')
 
-    // Wait a bit for the SVG to update
-    await page.waitForTimeout(500)
-
-    // SVG should still be visible
+    // Wait for SVG to update after style change
     await expect(page.locator('svg')).toBeVisible()
   })
 
@@ -55,8 +52,8 @@ test.describe('Audio Workflow', () => {
     await trimStart.fill('10')
     await trimStart.blur()
 
-    // Wait for debounce and re-render
-    await page.waitForTimeout(200)
+    // Wait for SVG to be visible after trim change
+    await expect(page.locator('svg')).toBeVisible()
 
     // SVG content should have changed
     const updatedSvg = await page.locator('svg').innerHTML()

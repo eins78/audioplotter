@@ -293,7 +293,6 @@ Generates SVG visualization from audio peaks.
 1. `zigzag` - Asymmetric pattern alternating above/below centerline
 2. `saw` - Sawtooth wave pattern (symmetric, higher density)
 3. `bars` - Vertical bars centered on middle (symmetric)
-4. `circle` - Circles above/below centerline (radius = amplitude)
 
 **Constants:**
 - Width: 1000px (fixed), Padding: 100px

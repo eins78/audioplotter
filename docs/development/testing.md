@@ -68,8 +68,9 @@ import SvgFromAudioPeaks from './SvgFromAudioPeaks'
 
 describe('SvgFromAudioPeaks', () => {
   it('renders SVG element', async () => {
+    const testBandPeaks = [{ name: 'Full', lowHz: 20, highHz: 20000, color: '#000000', peaks: [0.5] }]
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={[0.5]} height={150} style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={150} style="saw" strokeWidth={1} />
     )
 
     const svg = container.querySelector('svg')

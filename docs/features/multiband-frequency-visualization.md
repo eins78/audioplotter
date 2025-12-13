@@ -123,7 +123,7 @@ Perfect for:
 - **Treble:** 4,000-20,000 Hz
 
 #### 6-8 Bands
-Progressive subdivisions for fine-grained frequency analysis. See `FREQUENCY_PRESETS` in `components/AudioAnalyzer.js` for exact ranges.
+Progressive subdivisions for fine-grained frequency analysis. See `FREQUENCY_PRESETS` in `src/components/AudioAnalyzer.tsx` for exact ranges.
 
 ### Default Color Palette
 
@@ -487,9 +487,9 @@ Possible additions (not currently implemented):
 
 ### Files Modified
 
-- `components/AudioAnalyzer.js` - Frequency filtering, band processing
-- `components/AudioPlotter.js` - UI, state management, URL persistence
-- `components/SvgFromAudioPeaks.js` - Multi-band SVG rendering
+- `src/components/AudioAnalyzer.tsx` - Frequency filtering, band processing
+- `src/components/AudioPlotter.tsx` - UI, state management, URL persistence
+- `src/components/SvgFromAudioPeaks.tsx` - Multi-band SVG rendering
 
 ### Key Functions
 
@@ -511,7 +511,7 @@ Possible additions (not currently implemented):
 ### Dependencies
 
 **New:**
-- `next-usequerystate@1.7.3` - URL state management (Next.js 12 compatible)
+- `nuqs@2.x` - URL state management (framework-agnostic)
 - `zod@4.x` - Schema validation for bands array
 
 **Existing:**
