@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "serve": "serve dist -l 3000",
     "dev-audio-server": "serve --cors -l 57915 tmp/dev",
-    "postinstall": "node scripts/download-dev-sample.js",
+    "postinstall": "scripts/download-dev-sample.sh",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -71,7 +71,7 @@
     "printWidth": 120
   },
   "engines": {
-    "node": "^24.0.0"
+    "node": ">=24.12.0"
   },
   "packageManager": "pnpm@10.22.0+sha512.bf049efe995b28f527fd2b41ae0474ce29186f7edcb3bf545087bd61fbbebb2bf75362d1307fda09c2d288e1e499787ac12d4fcb617a974718a6051f2eee741c"
 }
