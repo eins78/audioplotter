@@ -113,7 +113,3 @@ Potential future additions:
 - localStorage persistence for manual overrides
 - Additional color themes beyond light/dark
 - Smooth animated transitions when switching themes
-
----
-
-**For Developers:** Technical implementation details, code examples, and architecture documentation are available in [docs/development/theme-and-colors.md](../development/theme-and-colors.md).

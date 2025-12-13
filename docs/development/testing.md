@@ -228,8 +228,8 @@ Tests run automatically on every push via GitHub Actions:
 | Layer | Files | Tests | Status |
 |-------|-------|-------|--------|
 | Unit | 2 | 19 | ✅ Passing |
-| Component | 1 | 17/23 | 🟡 Mostly passing |
-| E2E | 3 | Created | 🟡 Needs refinement |
+| Component | 1 | 18 | ✅ Passing |
+| E2E | 3 | 3 | ✅ Passing |
 
 ### Expanding Coverage
 

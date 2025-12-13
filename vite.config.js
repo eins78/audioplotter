@@ -3,8 +3,16 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  server: {
-    port: 40210
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          audio: ['audio-context', 'audio-buffer-utils'],
+          ui: ['bootstrap', 'react-toggle', 'react-bootstrap-icons']
+        }
+      }
+    }
   },
   css: {
     preprocessorOptions: {
