@@ -6,7 +6,6 @@ import createDebug from 'debug'
 
 // Debug loggers - enable with localStorage.debug = 'audioplotter:*'
 const debugFreqBands = createDebug('audioplotter:frequencyBands')
-const debugRender = createDebug('audioplotter:render')
 
 import {
   AudioBuffer,
@@ -47,7 +46,6 @@ import {
   ZoomIn,
   ZoomOut,
   Fullscreen,
-  PinAngle,
   BoxArrowInUp,
   Download,
 } from 'react-bootstrap-icons'
@@ -441,12 +439,12 @@ export default function AudioPlotter() {
     []
   )
   const onChangeTrimStart = (event) => {
-    const val = Try(() => parseFloat(event.target.value, 10))
+    const val = Try(() => parseFloat(event.target.value))
     setTrimStart(val, URL_UPDATE_OPTIONS)
     debounceAudioTrimPoints([val, trimEnd])
   }
   const onChangeTrimEnd = (event) => {
-    const val = Try(() => parseFloat(event.target.value, 10))
+    const val = Try(() => parseFloat(event.target.value))
     setTrimEnd(val, URL_UPDATE_OPTIONS)
     debounceAudioTrimPoints([trimStart, val])
   }
@@ -829,7 +827,7 @@ export default function AudioPlotter() {
                     <hr />
                     <div className="mb-3">
                       <div className="d-flex justify-content-center gap-2">
-                      {!!SHOW_BLOB_DOWNLOAD && (
+                      {SHOW_BLOB_DOWNLOAD && (
                         <a
                           className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
                           target="_blank"
