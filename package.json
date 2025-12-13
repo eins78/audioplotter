@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "serve": "serve dist -l 3000",
     "dev-audio-server": "serve --cors -l 57915 tmp/dev",
-    "postinstall": "node --experimental-strip-types scripts/download-dev-sample.ts",
+    "postinstall": "scripts/download-dev-sample.sh",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
