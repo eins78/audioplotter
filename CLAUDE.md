@@ -32,6 +32,21 @@
 
 **Rule for AI Agents:** When documenting features, create user-facing docs in `docs/features/` and technical docs in `docs/development/`. Keep them separate.
 
+## AI Agent Workflow Rules
+
+### Frontend Verification Protocol
+When making frontend changes (visual or behavioral):
+1. **MUST** use chrome-devtools MCP to verify changes work correctly
+2. **If verification fails** (timeout, connection error, page won't load): **STOP immediately**
+3. **Report the failure** to user and wait for them to fix the browser/server issue
+4. **Do NOT continue** with further changes or mark tasks as complete without visual verification
+
+### Dev Server Port Detection
+The dev server typically runs on port 3000, but may use a different port if 3000 is occupied:
+- Try ports 3000, 3001, 3002, 3003, 3004, 3005 in sequence
+- Use whichever port responds successfully
+- Only report failure after trying all ports
+
 ## Build/Development Commands
 
 ### Development
