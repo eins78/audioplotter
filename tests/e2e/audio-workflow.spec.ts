@@ -10,11 +10,11 @@ test.describe('Audio Workflow', () => {
     // Click the Generate Waveform button to load audio
     await page.click('button:has-text("Generate Waveform")')
 
-    // Wait for SVG to render
-    await page.waitForSelector('svg', { timeout: 10000 })
+    // Wait for waveform SVG to render (not Bootstrap icons)
+    await page.waitForSelector('svg[width="1000"]', { timeout: 10000 })
 
-    // Check SVG is visible
-    const svg = page.locator('svg')
+    // Check waveform SVG is visible
+    const svg = page.locator('svg[width="1000"]')
     await expect(svg).toBeVisible()
 
     // Check SVG has expected dimensions
@@ -27,14 +27,17 @@ test.describe('Audio Workflow', () => {
 
     // Load audio
     await page.click('button:has-text("Generate Waveform")')
-    await page.waitForSelector('svg')
+    await page.waitForSelector('svg[width="1000"]')
 
-    // Find style select (it's the first select on the page)
-    const styleSelect = page.locator('select').first()
+    // Expand Waveform Settings section
+    await page.click('button:has-text("Waveform Settings")')
+
+    // Find style select (no id, just select element)
+    const styleSelect = page.locator('select')
     await styleSelect.selectOption('zigzag')
 
-    // Wait for SVG to update after style change
-    await expect(page.locator('svg')).toBeVisible()
+    // Wait for waveform SVG to still be visible
+    await expect(page.locator('svg[width="1000"]')).toBeVisible()
   })
 
   test('adjusts trim points and visualization changes', async ({ page }) => {
@@ -42,21 +45,24 @@ test.describe('Audio Workflow', () => {
 
     // Load audio
     await page.click('button:has-text("Generate Waveform")')
-    await page.waitForSelector('svg')
+    await page.waitForSelector('svg[width="1000"]')
 
-    // Get initial SVG content
-    const initialSvg = await page.locator('svg').innerHTML()
+    // Get initial waveform SVG content
+    const initialSvg = await page.locator('svg[width="1000"]').innerHTML()
 
-    // Adjust trim start using the correct ID
-    const trimStart = page.locator('input#inputTrimStart')
+    // Expand Waveform Settings section
+    await page.click('button:has-text("Waveform Settings")')
+
+    // Adjust trim start using the correct ID (now inputTrimStartNr)
+    const trimStart = page.locator('input#inputTrimStartNr')
     await trimStart.fill('10')
     await trimStart.blur()
 
-    // Wait for SVG to be visible after trim change
-    await expect(page.locator('svg')).toBeVisible()
+    // Wait for waveform SVG to update
+    await expect(page.locator('svg[width="1000"]')).toBeVisible()
 
     // SVG content should have changed
-    const updatedSvg = await page.locator('svg').innerHTML()
+    const updatedSvg = await page.locator('svg[width="1000"]').innerHTML()
     expect(updatedSvg).not.toBe(initialSvg)
   })
 })

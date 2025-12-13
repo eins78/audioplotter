@@ -27,7 +27,7 @@ test.describe('PWA Functionality', () => {
 
     // Load the default audio to cache it
     await page.click('button:has-text("Generate Waveform")')
-    await page.waitForSelector('svg', { timeout: 10000 })
+    await page.waitForSelector('svg[width="1000"]', { timeout: 10000 })
 
     // Wait for network to be idle (assets cached)
     await page.waitForLoadState('networkidle')
@@ -41,8 +41,8 @@ test.describe('PWA Functionality', () => {
     // Verify app still works
     await expect(page.locator('h1')).toContainText('audioplotter')
 
-    // Verify we can still interact with UI
-    await expect(page.locator('select#style')).toBeVisible()
+    // Verify we can still interact with UI (check for Generate Waveform button)
+    await expect(page.locator('button:has-text("Generate Waveform")')).toBeVisible()
 
     // Go back online
     await context.setOffline(false)
@@ -51,9 +51,9 @@ test.describe('PWA Functionality', () => {
   test('manifest.json is accessible', async ({ page }) => {
     await page.goto('/')
 
-    // Check manifest link exists (may be multiple due to PWA plugin injection)
-    const manifestLink = page.locator('link[rel="manifest"]')
-    await expect(manifestLink.first()).toBeVisible()
+    // Check manifest link exists (link elements are not "visible" in Playwright)
+    const manifestLink = page.locator('link[rel="manifest"]').first()
+    await expect(manifestLink).toHaveAttribute('href')
 
     // Get manifest URL
     const href = await manifestLink.getAttribute('href')

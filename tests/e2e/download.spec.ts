@@ -6,13 +6,13 @@ test.describe('SVG Download', () => {
 
     // Load audio
     await page.click('button:has-text("Generate Waveform")')
-    await page.waitForSelector('svg')
+    await page.waitForSelector('svg[width="1000"]')
 
     // Set up download listener
     const downloadPromise = page.waitForEvent('download')
 
     // Click download button
-    await page.click('button:has-text("Download")')
+    await page.click('button:has-text("Download SVG")')
 
     // Wait for download to complete
     const download = await downloadPromise
@@ -42,17 +42,20 @@ test.describe('SVG Download', () => {
 
     // Load audio
     await page.click('button:has-text("Generate Waveform")')
-    await page.waitForSelector('svg')
+    await page.waitForSelector('svg[width="1000"]')
 
-    // Change settings
-    await page.selectOption('select#style', 'bars')
-    await page.fill('input#height', '200')
+    // Expand Waveform Settings
+    await page.click('button:has-text("Waveform Settings")')
+
+    // Change settings (select has no id, height input is inputHeightNr)
+    await page.selectOption('select', 'bars')
+    await page.fill('input#inputHeightNr', '200')
 
     // Set up download listener
     const downloadPromise = page.waitForEvent('download')
 
     // Download
-    await page.click('button:has-text("Download")')
+    await page.click('button:has-text("Download SVG")')
     const download = await downloadPromise
 
     // Check filename includes settings
