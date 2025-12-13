@@ -1257,8 +1257,9 @@ function generateFilename(audioSource: File | string, settings: FileSettings): s
 
 function downloadSVGNodeInDOM(filename = 'audioplot.svg') {
   // NOTE: goes around React straight to the DOM
-  const node = document.querySelector('svg')
-  if (!node) return
+  // Use specific selector to get waveform SVG, not Bootstrap icons
+  const node = document.querySelector('svg[width="1000"]')
+  if (!node || !(node instanceof SVGElement)) return
 
   const blob = svgDomNodeToBlob(node)
   const url = URL.createObjectURL(blob)

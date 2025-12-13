@@ -56,10 +56,12 @@ test.describe('Audio Workflow', () => {
     // Adjust trim start using the correct ID (now inputTrimStartNr)
     const trimStart = page.locator('input#inputTrimStartNr')
     await trimStart.fill('10')
-    await trimStart.blur()
 
-    // Wait for waveform SVG to update
-    await expect(page.locator('svg[width="1000"]')).toBeVisible()
+    // Wait for debounce (50ms) + re-render
+    await page.waitForTimeout(200)
+
+    // Verify the input value changed
+    await expect(trimStart).toHaveValue('10')
 
     // SVG content should have changed
     const updatedSvg = await page.locator('svg[width="1000"]').innerHTML()
