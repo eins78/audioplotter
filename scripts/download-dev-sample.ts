@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 
-const fs = require('fs')
-const path = require('path')
-const { execSync } = require('child_process')
+import fs from 'node:fs'
+import path from 'node:path'
+import { execSync } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
 
-const SAMPLE_URL = 'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const SAMPLE_URL =
+  'https://upload.wikimedia.org/wikipedia/en/transcoded/8/80/The_Amen_Break%2C_in_context.ogg/The_Amen_Break%2C_in_context.ogg.mp3'
 const TARGET_DIR = path.join(__dirname, '..', 'tmp', 'dev')
 const TARGET_FILE = path.join(TARGET_DIR, 'amen-break.mp3')
 
@@ -24,9 +28,12 @@ console.log('Downloading sample audio file from Wikimedia...')
 
 try {
   // Use curl with proper user agent to avoid 403 errors
-  execSync(`curl -L -o "${TARGET_FILE}" -H "User-Agent: Mozilla/5.0 (compatible; audioplotter/1.0)" "${SAMPLE_URL}"`, {
-    stdio: 'inherit'
-  })
+  execSync(
+    `curl -L -o "${TARGET_FILE}" -H "User-Agent: Mozilla/5.0 (compatible; audioplotter/1.0)" "${SAMPLE_URL}"`,
+    {
+      stdio: 'inherit'
+    }
+  )
 
   if (fs.existsSync(TARGET_FILE)) {
     console.log(`Sample audio downloaded successfully to: ${TARGET_FILE}`)
@@ -35,6 +42,6 @@ try {
     process.exit(1)
   }
 } catch (error) {
-  console.error('Error downloading file:', error.message)
+  console.error('Error downloading file:', (error as Error).message)
   process.exit(1)
 }
