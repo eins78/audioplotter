@@ -1,11 +1,11 @@
-name: Unit & Component Tests
+name: Tests (Unit & Component)
 
 on:
   pull_request:
     branches: ['*']
 
 jobs:
-  test:
+  unit-and-component:
     runs-on: ubuntu-latest
 
     steps:

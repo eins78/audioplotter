@@ -1,11 +1,11 @@
-name: E2E Tests
+name: Tests (E2E)
 
 on:
   pull_request:
     branches: ['*']
 
 jobs:
-  test:
+  e2e:
     runs-on: ubuntu-latest
 
     steps:
