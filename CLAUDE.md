@@ -10,6 +10,43 @@
 - **License**: GNU GPL v3
 - **Package Manager**: pnpm (via corepack)
 
+## Documentation Structure
+
+### docs/features/ - User-Facing Features
+- **Purpose**: Document features from end-user perspective
+- **Audience**: Users, designers, non-technical stakeholders
+- **Content**: What features do, how to use them, expected behavior
+- **Format**: Simple explanations, OS-specific instructions, no code
+- **Exclude**: Implementation details, file paths, code examples, debugging info
+
+**Examples:** dark-mode.md explains how users experience dark mode and how to change OS settings
+
+### docs/development/ - Development Documentation
+- **Purpose**: Technical documentation for developers and AI agents
+- **Audience**: Developers, technical contributors, AI agents working on codebase
+- **Content**: Implementation details, architecture, code examples, debugging procedures
+- **Format**: Code blocks, file paths, line numbers, technical reference, troubleshooting
+- **Include**: Everything developers need to understand, modify, and debug the code
+
+**Examples:** theme-and-colors.md contains CSS architecture, OKLCH color system, file structure
+
+**Rule for AI Agents:** When documenting features, create user-facing docs in `docs/features/` and technical docs in `docs/development/`. Keep them separate.
+
+## AI Agent Workflow Rules
+
+### Frontend Verification Protocol
+When making frontend changes (visual or behavioral):
+1. **MUST** use chrome-devtools MCP to verify changes work correctly
+2. **If verification fails** (timeout, connection error, page won't load): **STOP immediately**
+3. **Report the failure** to user and wait for them to fix the browser/server issue
+4. **Do NOT continue** with further changes or mark tasks as complete without visual verification
+
+### Dev Server Port Detection
+The dev server typically runs on port 3000, but may use a different port if 3000 is occupied:
+- Try ports 3000, 3001, 3002, 3003, 3004, 3005 in sequence
+- Use whichever port responds successfully
+- Only report failure after trying all ports
+
 ## Build/Development Commands
 
 ### Development
@@ -66,8 +103,9 @@
 - Example: `Try(() => riskyFunction(), (err) => handleError(err))`
 
 ### State Management
-- React hooks only: `useState`, `useEffect`, `useRef`, `useCallback`
+- React hooks only: `useState`, `useEffect`, `useRef`, `useCallback`, `useMemo`
 - No external state management libraries
+- Use `useMemo` for expensive computations and to prevent unnecessary recalculations
 
 ### Testing
 - RSpec with Capybara for E2E tests
@@ -104,11 +142,17 @@
 Audio processing and peak calculation using Web Audio API.
 
 **Exports:**
-- `AudioBuffer` - Fetches audio file from URL, returns ArrayBuffer
+- `AudioBuffer` - Fetches audio file from URL or File object, returns ArrayBuffer
 - `AudioPeaks` - Decodes audio, filters into bands, calculates peaks
-- Constants: `MIN_BANDS` (1), `MAX_BANDS` (2048), `DEFAULT_BANDS` (1024)
+- Constants:
+  - Time-domain: `MIN_BANDS` (1), `MAX_BANDS` (2048), `DEFAULT_BANDS` (1024)
+  - Frequency-domain: `MIN_FREQUENCY_BANDS` (1), `MAX_FREQUENCY_BANDS` (8), `DEFAULT_FREQUENCY_BANDS` (1)
+  - `DEFAULT_BAND_COLORS` - Palette of 9 pen-plotter colors
+  - `FREQUENCY_PRESETS` - Pre-configured Hz ranges for 1-8 bands
+- Functions:
+  - `filterAudioByFrequency(audioContext, audioBuffer, lowHz, highHz)` - Filter audio to specific frequency range using BiquadFilter
 
-**Process:** Fetch → Decode → Filter → Normalize
+**Process:** Fetch/Upload → Decode → Filter (frequency + time-domain) → Normalize
 
 ### AudioPlotter.js
 Main application component with UI controls.
@@ -116,7 +160,12 @@ Main application component with UI controls.
 **Features:**
 - User interaction required for Web Audio API ("Go" button)
 - Default audio: Amen Break (Wikipedia MP3 in prod, local in dev)
-- Controls: URL, style, height, bands, trim, stroke width, normalize, caps
+- **URL State Persistence:** All settings saved to URL using `next-usequerystate` with zod validation
+- **File Upload:** Accepts local audio files via file picker (no server upload)
+- **Collapsible Sections:** Audio File, Frequency Bands, Waveform Settings, Preview Settings
+- **Frequency Bands Controls:** 1-8 bands with per-band color/opacity customization
+- **Preview Panel:** Sticky/resizable with pan/zoom controls (using @panzoom/panzoom)
+- Controls: URL/file, style, height, bands, trim, stroke width, normalize, caps, blend mode, background color
 - Debounced trim inputs (50ms)
 - SVG download with descriptive filename
 
@@ -124,6 +173,8 @@ Main application component with UI controls.
 - Height: 150px, Bands: 1024
 - Trim: [32.78, 20.22] for Amen Break
 - Style: 'saw', Normalize: true, Caps: true
+- Frequency Bands: 1 (full spectrum)
+- Blend Mode: 'multiply', Background: white
 
 ### SvgFromAudioPeaks.js
 Generates SVG visualization from audio peaks.
@@ -132,19 +183,32 @@ Generates SVG visualization from audio peaks.
 1. `zigzag` - Alternates above/below centerline (not symmetric)
 2. `saw` - Sawtooth wave pattern (symmetric, higher density)
 3. `bars` - Vertical bars centered on middle (symmetric)
-4. `circle` - Circles above/below centerline (radius = amplitude)
 
 **Constants:**
 - Width: 1000px (fixed), Padding: 100px
 - Height: 1-2048px (variable)
 - Stroke width: 0.1-100 (dynamic max based on bands)
-- Colors: Black stroke (#222), white fill
+- Blend modes: `BLEND_MODES` - normal, multiply, screen, darken, lighten, overlay
+- `DEFAULT_BLEND_MODE` - 'multiply' (simulates pen plotter ink accumulation)
+- `DEFAULT_BACKGROUND_COLOR` - '#FFFFFF'
+
+**Multi-band Rendering:**
+- Renders each frequency band in separate `<g>` group with ID like `band-1-bass-20-250hz`
+- Applies per-band opacity and blend mode for realistic pen plotter preview
+- Background rect with configurable color
+
+**Performance Optimization:**
+- Uses `React.memo` for `BandGroup` component to prevent re-renders on styling-only changes
+- Uses `useMemo` for path coordinate calculations (geometry-dependent only)
+- Separate geometry calculation from styling for efficient updates
 
 ### AppLayout.js
 Main layout wrapper with header and content area.
 
 ### Form/CheckBox.js
-Toggle switch component using react-toggle with custom I/O icons.
+Toggle switch component using react-toggle.
+
+**Important:** The custom I/O icons (ToggleIcon component) may not render correctly due to positioning and font rendering issues. Use `icons={false}` or the react-toggle defaults instead. If using custom icons, always verify they render properly in the browser.
 
 ## Core Features
 
@@ -163,10 +227,10 @@ Toggle switch component using react-toggle with custom I/O icons.
 ### SVG Download
 **Filename Format:**
 ```
-{audio-name}-h{height}-b{bands}-ts{trimStart}-te{trimEnd}-norm{yes/no}-caps{yes/no}.svg
+audioplot-{audio-name}-h{height}-p{points}-{numBands}band-ts{trimStart}-te{trimEnd}-norm{yes/no}-caps{yes/no}-spread{yes/no}.svg
 ```
 
-**Example:** `amen-break-h150-b1024-ts32.78-te20.22-normyes-capsyes.svg`
+**Example:** `audioplot-amen-break-h150-p1024-3band-ts32.78-te20.22-normyes-capsyes-spreadno.svg`
 
 ## Key Dependencies
 
@@ -179,6 +243,12 @@ Toggle switch component using react-toggle with custom I/O icons.
 - `react-toggle` - Toggle component
 - `lodash.debounce` - Input debouncing
 - `next-pwa` - Progressive Web App support
+- `@panzoom/panzoom` (^4.6.1) - Pan/zoom for preview panel
+- `debug` (^4.4.3) - Opt-in debug logging
+- `next-usequerystate` (1.7.3) - URL state management
+- `react-bootstrap-icons` (^1.11.6) - SVG icon components
+- `usehooks-ts` (^3.1.1) - React hooks utilities (localStorage, etc.)
+- `zod` (^4.1.12) - Schema validation for URL params
 
 ### Development
 - `prettier` (^2.5.1) - Code formatter
