@@ -124,7 +124,7 @@ export default function AudioPlotter() {
   )
   const [backgroundColor, setBackgroundColor] = useQueryState('bgColor', { defaultValue: DEFAULT_BACKGROUND_COLOR })
   const [spreadPeaks, setSpreadPeaks] = useQueryState('spreadPeaks', queryTypes.boolean.withDefault(false))
-  const [stickyPreview, setStickyPreview] = useLocalStorage('stickyPreview', true)
+  const [stickyPreview, setStickyPreview] = useLocalStorage('stickyPreview', false)
 
   // form state - not URL persisted
   const [audioFile, setAudioFile] = useState(null)
@@ -331,10 +331,10 @@ export default function AudioPlotter() {
     }
   }, [hasWaveform, previewState])
 
-  // Initialize panzoom when waveform is available
+  // Initialize panzoom when waveform is available AND sticky mode is enabled
   useEffect(() => {
     const container = panzoomContainerRef.current
-    if (!container || !hasWaveform) return
+    if (!container || !hasWaveform || !stickyPreview) return
 
     const panzoom = Panzoom(container, {
       maxScale: 10,
@@ -359,7 +359,7 @@ export default function AudioPlotter() {
       panzoom.destroy()
       panzoomInstanceRef.current = null
     }
-  }, [hasWaveform])
+  }, [hasWaveform, stickyPreview])
 
   // Zoom control handlers
   const handleZoomIn = useCallback(() => panzoomInstanceRef.current?.zoomIn(), [])
@@ -799,28 +799,17 @@ export default function AudioPlotter() {
                           />
                         </div>
                       </div>
-
-                      <div className="mb-3">
-                        <CheckBox
-                          labelTxt="sticky preview"
-                          id="inputStickyPreview"
-                          checked={stickyPreview}
-                          onChange={(e) => setStickyPreview(e.target.checked)}
-                        />
-                        <small className="text-muted d-block mt-1">
-                          Keep preview visible at bottom while scrolling
-                        </small>
-                      </div>
                     </div>
                   )}
                 </div>
 
-                <hr />
-
-                <div className="mb-3">
-                  <div style={{ textAlign: 'center' }}>
-                    {!!SHOW_BLOB_DOWNLOAD && (
-                      <>
+                {/* Download buttons row - only show when NOT in sticky mode */}
+                {!stickyPreview && (
+                  <>
+                    <hr />
+                    <div className="mb-3">
+                      <div className="d-flex justify-content-center gap-2">
+                      {!!SHOW_BLOB_DOWNLOAD && (
                         <a
                           className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
                           target="_blank"
@@ -837,31 +826,39 @@ export default function AudioPlotter() {
                           href={svgBlobURL}
                         >
                           Download SVG (from blob!)
-                        </a>{' '}
-                      </>
-                    )}
-                    <button
-                      className="btn btn-outline-primary"
-                      onClick={() =>
-                        downloadSVGNodeInDOM(
-                          generateFilename(audioFile || url, {
-                            height: imgHeight,
-                            points: numBands,
-                            numBands: numFrequencyBands,
-                            trimStart: audioTrimPoints[0],
-                            trimEnd: audioTrimPoints[1],
-                            normalize: doNormalize,
-                            addCaps: addCaps,
-                            spreadPeaks: spreadPeaks,
-                          })
-                        )
-                      }
-                    >
-                      Download SVG
-                    </button>
-                  </div>
-                  <hr />
-                </div>
+                        </a>
+                      )}
+                      <button
+                        className="btn btn-outline-primary"
+                        onClick={() =>
+                          downloadSVGNodeInDOM(
+                            generateFilename(audioFile || url, {
+                              height: imgHeight,
+                              points: numBands,
+                              numBands: numFrequencyBands,
+                              trimStart: audioTrimPoints[0],
+                              trimEnd: audioTrimPoints[1],
+                              normalize: doNormalize,
+                              addCaps: addCaps,
+                              spreadPeaks: spreadPeaks,
+                            })
+                          )
+                        }
+                      >
+                        Download SVG
+                      </button>
+                      <button
+                        className="btn btn-outline-secondary"
+                        onClick={() => setStickyPreview(true)}
+                      >
+                        <Fullscreen size={16} className="me-1" aria-hidden="true" focusable="false" />
+                        Open Preview Panel
+                      </button>
+                      </div>
+                      <hr />
+                    </div>
+                  </>
+                )}
               </>
             )
           }}
@@ -890,161 +887,164 @@ export default function AudioPlotter() {
           onKeyDown={handleKeyboardResize}
         />
         <div ref={previewContentRef} className="preview-content">
-          {previewState === 'no-audio' && <EmptyState />}
-          {previewState === 'ready' && (
-            <ReadyState
-              onGenerate={() => {
-                setPreviewState('loading')
-                setShowAudioFile(false)
-              }}
-            />
+          {/* Left toolbar: Zoom controls (sticky mode only, always rendered) */}
+          {stickyPreview && (
+            <div className="preview-toolbar preview-toolbar-left panzoom-exclude">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleZoomIn}
+                disabled={!hasWaveform}
+                title="Zoom in"
+                aria-label="Zoom in"
+              >
+                <ZoomIn size={16} aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleZoomOut}
+                disabled={!hasWaveform}
+                title="Zoom out"
+                aria-label="Zoom out"
+              >
+                <ZoomOut size={16} aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={handleFitAll}
+                disabled={!hasWaveform}
+                title="Fit all"
+                aria-label="Fit all"
+              >
+                <Fullscreen size={16} aria-hidden="true" focusable="false" />
+              </button>
+            </div>
           )}
-          {(previewState === 'loading' || previewState === 'success') && (
-            <AudioBuffer url={url} file={audioFile}>
-              {({ isFetching, fetchError, bufferLength, buffer }) => {
-                // Handle fetch errors
-                if (fetchError) {
-                  if (previewState !== 'error') {
-                    setTimeout(() => {
-                      setPreviewError(fetchError)
-                      setPreviewState('error')
-                    }, 0)
+
+          {/* Center content container */}
+          <div
+            ref={panzoomContainerRef}
+            className={stickyPreview ? 'panzoom-container' : 'preview-svg-container'}
+          >
+            {previewState === 'no-audio' && <EmptyState />}
+            {previewState === 'ready' && (
+              <ReadyState
+                onGenerate={() => {
+                  setPreviewState('loading')
+                  setShowAudioFile(false)
+                }}
+              />
+            )}
+            {(previewState === 'loading' || previewState === 'success') && (
+              <AudioBuffer url={url} file={audioFile}>
+                {({ isFetching, fetchError, buffer }) => {
+                  // Handle fetch errors
+                  if (fetchError) {
+                    if (previewState !== 'error') {
+                      setTimeout(() => {
+                        setPreviewError(fetchError)
+                        setPreviewState('error')
+                      }, 0)
+                    }
+                    return null
                   }
-                  return null
-                }
 
-                if (isFetching) return <LoadingState />
+                  if (isFetching) return <LoadingState />
 
-                return (
-                  <AudioPeaks
-                    buffer={buffer}
-                    bands={numBands}
-                    normalize={doNormalize}
-                    trimPoints={audioTrimPointsDebounced}
-                    frequencyBands={frequencyBands}
-                  >
-                    {({ bandPeaks, decodeError }) => {
-                      // Handle decode errors
-                      if (decodeError) {
-                        if (previewState !== 'error') {
-                          setTimeout(() => {
-                            setPreviewError(decodeError)
-                            setPreviewState('error')
-                          }, 0)
+                  return (
+                    <AudioPeaks
+                      buffer={buffer}
+                      bands={numBands}
+                      normalize={doNormalize}
+                      trimPoints={audioTrimPointsDebounced}
+                      frequencyBands={frequencyBands}
+                    >
+                      {({ bandPeaks, decodeError }) => {
+                        // Handle decode errors
+                        if (decodeError) {
+                          if (previewState !== 'error') {
+                            setTimeout(() => {
+                              setPreviewError(decodeError)
+                              setPreviewState('error')
+                            }, 0)
+                          }
+                          return null
                         }
-                        return null
-                      }
 
-                      // Update hasWaveform flag when bandPeaks available
-                      if (bandPeaks && !hasWaveform) {
-                        // Use queueMicrotask to defer state update outside render
-                        queueMicrotask(() => setHasWaveform(true))
-                      }
+                        // Update hasWaveform flag when bandPeaks available
+                        if (bandPeaks && !hasWaveform) {
+                          queueMicrotask(() => setHasWaveform(true))
+                        }
 
-                      // Render waveform with panzoom and toolbars
-                      return !!bandPeaks ? (
-                        <>
-                          {/* Left toolbar: Zoom controls */}
-                          <div className="preview-toolbar preview-toolbar-left panzoom-exclude">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={handleZoomIn}
-                              title="Zoom in"
-                              aria-label="Zoom in"
-                            >
-                              <ZoomIn size={16} aria-hidden="true" focusable="false" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={handleZoomOut}
-                              title="Zoom out"
-                              aria-label="Zoom out"
-                            >
-                              <ZoomOut size={16} aria-hidden="true" focusable="false" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={handleFitAll}
-                              title="Fit all"
-                              aria-label="Fit all"
-                            >
-                              <Fullscreen size={16} aria-hidden="true" focusable="false" />
-                            </button>
-                          </div>
+                        return bandPeaks ? (
+                          <SvgFromAudioPeaks
+                            ref={svgEl}
+                            className="img-fluid"
+                            bandPeaks={bandPeaks}
+                            height={imgHeight}
+                            style={visStyle}
+                            strokeWidth={strokeWidth}
+                            withCaps={addCaps}
+                            backgroundColor={backgroundColor}
+                            blendMode={blendMode}
+                            spreadPeaks={spreadPeaks}
+                          />
+                        ) : null
+                      }}
+                    </AudioPeaks>
+                  )
+                }}
+              </AudioBuffer>
+            )}
+            {previewState === 'error' && (
+              <ErrorState
+                error={previewError}
+                onRetry={() => {
+                  setPreviewState('loading')
+                  setPreviewError(null)
+                }}
+              />
+            )}
+          </div>
 
-                          {/* Panzoom container wrapping SVG */}
-                          <div ref={panzoomContainerRef} className="panzoom-container">
-                            <SvgFromAudioPeaks
-                              ref={svgEl}
-                              className="img-fluid"
-                              bandPeaks={bandPeaks}
-                              height={imgHeight}
-                              style={visStyle}
-                              strokeWidth={strokeWidth}
-                              withCaps={addCaps}
-                              backgroundColor={backgroundColor}
-                              blendMode={blendMode}
-                              spreadPeaks={spreadPeaks}
-                            />
-                          </div>
-
-                          {/* Right toolbar: Unstick + Download */}
-                          <div className="preview-toolbar preview-toolbar-right panzoom-exclude">
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() => setStickyPreview(!stickyPreview)}
-                              title={stickyPreview ? 'Unstick preview' : 'Stick preview'}
-                              aria-label={stickyPreview ? 'Unstick preview' : 'Stick preview'}
-                            >
-                              {stickyPreview ? (
-                                <PinFill size={16} aria-hidden="true" focusable="false" />
-                              ) : (
-                                <PinAngle size={16} aria-hidden="true" focusable="false" />
-                              )}
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-sm btn-outline-secondary"
-                              onClick={() =>
-                                downloadSVGNodeInDOM(
-                                  generateFilename(audioFile || url, {
-                                    height: imgHeight,
-                                    points: numBands,
-                                    numBands: numFrequencyBands,
-                                    trimStart: audioTrimPoints[0],
-                                    trimEnd: audioTrimPoints[1],
-                                    normalize: doNormalize,
-                                    addCaps: addCaps,
-                                    spreadPeaks: spreadPeaks,
-                                  })
-                                )
-                              }
-                              title="Download SVG"
-                              aria-label="Download SVG"
-                            >
-                              <Download size={16} aria-hidden="true" focusable="false" />
-                            </button>
-                          </div>
-                        </>
-                      ) : null
-                    }}
-                  </AudioPeaks>
-                )
-              }}
-            </AudioBuffer>
-          )}
-          {previewState === 'error' && (
-            <ErrorState
-              error={previewError}
-              onRetry={() => {
-                setPreviewState('loading')
-                setPreviewError(null)
-              }}
-            />
+          {/* Right toolbar: Unstick + Download (sticky mode only, always rendered) */}
+          {stickyPreview && (
+            <div className="preview-toolbar preview-toolbar-right panzoom-exclude">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                onClick={() => setStickyPreview(false)}
+                title="Close preview panel"
+                aria-label="Close preview panel"
+              >
+                <PinFill size={16} aria-hidden="true" focusable="false" />
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary"
+                disabled={!hasWaveform}
+                onClick={() =>
+                  downloadSVGNodeInDOM(
+                    generateFilename(audioFile || url, {
+                      height: imgHeight,
+                      points: numBands,
+                      numBands: numFrequencyBands,
+                      trimStart: audioTrimPoints[0],
+                      trimEnd: audioTrimPoints[1],
+                      normalize: doNormalize,
+                      addCaps: addCaps,
+                      spreadPeaks: spreadPeaks,
+                    })
+                  )
+                }
+                title="Download SVG"
+                aria-label="Download SVG"
+              >
+                <Download size={16} aria-hidden="true" focusable="false" />
+              </button>
+            </div>
           )}
         </div>
       </div>
