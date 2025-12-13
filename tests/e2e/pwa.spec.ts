@@ -22,8 +22,15 @@ test.describe('PWA Functionality', () => {
     // Wait for app to fully load
     await expect(page.locator('h1')).toContainText('audioplotter')
 
-    // Wait for service worker
-    await page.evaluate(() => navigator.serviceWorker.ready)
+    // Wait for service worker to be ready and activated
+    await page.evaluate(async () => {
+      await navigator.serviceWorker.ready
+      // Wait for service worker to be activated
+      const sw = await navigator.serviceWorker.ready
+      if (sw.active?.state !== 'activated') {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+    })
 
     // Load the default audio to cache it
     await page.click('button:has-text("Generate Waveform")')
@@ -32,11 +39,14 @@ test.describe('PWA Functionality', () => {
     // Wait for network to be idle (assets cached)
     await page.waitForLoadState('networkidle')
 
+    // Additional wait for service worker precaching to complete
+    await page.waitForTimeout(2000)
+
     // Go offline
     await context.setOffline(true)
 
     // Reload page - should work from cache
-    await page.reload()
+    await page.reload({ waitUntil: 'domcontentloaded' })
 
     // Verify app still works
     await expect(page.locator('h1')).toContainText('audioplotter')
