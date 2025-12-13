@@ -38,6 +38,12 @@ Perfect for:
   - `darken`, `lighten`, `overlay` - Creative effects
 - **Stroke Width:** Control line thickness (0.1-100, dynamic max)
 
+**Spread Peaks Mode**
+- **Normal mode (default):** All frequency bands render at the same X positions, creating overlaid/stacked visualization
+- **Spread mode:** Bands are interleaved horizontally across the timeline, creating a wider, separated visualization
+- **Use case:** When you want to see each frequency band distinctly without overlap
+- **Toggle:** Enable "spread peaks" checkbox in Frequency Bands section
+
 **URL State Persistence**
 - All settings automatically saved to URL
 - Share exact configurations via link
@@ -368,6 +374,29 @@ Uses Web Audio API's `BiquadFilterNode` with `OfflineAudioContext`:
 
 ## Troubleshooting
 
+### Debug Logging
+
+Enable debug logging to see detailed information about audio processing and rendering:
+
+1. Open browser console (F12 / Cmd+Opt+I)
+2. Run: `localStorage.debug = 'audioplotter:*'`
+3. Reload page and generate waveform
+4. View detailed logs in console
+
+**Log namespaces:**
+- `audioplotter:peaks` - Audio peak calculation timing
+- `audioplotter:frequencyBands` - Frequency band configuration changes
+- `audioplotter:svg:render` - SVG rendering
+- `audioplotter:svg:geometry` - Path coordinate recalculation (expensive)
+- `audioplotter:svg:band` - Individual band rendering
+
+**Useful for diagnosing:**
+- Performance issues (excessive recalculations)
+- Frequency band configuration problems
+- Rendering issues
+
+To disable: `localStorage.debug = ''`
+
 ### Waveform looks empty or flat
 
 **Cause:** Audio might be mostly in one frequency range
@@ -375,6 +404,7 @@ Uses Web Audio API's `BiquadFilterNode` with `OfflineAudioContext`:
 - Try different band counts
 - Check if normalize is enabled
 - Verify audio file has content in expected frequency ranges
+- Enable debug logging to see peak values
 
 ### Colors look washed out
 
