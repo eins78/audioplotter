@@ -3,7 +3,7 @@
 # This image is used by docker-compose for running E2E tests with Selenium
 
 # Build stage
-FROM node:24-alpine AS builder
+FROM node:24.12-alpine AS builder
 WORKDIR /app
 
 # Enable corepack for pnpm
