@@ -5,6 +5,12 @@ import { ViteMinifyPlugin } from 'vite-plugin-minify'
 
 export default defineConfig({
   build: {
+    modulePreload: {
+      // At the time of writing (2025-12-13): 91%+ browser support
+      // Chrome 66+, Edge 79+, Firefox 115+, Safari 17+
+      // Older browsers gracefully degrade: modules load on-demand instead of preloaded
+      polyfill: false
+    },
     rollupOptions: {
       output: {
         manualChunks: {
@@ -28,6 +34,7 @@ export default defineConfig({
     ViteMinifyPlugin({ removeComments: true }),
     VitePWA({
       registerType: 'autoUpdate',
+      injectRegister: 'script-defer', // Use defer to avoid render blocking
       includeAssets: ['icons/*.png', 'icons/*.svg', 'favicon.ico'],
       manifest: {
         name: 'audioplotter',
