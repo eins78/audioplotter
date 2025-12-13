@@ -115,8 +115,9 @@ describe('SvgFromAudioPeaks component', () => {
       <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="zigzag" strokeWidth={1} />
     )
 
-    const polyline = container.querySelector('polyline')
-    expect(polyline).toBeTruthy()
+    // react-svg-path 2.0.0 uses <path> instead of <polyline>
+    const path = container.querySelector('path')
+    expect(path).toBeTruthy()
   })
 
   it('renders saw style', async () => {
@@ -124,8 +125,9 @@ describe('SvgFromAudioPeaks component', () => {
       <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
     )
 
-    const polyline = container.querySelector('polyline')
-    expect(polyline).toBeTruthy()
+    // react-svg-path 2.0.0 uses <path> instead of <polyline>
+    const path = container.querySelector('path')
+    expect(path).toBeTruthy()
   })
 
   it('renders bars style', async () => {
@@ -143,8 +145,9 @@ describe('SvgFromAudioPeaks component', () => {
       <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={strokeWidth} />
     )
 
-    const polyline = container.querySelector('polyline')
-    expect(polyline?.getAttribute('stroke-width')).toBe(String(strokeWidth))
+    // react-svg-path 2.0.0 uses <path> instead of <polyline>
+    const path = container.querySelector('path')
+    expect(path?.getAttribute('stroke-width')).toBe(String(strokeWidth))
   })
 
   it('applies stroke color', async () => {
@@ -153,8 +156,9 @@ describe('SvgFromAudioPeaks component', () => {
     )
 
     const group = container.querySelector('g')
-    const polyline = group?.querySelector('polyline')
-    expect(polyline?.getAttribute('stroke')).toBe('#000000')
+    // react-svg-path 2.0.0 uses <path> instead of <polyline>
+    const path = group?.querySelector('path')
+    expect(path?.getAttribute('stroke')).toBe('#000000')
   })
 
   it('handles empty peaks array', async () => {
@@ -172,8 +176,9 @@ describe('SvgFromAudioPeaks component', () => {
       <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} withCaps={true} />
     )
 
-    const polyline = container.querySelector('polyline')
-    expect(polyline).toBeTruthy()
+    // react-svg-path 2.0.0 uses <path> instead of <polyline>
+    const path = container.querySelector('path')
+    expect(path).toBeTruthy()
   })
 
   it('handles withCaps=false', async () => {
@@ -181,8 +186,9 @@ describe('SvgFromAudioPeaks component', () => {
       <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} withCaps={false} />
     )
 
-    const polyline = container.querySelector('polyline')
-    expect(polyline).toBeTruthy()
+    // react-svg-path 2.0.0 uses <path> instead of <polyline>
+    const path = container.querySelector('path')
+    expect(path).toBeTruthy()
   })
 
   it('accepts string height', async () => {
