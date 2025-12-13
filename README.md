@@ -11,18 +11,22 @@ create graphics for penplotters from audio files, aka waveforms, soundwaves.
     _Asymmetric_
   - `saw`: follows a [Sawtooth wave](https://en.wikipedia.org/wiki/Sawtooth_wave) pattern.
     _Is symmetric but has more line density per bands._
+  - `bars`: vertical bars centered on the horizontal centerline.
+    _Symmetric, great for pen plotters._
+- **Multiband Frequency Visualization:** Split audio into 1-8 frequency bands (bass, mid, treble) with customizable colors and opacity ([docs](docs/features/multiband-frequency-visualization.md))
+- **Local File Upload:** Process audio files directly from your device (no server upload required)
+- **Sticky/Resizable Preview Panel:** Pan, zoom, and resize the preview panel with persistent state ([docs](docs/features/preview-panel.md))
+- **URL State Persistence:** All settings saved to URL for easy sharing
+- **Blend Modes:** Realistic ink simulation with 6 blend modes (multiply, screen, darken, lighten, overlay, normal)
 - **Dark Mode:** Automatic theme detection based on system preferences ([docs](docs/features/dark-mode.md))
 - **PWA Support:** Works offline as a Progressive Web App
 - **SVG Export:** Download high-quality vector graphics for plotting
 
 ## Ideas
 
-- addCaps: add horizontal lines of configurable length to start and end
 - playback of the audio
 - show audio file info
-- enhanced download: format selection, quality settings
-- trim audio start and end points (needed for Amen Break demo: the Wikimedia file has audio before and after the break)
-- separate frequencies, create 1 graph per band in different colors (low/red,mid/green,high/yellow)
+- better download option (with preview of settings)
 
 ## Credits
 

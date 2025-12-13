@@ -2,9 +2,9 @@
 
 Audioplotter uses a JavaScript-native testing stack (Vitest + Playwright):
 
-1. **Unit Tests** - Fast, isolated tests for pure functions
-2. **Component Tests** - React components rendered in real browsers
-3. **E2E Tests** - Full user workflows with Playwright
+1. **Unit Tests** - Pure function tests (fast, isolated)
+2. **Component Tests** - React component tests (real browser rendering)
+3. **E2E Tests** - User workflow tests (Playwright)
 
 ## Quick Start
 
@@ -30,7 +30,7 @@ Tests pure JavaScript/TypeScript functions without DOM overhead
 
 **Config:** `vitest.config.ts`
 
-**Pattern:** `src/**/*.test.ts` (no JSX)
+**Pattern:** `src/**/*.test.ts` (TypeScript only)
 
 **Example:**
 ```typescript
@@ -132,7 +132,7 @@ test('loads audio and renders SVG', async ({ page }) => {
     pwa.spec.ts
 ```
 
-**Co-location:** Unit and component tests live next to the code they test for easy discovery.
+**Co-location:** Unit and component tests live next to the code they test.
 
 **Separation:** E2E tests are in `/tests/e2e/` since they test the whole app, not individual files.
 

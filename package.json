@@ -1,6 +1,6 @@
 {
   "name": "audioplotter",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "private": true,
   "homepage": "https://audioplotter.ars.is",
   "repository": "https://github.com/eins78/audioplotter",
@@ -9,7 +9,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "serve": "serve dist -l 3000",
-    "dev-audio-server": "serve --cors -l 57915 ../../Inputs/Amen\\ Break/",
+    "dev-audio-server": "serve --cors -l 57915 tmp/dev",
+    "postinstall": "node scripts/download-dev-sample.js",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -22,18 +23,23 @@
     "ci": "pnpm lint && pnpm test && pnpm test:browser && pnpm build && pnpm test:e2e"
   },
   "dependencies": {
+    "@panzoom/panzoom": "^4.6.1",
     "audio-buffer-utils": "^5.1.2",
     "audio-context": "^1.0.3",
     "bootstrap": "^5.3.3",
+    "debug": "^4.4.3",
     "lodash.debounce": "^4.0.8",
     "prop-types": "^15.8.1",
     "react": "^19.0.0",
+    "react-bootstrap-icons": "^1.11.6",
     "react-dom": "^19.0.0",
     "react-helmet-async": "^2.0.5",
     "react-svg-path": "^1.11.0",
     "react-toggle": "^4.1.2",
+    "usehooks-ts": "^3.1.1",
     "workbox-build": "^7.3.0",
-    "workbox-window": "^7.3.0"
+    "workbox-window": "^7.3.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",
@@ -41,6 +47,7 @@
     "@testing-library/dom": "^10.4.1",
     "@testing-library/react": "^16.3.0",
     "@total-typescript/ts-reset": "^0.6.1",
+    "@types/debug": "^4.1.12",
     "@types/lodash.debounce": "^4.0.9",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

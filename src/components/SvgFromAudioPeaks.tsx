@@ -1,26 +1,23 @@
-import React from 'react'
+import React, { useMemo } from 'react'
+import createDebug from 'debug'
 
-import { Polyline } from 'react-svg-path'
+import { Svg, Polyline, Quad } from 'react-svg-path'
+
+// Debug loggers - enable with localStorage.debug = 'audioplotter:*'
+const debugRender = createDebug('audioplotter:svg:render')
+const debugGeometry = createDebug('audioplotter:svg:geometry')
+const debugBand = createDebug('audioplotter:svg:band')
 
 export const STYLES = [
   'zigzag',
   'saw',
   'bars',
   // 'quad'
-] as const
+]
 
-export const DEFAULT_STYLE: StyleType = 'saw'
-
-export type StyleType = (typeof STYLES)[number]
-
-export function isStyleType(value: unknown): value is StyleType {
-  return typeof value === 'string' && STYLES.includes(value as StyleType)
-}
-
-export function ensureStyleType(value: unknown): StyleType {
-  if (isStyleType(value)) return value
-  return DEFAULT_STYLE
-}
+export const BLEND_MODES = ['normal', 'multiply', 'screen', 'darken', 'lighten', 'overlay']
+export const DEFAULT_BLEND_MODE = 'multiply'
+export const DEFAULT_BACKGROUND_COLOR = '#FFFFFF'
 
 export const DEFAULT_HEIGHT = 150
 export const DEFAULT_WIDTH = 1000
@@ -31,75 +28,46 @@ export const MIN_STROKE_WIDTH = 0.1
 export const MAX_STROKE_WIDTH = 100
 export const STROKE_WIDTH_STEP = 0.1
 
-export function calcMaxStrokeWidth(numBands: number): number {
+export function calcMaxStrokeWidth(numBands) {
   const relativeWidth = Math.ceil((2 / numBands) * 100 * 100)
   return Math.min(MAX_STROKE_WIDTH, relativeWidth)
 }
 
-interface SvgFromAudioPeaksProps extends Omit<React.SVGProps<SVGSVGElement>, 'style'> {
-  peaks: number[]
-  height: number | string
-  withCaps?: boolean
-  style: StyleType
-  strokeWidth: number
-}
-
-export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function SvgFromAudioPeaks(
-  {
-    peaks,
-    height,
-    withCaps = true, // wrap in start- and endpoint?
-    style,
-    strokeWidth,
-    ...restProps
-  },
-  ref
-) {
-  if (!height) throw new TypeError()
-
-  const targetWidth = DEFAULT_WIDTH
-  const paddingX = DEFAULT_PADDING_X
-  const targetHeight = typeof height === 'string' ? parseInt(height, 10) : height
-
-  const totalWidth = peaks.length + (withCaps ? 2 : 0)
+/**
+ * Calculate path coordinates for a band graph (pure function, no JSX)
+ * Separated from rendering to enable memoization of geometry calculations
+ * @returns Object with type ('polyline' | 'bars') and coordinate data
+ */
+function calculatePathCoordinates(peaks, style, targetHeight, targetWidth, withCaps, spreadPeaks, bandIndex, numBands) {
+  const effectivePositions = spreadPeaks ? peaks.length * numBands : peaks.length
+  const totalWidth = effectivePositions + (withCaps ? 2 : 0)
   const distanceX = targetWidth / totalWidth
   const middleY = targetHeight / 2
-  const [startX, startY] = [0, middleY]
-  const [endX, endY] = [targetWidth, middleY]
-
-  const strokeProps = {
-    stroke: '#222',
-    strokeWidth: strokeWidth,
-    fill: 'white',
-    strokeLinecap: 'round' as const,
-    strokeLinejoin: 'round' as const,
-  }
-
-  let points: number[][] = []
-  let graph: React.ReactNode = null
-
-  if (!STYLES.includes(style)) throw new TypeError()
+  const startPos = [0, middleY]
+  const endPos = [targetWidth, middleY]
 
   if (style === 'zigzag') {
-    points = peaks.map((peak, index) => {
+    let points = peaks.map((peak, index) => {
       const isEven = index % 2 === 0
-      const isUp = totalWidth % 2 === 0 ? isEven : !isEven // start up or down according to total width - less flicker when changing values?
-      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+      const isUp = totalWidth % 2 === 0 ? isEven : !isEven
+      const globalIndex = spreadPeaks ? index * numBands + bandIndex : index
+      const xPos = globalIndex * distanceX + (withCaps ? distanceX : 0)
       const distance = peak * targetHeight
       const yPos = isUp ? middleY + distance : middleY - distance
       return [xPos, yPos]
     })
 
     if (withCaps) {
-      points = [[startX, startY]].concat(points, [[endX, endY]])
+      points = [startPos].concat(points, [endPos])
     }
 
-    graph = <Polyline points={points} {...strokeProps} />
+    return { type: 'polyline', points }
   }
 
   if (style === 'saw') {
-    points = peaks.reduce<number[][]>((result, peak, index) => {
-      const xPos = index * distanceX + (withCaps ? distanceX : 0)
+    let points = peaks.reduce((result, peak, index) => {
+      const globalIndex = spreadPeaks ? index * numBands + bandIndex : index
+      const xPos = globalIndex * distanceX + (withCaps ? distanceX : 0)
       const distance = peak * targetHeight
       const yUp = middleY - distance
       const yDown = middleY + distance
@@ -110,61 +78,146 @@ export default React.forwardRef<SVGSVGElement, SvgFromAudioPeaksProps>(function 
     }, [])
 
     if (withCaps) {
-      points = [[startX, startY]].concat(points, [[endX, endY]])
+      points = [startPos].concat(points, [endPos])
     }
-    graph = <Polyline points={points} {...strokeProps} />
+
+    return { type: 'polyline', points }
   }
 
   if (style === 'bars') {
     const lines = peaks.map((peak, index) => {
-      const xPos = index * distanceX + (withCaps ? distanceX : 0)
-      const distance = (peak * targetHeight) / 2 // Divide by 2 since we want bars centered on middle
+      const globalIndex = spreadPeaks ? index * numBands + bandIndex : index
+      const xPos = globalIndex * distanceX + (withCaps ? distanceX : 0)
+      const distance = (peak * targetHeight) / 2
       const yUp = middleY - distance
       const yDown = middleY + distance
-      return <line key={index} x1={xPos} y1={yUp} x2={xPos} y2={yDown} {...strokeProps} />
+      return { x: xPos, yUp, yDown }
     })
 
+    // Add caps as line data
     if (withCaps) {
-      lines.unshift(
-        <line key="start" x1={startX} y1={startY} x2={startX} y2={startY} {...strokeProps} />
-      )
-      lines.push(<line key="end" x1={endX} y1={endY} x2={endX} y2={endY} {...strokeProps} />)
+      lines.unshift({ x: startPos[0], yUp: startPos[1], yDown: startPos[1], key: 'start' })
+      lines.push({ x: endPos[0], yUp: endPos[1], yDown: endPos[1], key: 'end' })
     }
 
-    graph = <>{lines}</>
+    return { type: 'bars', lines }
   }
 
-  // if (style === 'quad') {
-  //   points = peaks.reduce((result, peak, index) => {
-  //     const xPos = index * distanceX + (withCaps ? distanceX : 0)
-  //     const distance = peak * targetHeight
-  //     const yUp = middleY - distance
-  //     const yDown = middleY + distance
-  //     return result.concat([
-  //       [xPos, yUp],
-  //       [xPos, yDown],
-  //     ])
-  //   }, [])
+  return null
+}
 
-  //   if (withCaps) {
-  //     points = [startPos].concat(points, [endPos])
-  //   }
+/**
+ * Memoized component for rendering a single frequency band
+ * Re-renders only when its props change (geometry, styling)
+ */
+const BandGroup = React.memo(function BandGroup({ bandIndex, name, lowHz, highHz, color, opacity, geometry, strokeWidth, blendMode }) {
+  debugBand('render band %d (%s) color=%s strokeWidth=%s', bandIndex, name, color, strokeWidth)
 
-  //   graph = <Quad T={points} {...strokeProps} />
-  // }
+  const groupId = `band-${bandIndex + 1}-${name.toLowerCase()}-${lowHz}-${highHz}hz`
+
+  const strokeProps = {
+    stroke: color,
+    strokeWidth: strokeWidth,
+    fill: 'white',
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+  }
+
+  let content = null
+  if (geometry.type === 'polyline') {
+    content = <Polyline points={geometry.points} {...strokeProps} />
+  } else if (geometry.type === 'bars') {
+    content = geometry.lines.map((line, i) => (
+      <line key={line.key || i} x1={line.x} y1={line.yUp} x2={line.x} y2={line.yDown} {...strokeProps} />
+    ))
+  }
+
+  return (
+    <g id={groupId} opacity={opacity} style={{ mixBlendMode: blendMode }}>
+      {content}
+    </g>
+  )
+})
+
+export default React.forwardRef(function SvgFromAudioPeaks(
+  {
+    bandPeaks, // Array of { name, lowHz, highHz, color, opacity, peaks }
+    height,
+    withCaps = true,
+    style,
+    strokeWidth,
+    backgroundColor = DEFAULT_BACKGROUND_COLOR,
+    blendMode = DEFAULT_BLEND_MODE,
+    spreadPeaks = false,
+    ...restProps
+  },
+  ref
+) {
+  if (!height) throw new TypeError()
+  if (!bandPeaks || bandPeaks.length === 0) return null
+
+  const targetWidth = DEFAULT_WIDTH
+  const paddingX = DEFAULT_PADDING_X
+  const targetHeight = parseInt(height, 10)
+
+  if (!STYLES.includes(style)) throw new TypeError()
 
   const finalHeight = Math.ceil(targetHeight + paddingX)
+  const numBands = bandPeaks.length
+
+  debugRender('render SvgFromAudioPeaks height=%d style=%s strokeWidth=%s bands=%d', targetHeight, style, strokeWidth, numBands)
+
+  // Memoize path coordinate calculations for all bands
+  // Only recalculates when geometry-affecting props change
+  // Does NOT recalculate for styling-only changes (strokeWidth, color, opacity, blendMode)
+  const bandGeometries = useMemo(() => {
+    debugGeometry('RECALCULATING geometries for %d bands (style=%s height=%d)', numBands, style, targetHeight)
+    return bandPeaks.map((band, index) => ({
+      bandIndex: index,
+      name: band.name,
+      lowHz: band.lowHz,
+      highHz: band.highHz,
+      geometry: calculatePathCoordinates(
+        band.peaks,
+        style,
+        targetHeight,
+        targetWidth,
+        withCaps,
+        spreadPeaks,
+        index,
+        numBands
+      ),
+    }))
+  }, [bandPeaks, style, targetHeight, targetWidth, withCaps, spreadPeaks, numBands])
 
   return (
     <svg
-      // scale
       ref={ref}
       width={targetWidth}
       height={finalHeight}
       viewBox={[0, -Math.floor(paddingX / 2), targetWidth, finalHeight].join(' ')}
       {...restProps}
     >
-      {graph}
+      {/* Background */}
+      <rect x="0" y={-Math.floor(paddingX / 2)} width={targetWidth} height={finalHeight} fill={backgroundColor} />
+      {/* Frequency bands - uses memoized geometries */}
+      {bandGeometries.map((bandGeo, index) => {
+        const band = bandPeaks[index]
+        return (
+          <BandGroup
+            key={index}
+            bandIndex={bandGeo.bandIndex}
+            name={bandGeo.name}
+            lowHz={bandGeo.lowHz}
+            highHz={bandGeo.highHz}
+            color={band.color}
+            opacity={band.opacity !== undefined ? band.opacity : 1}
+            geometry={bandGeo.geometry}
+            strokeWidth={strokeWidth}
+            blendMode={blendMode}
+          />
+        )
+      })}
     </svg>
   )
 })

@@ -1,121 +1,119 @@
 # Dark Mode
 
-**Version:** 1.0
-**Date:** 2025-11-21
+**Version:** 2.0
+**Last Updated:** December 6, 2025
+**Status:** Production
 
 ## Overview
 
-Dark mode detection follows the system's `prefers-color-scheme` setting. The app applies the theme automatically before page render, with no manual toggle or configuration.
+audioplotter automatically adapts to your system's dark mode preference. When you enable dark mode on your device, the app instantly switches to a dark theme with carefully adjusted colors for comfortable viewing in low-light environments.
 
-## Features
-
-- **Automatic Detection:** Detects system preference via `prefers-color-scheme` media query
-- **Zero Configuration:** Uses OS-level dark/light mode settings directly
-- **Instant Theme:** Theme applies before page render
-- **Offline Support:** Works in PWA offline mode
-- **Bootstrap 5:** Uses Bootstrap's `data-bs-theme` attribute
+**Key Features:**
+- Automatic detection of your system preference
+- Instant updates when you change your system settings
+- No manual toggle needed
+- Works offline (PWA support)
 
 ## How It Works
 
-An inline script detects the system color scheme preference and applies the theme before React hydrates, preventing a theme flash.
+The app detects your operating system's dark mode setting and applies the appropriate theme automatically. When you switch between light and dark mode in your system settings, audioplotter updates within milliseconds—no page refresh required.
 
-**Light Mode**
-- White backgrounds (#ffffff)
-- Dark text (#212529)
-- Light gray cards (#f8f9fa)
+**What Changes:**
 
-**Dark Mode**
-- Dark backgrounds (#1a1a1a, #2d2d2d)
-- Light text (#e0e0e0, #ffffff)
-- Dark cards with subtle borders
-- Purple accent (#500cbd)
+**Light Mode:**
+- Bright white backgrounds
+- Dark text for easy reading
+- Light cards and form elements
+- Original purple accent color (#500cbd)
 
-## Styled Components
+**Dark Mode:**
+- Deep dark backgrounds for reduced eye strain
+- Light text (#e0e0e0) for comfortable reading
+- Darker cards with subtle borders
+- Lighter purple accent (#9d6fff) for better visibility
 
-All UI elements adapt automatically:
+## Visual Adaptations
 
-- **Cards:** Dark background (#2d2d2d), subtle borders
-- **Form Controls:** Dark input backgrounds with light text and purple focus border
-- **Buttons:** Inverted outline colors
-- **Range Sliders:** Purple thumbs
-- **Collapsible Sections:** Dark headers with contrast
+All interface elements automatically adjust for dark mode:
 
-## SVG Preview
+**Cards and Panels:**
+- Dark gray backgrounds (#2d2d2d) instead of white
+- Subtle borders for depth without harsh contrast
+- Darker headers with good text contrast
 
-The SVG preview area uses independent styling:
+**Form Controls:**
+- Dark input backgrounds with light text
+- Bright purple focus borders for clear interaction feedback
+- Range sliders with visible purple thumbs
 
-- Background color controlled by Preview Settings
-- Blend modes work in both themes
-- Downloaded SVG includes the custom background, not UI theme colors
+**Buttons:**
+- Inverted color scheme for dark backgrounds
+- Lighter purple accents for better visibility
+- Clear hover states
 
-## Technical Details
+**Text and Links:**
+- Light gray text (#e0e0e0) for comfortable reading
+- Pure white (#ffffff) for important headings
+- Lighter purple links that stand out against dark backgrounds
 
-### Implementation
+## SVG Preview Independence
 
-**Theme Detection (pages/_app.js)**
-```javascript
-<script dangerouslySetInnerHTML={{
-  __html: `
-    (function() {
-      const theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-bs-theme', theme);
-    })();
-  `
-}} />
-```
+The SVG visualization preview area operates independently from the UI theme. Its background color is controlled by the "Preview Settings" section, not by your system's dark mode preference. This lets you preview your waveforms with any background color you choose, regardless of whether your device is in light or dark mode.
 
-**Dark Mode Styles (styles/style.scss)**
-```scss
-[data-bs-theme='dark'] {
-  --bs-body-bg: #1a1a1a;
-  --bs-body-color: #e0e0e0;
-  // ... custom component styling
-}
-```
+## Changing Your System Theme
 
-### Color Palette
+To switch between light and dark mode, change your device's appearance settings:
 
-**Dark Mode Colors:**
-- Body background: `#1a1a1a`
-- Card background: `#2d2d2d`
-- Card header: `#242424`
-- Text: `#e0e0e0`
-- Emphasis text: `#ffffff`
-- Borders: `#404040`
-- Primary (accent): `#500cbd` (purple, unchanged)
+**macOS:**
+1. Open System Preferences (or System Settings)
+2. Go to General → Appearance
+3. Choose Light, Dark, or Auto
 
-**Light Mode:** Standard Bootstrap 5 defaults
+**Windows 10/11:**
+1. Open Settings
+2. Go to Personalization → Colors
+3. Choose your color mode: Light, Dark, or Custom
+
+**Linux (GNOME):**
+1. Open Settings
+2. Go to Appearance
+3. Toggle between Light and Dark
+
+**iOS/iPadOS:**
+1. Open Settings
+2. Go to Display & Brightness
+3. Choose Light or Dark (or enable Automatic)
+
+**Android:**
+1. Open Settings
+2. Go to Display
+3. Enable or disable Dark theme
+
+**The app updates automatically**—you don't need to refresh or restart audioplotter.
 
 ## Browser Support
 
-Requires:
-- CSS custom properties support
-- `prefers-color-scheme` media query support
-- Chrome 76+, Firefox 67+, Safari 12.1+, Edge 79+
+Dark mode works in all modern browsers that support:
+- CSS custom properties (CSS variables)
+- `prefers-color-scheme` media query
+- OKLCH color space (for optimal color rendering)
 
-## Changing Your Theme
+**Supported Browsers:**
+- Chrome 111+ (March 2023 or later)
+- Firefox 113+ (May 2023 or later)
+- Safari 16.4+ (March 2023 or later)
+- Edge 111+ (March 2023 or later)
 
-**macOS:** System Preferences → General → Appearance
-
-**Windows:** Settings → Personalization → Colors
-
-**Linux (GNOME):** Settings → Appearance
-
-**iOS/iPadOS:** Settings → Display & Brightness
-
-**Android:** Settings → Display → Dark theme
-
-The app updates automatically when you change your system preference.
+**Coverage:** 92%+ of global users (as of December 2025)
 
 ## Future Enhancements
 
-Future additions:
-- Manual theme toggle override
-- localStorage persistence for overrides
-- Additional theme options
-- Smooth theme transitions
+Potential future additions:
+- Manual theme toggle (override system preference)
+- localStorage persistence for manual overrides
+- Additional color themes beyond light/dark
+- Smooth animated transitions when switching themes
 
-## Files Modified
+---
 
-- `pages/_app.js` - Theme detection script
-- `styles/style.scss` - Dark mode component styles
+**For Developers:** Technical implementation details, code examples, and architecture documentation are available in [docs/development/theme-and-colors.md](../development/theme-and-colors.md).

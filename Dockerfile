@@ -11,7 +11,7 @@ RUN npm i -g corepack && corepack enable && pnpm -v
 
 # Copy package files and install dependencies
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
 # Copy source code and build
 COPY . .
