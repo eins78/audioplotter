@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { ViteMinifyPlugin } from 'vite-plugin-minify'
 
 export default defineConfig({
   build: {
@@ -24,6 +25,7 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    ViteMinifyPlugin({ removeComments: true }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'icons/*.svg', 'favicon.ico'],
