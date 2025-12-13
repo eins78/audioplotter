@@ -131,6 +131,9 @@ export default function AudioPlotter() {
   const [audioFile, setAudioFile] = useState(null)
   const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState(DEFAULT_TRIM_POINTS)
 
+  // Stable key that changes only when audio source changes (for panzoom reset)
+  const audioSourceKey = audioFile?.name || url || 'no-audio'
+
   // Collapsible section state
   const [showAudioFile, setShowAudioFile] = useState(true)
   const [showFrequencyBands, setShowFrequencyBands] = useState(true)
@@ -338,10 +341,13 @@ export default function AudioPlotter() {
     }
   }, [hasWaveform, previewState])
 
-  // Initialize panzoom when waveform is available AND sticky mode is enabled
+  // Initialize panzoom when sticky mode is enabled
+  // Resets when audio source changes (via audioSourceKey)
+  // Re-runs when portal becomes available (portalRoot changes from null to element)
+  // Does NOT reset when waveform parameters change (height, bands, etc.)
   useEffect(() => {
     const container = panzoomContainerRef.current
-    if (!container || !hasWaveform || !stickyPreview) return
+    if (!container || !stickyPreview) return
 
     const panzoom = Panzoom(container, {
       maxScale: 10,
@@ -366,7 +372,7 @@ export default function AudioPlotter() {
       panzoom.destroy()
       panzoomInstanceRef.current = null
     }
-  }, [hasWaveform, stickyPreview])
+  }, [stickyPreview, audioSourceKey, portalRoot])
 
   // Zoom control handlers
   const handleZoomIn = useCallback(() => panzoomInstanceRef.current?.zoomIn(), [])
@@ -932,8 +938,9 @@ export default function AudioPlotter() {
             </div>
           )}
 
-          {/* Center content container */}
+          {/* Center content container - key resets panzoom when audio source changes */}
           <div
+            key={audioSourceKey}
             ref={panzoomContainerRef}
             className={stickyPreview ? 'panzoom-container' : 'preview-svg-container'}
           >
