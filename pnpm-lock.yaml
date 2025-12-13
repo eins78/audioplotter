@@ -38,6 +38,9 @@ importers:
       react:
         specifier: 17.0.2
         version: 17.0.2
+      react-bootstrap-icons:
+        specifier: ^1.11.6
+        version: 1.11.6(react@17.0.2)
       react-dom:
         specifier: 17.0.2
         version: 17.0.2(react@17.0.2)
@@ -2024,6 +2027,11 @@ packages:
   rc@1.2.8:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
+
+  react-bootstrap-icons@1.11.6:
+    resolution: {integrity: sha512-ycXiyeSyzbS1C4+MlPTYe0riB+UlZ7LV7YZQYqlERV2cxDiKtntI0huHmP/3VVvzPt4tGxqK0K+Y6g7We3U6tQ==}
+    peerDependencies:
+      react: '>=16.8.6'
 
   react-dom@17.0.2:
     resolution: {integrity: sha512-s4h96KtLDUQlsENhMn1ar8t2bEa+q/YAtj8pPPdIjPDGBDIVNsrD9aXNWqspUe6AzKCIG0C1HZZLqLV7qpOBGA==}
@@ -4635,6 +4643,11 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.6
       strip-json-comments: 2.0.1
+
+  react-bootstrap-icons@1.11.6(react@17.0.2):
+    dependencies:
+      prop-types: 15.8.1
+      react: 17.0.2
 
   react-dom@17.0.2(react@17.0.2):
     dependencies:

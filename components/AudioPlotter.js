@@ -30,6 +30,21 @@ import CheckBox from './Form/CheckBox'
 import { debounce, Try, svgDomNodeToBlob } from '../util'
 import Panzoom from '@panzoom/panzoom'
 import { useLocalStorage } from 'usehooks-ts'
+import {
+  Folder,
+  MusicNoteBeamed,
+  Gear,
+  Palette,
+  ExclamationTriangle,
+  ChevronDown,
+  ChevronRight,
+  ZoomIn,
+  ZoomOut,
+  Fullscreen,
+  PinFill,
+  PinAngle,
+  Download,
+} from 'react-bootstrap-icons'
 
 const isDev = process.env.NODE_ENV === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
@@ -446,7 +461,12 @@ export default function AudioPlotter() {
           onClick={() => setShowAudioFile(!showAudioFile)}
           style={{ cursor: 'pointer' }}
         >
-          {showAudioFile ? '▼' : '▶'} 📁 Audio File
+          {showAudioFile ? (
+            <ChevronDown size={12} aria-hidden="true" focusable="false" />
+          ) : (
+            <ChevronRight size={12} aria-hidden="true" focusable="false" />
+          )}{' '}
+          <Folder size={16} aria-hidden="true" focusable="false" className="me-1" /> Audio File
         </div>
         {showAudioFile && (
           <div className="card-body font-monospace small">
@@ -515,7 +535,13 @@ export default function AudioPlotter() {
                     onClick={() => setShowFrequencyBands(!showFrequencyBands)}
                     style={{ cursor: 'pointer' }}
                   >
-                    {showFrequencyBands ? '▼' : '▶'} 🎵 Frequency Bands
+                    {showFrequencyBands ? (
+                      <ChevronDown size={12} aria-hidden="true" focusable="false" />
+                    ) : (
+                      <ChevronRight size={12} aria-hidden="true" focusable="false" />
+                    )}{' '}
+                    <MusicNoteBeamed size={16} aria-hidden="true" focusable="false" className="me-1" />{' '}
+                    Frequency Bands
                   </div>
                   {showFrequencyBands && (
                     <div className="card-body font-monospace small">
@@ -614,7 +640,12 @@ export default function AudioPlotter() {
                     onClick={() => setShowWaveformSettings(!showWaveformSettings)}
                     style={{ cursor: 'pointer' }}
                   >
-                    {showWaveformSettings ? '▼' : '▶'} ⚙️ Waveform Settings
+                    {showWaveformSettings ? (
+                      <ChevronDown size={12} aria-hidden="true" focusable="false" />
+                    ) : (
+                      <ChevronRight size={12} aria-hidden="true" focusable="false" />
+                    )}{' '}
+                    <Gear size={16} aria-hidden="true" focusable="false" className="me-1" /> Waveform Settings
                   </div>
                   {showWaveformSettings && (
                     <div className="card-body font-monospace small">
@@ -719,7 +750,12 @@ export default function AudioPlotter() {
                     onClick={() => setShowPreviewSettings(!showPreviewSettings)}
                     style={{ cursor: 'pointer' }}
                   >
-                    {showPreviewSettings ? '▼' : '▶'} 🎨 Preview Settings
+                    {showPreviewSettings ? (
+                      <ChevronDown size={12} aria-hidden="true" focusable="false" />
+                    ) : (
+                      <ChevronRight size={12} aria-hidden="true" focusable="false" />
+                    )}{' '}
+                    <Palette size={16} aria-hidden="true" focusable="false" className="me-1" /> Preview Settings
                   </div>
                   {showPreviewSettings && (
                     <div className="card-body font-monospace small">
@@ -918,7 +954,7 @@ export default function AudioPlotter() {
                               title="Zoom in"
                               aria-label="Zoom in"
                             >
-                              +
+                              <ZoomIn size={16} aria-hidden="true" focusable="false" />
                             </button>
                             <button
                               type="button"
@@ -927,7 +963,7 @@ export default function AudioPlotter() {
                               title="Zoom out"
                               aria-label="Zoom out"
                             >
-                              −
+                              <ZoomOut size={16} aria-hidden="true" focusable="false" />
                             </button>
                             <button
                               type="button"
@@ -936,7 +972,7 @@ export default function AudioPlotter() {
                               title="Fit all"
                               aria-label="Fit all"
                             >
-                              ⊡
+                              <Fullscreen size={16} aria-hidden="true" focusable="false" />
                             </button>
                           </div>
 
@@ -965,7 +1001,11 @@ export default function AudioPlotter() {
                               title={stickyPreview ? 'Unstick preview' : 'Stick preview'}
                               aria-label={stickyPreview ? 'Unstick preview' : 'Stick preview'}
                             >
-                              {stickyPreview ? '📌' : '📍'}
+                              {stickyPreview ? (
+                                <PinFill size={16} aria-hidden="true" focusable="false" />
+                              ) : (
+                                <PinAngle size={16} aria-hidden="true" focusable="false" />
+                              )}
                             </button>
                             <button
                               type="button"
@@ -987,7 +1027,7 @@ export default function AudioPlotter() {
                               title="Download SVG"
                               aria-label="Download SVG"
                             >
-                              ⬇
+                              <Download size={16} aria-hidden="true" focusable="false" />
                             </button>
                           </div>
                         </>
@@ -1026,8 +1066,8 @@ const ErrorMessage = ({ error, children }) => (
 const EmptyState = () => (
   <div className="preview-placeholder">
     <div className="text-center">
-      <div className="mb-3" style={{ fontSize: '3rem' }}>
-        🎵
+      <div className="mb-3">
+        <MusicNoteBeamed size={48} className="text-muted" aria-hidden="true" focusable="false" />
       </div>
       <h5>Upload an audio file to begin</h5>
     </div>
@@ -1037,8 +1077,8 @@ const EmptyState = () => (
 const ReadyState = ({ onGenerate }) => (
   <div className="preview-placeholder">
     <div className="text-center">
-      <div className="mb-3" style={{ fontSize: '2rem' }}>
-        🎵
+      <div className="mb-3">
+        <MusicNoteBeamed size={32} className="text-primary" aria-hidden="true" focusable="false" />
       </div>
       <p className="mb-3">Ready to generate your waveform</p>
       <button className="btn btn-primary btn-lg" onClick={onGenerate} type="button">
@@ -1064,8 +1104,8 @@ const LoadingState = () => (
 const ErrorState = ({ error, onRetry }) => (
   <div className="preview-placeholder">
     <div className="text-center">
-      <div className="mb-3" style={{ fontSize: '2rem' }}>
-        ⚠️
+      <div className="mb-3">
+        <ExclamationTriangle size={32} className="text-warning" aria-hidden="true" focusable="false" />
       </div>
       <h5 className="text-danger mb-2">Error</h5>
       <p className="text-muted small mb-3">{error || 'Something went wrong'}</p>
