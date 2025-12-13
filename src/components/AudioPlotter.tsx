@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { createPortal } from 'react-dom'
-import { useQueryState, queryTypes } from 'next-usequerystate'
+import { useQueryState, parseAsInteger, parseAsFloat, parseAsBoolean, parseAsStringEnum, createParser } from 'nuqs'
 import { z } from 'zod'
 import createDebug from 'debug'
+import type { FrequencyBandConfig } from './AudioAnalyzer'
+import { ensureFrequencyBandCount } from './AudioAnalyzer'
+import type { StyleType, BlendMode } from './SvgFromAudioPeaks'
+import { ensureStyleType, ensureBlendMode } from './SvgFromAudioPeaks'
 
 // Debug loggers - enable with localStorage.debug = 'audioplotter:*'
 const debugFreqBands = createDebug('audioplotter:frequencyBands')
-const debugRender = createDebug('audioplotter:render')
 
 import {
   AudioBuffer,
@@ -47,12 +50,11 @@ import {
   ZoomIn,
   ZoomOut,
   Fullscreen,
-  PinAngle,
   BoxArrowInUp,
   Download,
 } from 'react-bootstrap-icons'
 
-const isDev = process.env.NODE_ENV === 'development'
+const isDev = import.meta.env.MODE === 'development'
 const DEV_HTTP_FETCH = false // do network calls even in dev mode, to test that it works
 const SHOW_BLOB_DOWNLOAD = false // isDev
 
@@ -69,6 +71,12 @@ const DEFAULT_VIS_STYLE = 'saw'
 // Transition options to prevent scroll-to-top on URL updates
 const URL_UPDATE_OPTIONS = { scroll: false, shallow: true }
 
+// Type for band settings in URL
+interface BandSetting {
+  color: string
+  opacity?: number
+}
+
 // Zod schema for bands array
 const bandSchema = z.object({
   color: z.string(),
@@ -76,42 +84,42 @@ const bandSchema = z.object({
 })
 const bandsArraySchema = z.array(bandSchema)
 
-// Custom parser for bands JSON
-const bandsParser = {
-  parse: (value) => {
+// Custom parser for bands JSON using nuqs createParser
+const bandsParser = createParser<BandSetting[] | null>({
+  parse: (value: string): BandSetting[] | null => {
     try {
-      const parsed = JSON.parse(value)
+      const parsed: unknown = JSON.parse(value)
       const validated = bandsArraySchema.parse(parsed)
       return validated
     } catch {
       return null
     }
   },
-  serialize: (value) => {
+  serialize: (value: BandSetting[] | null): string => {
     if (!value) return ''
     return JSON.stringify(value)
   },
-}
+})
 
 export default function AudioPlotter() {
   // form state - URL persisted with validation
   const [url, setUrl] = useQueryState('url', { defaultValue: DEFAULT_AUDIO_URL })
-  const [imgHeightRaw, setImgHeightRaw] = useQueryState('height', queryTypes.integer.withDefault(DEFAULT_HEIGHT))
-  const imgHeight = Math.max(1, Math.min(imgHeightRaw, MAX_HEIGHT)) // Clamp to valid range
-  const [numBandsRaw, setNumBandsRaw] = useQueryState('points', queryTypes.integer.withDefault(DEFAULT_BANDS))
-  const numBands = Math.max(MIN_BANDS, Math.min(numBandsRaw, MAX_BANDS)) // Clamp to valid range
-  const [trimStart, setTrimStart] = useQueryState('trimStart', queryTypes.float.withDefault(DEFAULT_TRIM_POINTS[0]))
-  const [trimEnd, setTrimEnd] = useQueryState('trimEnd', queryTypes.float.withDefault(DEFAULT_TRIM_POINTS[1]))
-  const [doNormalize, setDoNormalize] = useQueryState('normalize', queryTypes.boolean.withDefault(true))
+  const [imgHeightRaw, setImgHeightRaw] = useQueryState('height', parseAsInteger.withDefault(DEFAULT_HEIGHT))
+  const imgHeight = Math.max(1, Math.min(imgHeightRaw ?? DEFAULT_HEIGHT, MAX_HEIGHT)) // Clamp to valid range
+  const [numBandsRaw, setNumBandsRaw] = useQueryState('points', parseAsInteger.withDefault(DEFAULT_BANDS))
+  const numBands = Math.max(MIN_BANDS, Math.min(numBandsRaw ?? DEFAULT_BANDS, MAX_BANDS)) // Clamp to valid range
+  const [trimStart, setTrimStart] = useQueryState('trimStart', parseAsFloat.withDefault(DEFAULT_TRIM_POINTS[0] ?? 0))
+  const [trimEnd, setTrimEnd] = useQueryState('trimEnd', parseAsFloat.withDefault(DEFAULT_TRIM_POINTS[1] ?? 0))
+  const [doNormalize, setDoNormalize] = useQueryState('normalize', parseAsBoolean.withDefault(true))
   const [visStyle, setVisStyle] = useQueryState(
     'style',
-    queryTypes.stringEnum(VIS_STYLES).withDefault(DEFAULT_VIS_STYLE)
+    parseAsStringEnum<StyleType>([...VIS_STYLES]).withDefault(DEFAULT_VIS_STYLE)
   )
   const [strokeWidthRaw, setStrokeWidthRaw] = useQueryState(
     'strokeWidth',
-    queryTypes.float.withDefault(DEFAULT_STROKE_WIDTH)
+    parseAsFloat.withDefault(DEFAULT_STROKE_WIDTH)
   )
-  const [addCaps, setAddCaps] = useQueryState('caps', queryTypes.boolean.withDefault(true))
+  const [addCaps, setAddCaps] = useQueryState('caps', parseAsBoolean.withDefault(true))
 
   // Validate strokeWidth with dynamic max based on numBands
   const maxStrokeWidth = calcMaxStrokeWidth(numBands)
@@ -120,21 +128,21 @@ export default function AudioPlotter() {
   // Multiband URL state with validation
   const [numFrequencyBandsRaw, setNumFrequencyBandsRaw] = useQueryState(
     'numBands',
-    queryTypes.integer.withDefault(DEFAULT_FREQUENCY_BANDS)
+    parseAsInteger.withDefault(DEFAULT_FREQUENCY_BANDS)
   )
-  const numFrequencyBands = Math.max(MIN_FREQUENCY_BANDS, Math.min(numFrequencyBandsRaw, MAX_FREQUENCY_BANDS))
+  const numFrequencyBands = Math.max(MIN_FREQUENCY_BANDS, Math.min(numFrequencyBandsRaw ?? DEFAULT_FREQUENCY_BANDS, MAX_FREQUENCY_BANDS))
   const [bands, setBands] = useQueryState('bands', bandsParser)
   const [blendMode, setBlendMode] = useQueryState(
     'blendMode',
-    queryTypes.stringEnum(BLEND_MODES).withDefault(DEFAULT_BLEND_MODE)
+    parseAsStringEnum<BlendMode>([...BLEND_MODES]).withDefault(DEFAULT_BLEND_MODE)
   )
   const [backgroundColor, setBackgroundColor] = useQueryState('bgColor', { defaultValue: DEFAULT_BACKGROUND_COLOR })
-  const [spreadPeaks, setSpreadPeaks] = useQueryState('spreadPeaks', queryTypes.boolean.withDefault(false))
+  const [spreadPeaks, setSpreadPeaks] = useQueryState('spreadPeaks', parseAsBoolean.withDefault(false))
   const [stickyPreview, setStickyPreview] = useLocalStorage('stickyPreview', false)
 
   // form state - not URL persisted
-  const [audioFile, setAudioFile] = useState(null)
-  const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState(DEFAULT_TRIM_POINTS)
+  const [audioFile, setAudioFile] = useState<File | null>(null)
+  const [audioTrimPointsDebounced, setAudioTrimPointsDebounced] = useState<[number, number]>(DEFAULT_TRIM_POINTS as [number, number])
 
   // Stable key that changes only when audio source changes (for panzoom reset)
   const audioSourceKey = audioFile?.name || url || 'no-audio'
@@ -150,20 +158,20 @@ export default function AudioPlotter() {
   const [isDragging, setIsDragging] = useState(false)
 
   // Portal root for preview panel (renders outside Bootstrap grid structure)
-  const [portalRoot, setPortalRoot] = useState(null)
+  const [portalRoot, setPortalRoot] = useState<HTMLElement | null>(null)
   useEffect(() => {
     setPortalRoot(document.getElementById('preview-portal-root'))
   }, [])
 
   // Resize handlers
-  const handleDragStart = useCallback((e) => {
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     setIsDragging(true)
     document.body.classList.add('preview-dragging')
   }, [])
 
   const handleDragMove = useCallback(
-    (e) => {
+    (e: MouseEvent | TouchEvent) => {
       if (!isDragging || !previewPanelRef.current) return
 
       // Cancel previous frame if still pending
@@ -173,8 +181,10 @@ export default function AudioPlotter() {
 
       // Use requestAnimationFrame to throttle to 60fps max
       dragAnimationFrameRef.current = requestAnimationFrame(() => {
+        if (!previewPanelRef.current) return
+
         const viewportHeight = window.innerHeight
-        const mouseY = e.clientY || e.touches?.[0]?.clientY
+        const mouseY = 'clientY' in e ? e.clientY : e.touches?.item(0)?.clientY
         if (!mouseY) return
 
         const newHeightPx = viewportHeight - mouseY
@@ -205,7 +215,7 @@ export default function AudioPlotter() {
   }, [isDragging])
 
   const handleKeyboardResize = useCallback(
-    (e) => {
+    (e: React.KeyboardEvent) => {
       if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         e.preventDefault()
         const currentVh = parseFloat(previewHeight)
@@ -217,13 +227,13 @@ export default function AudioPlotter() {
         setPreviewHeight('40vh')
       }
     },
-    [previewHeight]
+    [previewHeight, setPreviewHeight]
   )
 
   // Attach drag event listeners
   useEffect(() => {
     if (isDragging) {
-      const handleMove = (e) => handleDragMove(e)
+      const handleMove = (e: MouseEvent | TouchEvent) => handleDragMove(e)
       const handleEnd = () => handleDragEnd()
 
       document.addEventListener('mousemove', handleMove)
@@ -241,48 +251,51 @@ export default function AudioPlotter() {
   }, [isDragging, handleDragMove, handleDragEnd])
 
   // Reference to preview content for scrolling
-  const previewContentRef = useRef(null)
+  const previewContentRef = useRef<HTMLDivElement>(null)
 
   // Initialize/update bands array when numFrequencyBands changes
   useEffect(() => {
-    const currentBands = bands || []
-    const targetCount = numFrequencyBands || DEFAULT_FREQUENCY_BANDS
+    const currentBands = bands ?? []
+    const targetCount = numFrequencyBands ?? DEFAULT_FREQUENCY_BANDS
     const previousCount = currentBands.length
 
     if (previousCount !== targetCount) {
-      const newBands = []
+      const newBands: BandSetting[] = []
       // Always reset to default colors when band count changes
       // For multiband mode (2+), skip black (index 0) which is reserved for single-band
       const isMultiband = targetCount > 1
 
       for (let i = 0; i < targetCount; i++) {
+        const colorIndex = isMultiband ? i + 1 : i
+        const color = DEFAULT_BAND_COLORS.at(colorIndex) ?? '#000000'
         newBands.push({
-          color: isMultiband ? DEFAULT_BAND_COLORS[i + 1] : DEFAULT_BAND_COLORS[i],
+          color,
           opacity: 1,
         })
       }
       setBands(newBands, URL_UPDATE_OPTIONS)
     }
-  }, [numFrequencyBands])
+  }, [numFrequencyBands, bands, setBands])
 
   // Build frequencyBands config from presets + colors + opacity
   // Memoized to prevent unnecessary AudioPeaks recalculation when unrelated state changes
   const frequencyBands = useMemo(() => {
     debugFreqBands('RECALCULATING frequencyBands (numFrequencyBands=%d)', numFrequencyBands)
     if (numFrequencyBands <= 1) return null
-    return FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => ({
+    const bandCount = ensureFrequencyBandCount(numFrequencyBands)
+    return FREQUENCY_PRESETS[bandCount].map((preset: FrequencyBandConfig, i: number) => ({
       name: preset.name,
       lowHz: preset.low,
       highHz: preset.high,
-      color: bands?.[i]?.color || DEFAULT_BAND_COLORS[i],
-      opacity: bands?.[i]?.opacity !== undefined ? bands[i].opacity : 1,
+      color: bands?.at(i)?.color ?? DEFAULT_BAND_COLORS.at(i) ?? '#000000',
+      opacity: bands?.at(i)?.opacity ?? 1,
     }))
   }, [numFrequencyBands, bands])
 
   // Preview panel state management
-  // States: 'no-audio' | 'ready' | 'loading' | 'error' | 'success'
-  const [previewState, setPreviewState] = useState('no-audio')
-  const [previewError, setPreviewError] = useState(null)
+  type PreviewState = 'no-audio' | 'ready' | 'loading' | 'error' | 'success'
+  const [previewState, setPreviewState] = useState<PreviewState>('no-audio')
+  const [previewError, setPreviewError] = useState<string | null>(null)
 
   // Update preview state when audio source changes
   useEffect(() => {
@@ -331,15 +344,15 @@ export default function AudioPlotter() {
   }, [settingsHash, previewState])
 
   // other state
-  const [svgBlobURL, setSvgBlobURL] = useState(null)
-  const svgEl = useRef(null)
-  const previewPanelRef = useRef(null)
-  const dragAnimationFrameRef = useRef(null)
+  const [svgBlobURL, setSvgBlobURL] = useState<string | null>(null)
+  const svgEl = useRef<SVGSVGElement>(null)
+  const previewPanelRef = useRef<HTMLDivElement>(null)
+  const dragAnimationFrameRef = useRef<number | null>(null)
   const [hasWaveform, setHasWaveform] = useState(false)
 
   // Panzoom state
-  const panzoomContainerRef = useRef(null)
-  const panzoomInstanceRef = useRef(null)
+  const panzoomContainerRef = useRef<HTMLDivElement>(null)
+  const panzoomInstanceRef = useRef<ReturnType<typeof Panzoom> | null>(null)
 
   // Transition to success when bandPeaks become available
   useEffect(() => {
@@ -367,15 +380,15 @@ export default function AudioPlotter() {
 
     // Enable mouse wheel zooming on the parent (preview-content)
     const parent = container.parentElement
-    const handleWheel = (e) => {
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault()
       panzoom.zoomWithWheel(e)
     }
-    parent.addEventListener('wheel', handleWheel, { passive: false })
+    parent?.addEventListener('wheel', handleWheel, { passive: false })
 
     // Cleanup
     return () => {
-      parent.removeEventListener('wheel', handleWheel)
+      parent?.removeEventListener('wheel', handleWheel)
       panzoom.destroy()
       panzoomInstanceRef.current = null
     }
@@ -435,20 +448,20 @@ export default function AudioPlotter() {
   }, [numBands])
 
   // * audio trim points
-  const audioTrimPoints = [trimStart, trimEnd]
+  const audioTrimPoints: [number, number] = [trimStart ?? 0, trimEnd ?? 0]
   const debounceAudioTrimPoints = useCallback(
-    debounce((atp) => setAudioTrimPointsDebounced(atp), 50),
-    []
+    debounce((atp: [number, number]) => setAudioTrimPointsDebounced(atp), 50),
+    [setAudioTrimPointsDebounced]
   )
-  const onChangeTrimStart = (event) => {
-    const val = Try(() => parseFloat(event.target.value, 10))
+  const onChangeTrimStart = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Try(() => parseFloat(event.target.value)) ?? 0
     setTrimStart(val, URL_UPDATE_OPTIONS)
-    debounceAudioTrimPoints([val, trimEnd])
+    debounceAudioTrimPoints([val, trimEnd ?? 0])
   }
-  const onChangeTrimEnd = (event) => {
-    const val = Try(() => parseFloat(event.target.value, 10))
+  const onChangeTrimEnd = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = Try(() => parseFloat(event.target.value)) ?? 0
     setTrimEnd(val, URL_UPDATE_OPTIONS)
-    debounceAudioTrimPoints([trimStart, val])
+    debounceAudioTrimPoints([trimStart ?? 0, val])
   }
 
   // FIXME: does not work on initial render… either find the correct way to hook it up,
@@ -514,8 +527,8 @@ export default function AudioPlotter() {
                 className="form-control form-control-sm"
                 type="file"
                 accept="audio/*"
-                onChange={(e) => {
-                  const file = e.target.files[0]
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const file = e.target.files?.item(0) ?? null
                   if (file) {
                     setAudioFile(file)
                     setUrl('', URL_UPDATE_OPTIONS)
@@ -530,10 +543,10 @@ export default function AudioPlotter() {
       {/* Controls only show when generating/generated */}
       {(previewState === 'loading' || previewState === 'success') && (
         <AudioBuffer url={url} file={audioFile}>
-          {({ isFetching, fetchError, bufferLength, buffer }) => {
+          {({ isFetching, fetchError }) => {
             // Handle fetch errors
             if (fetchError) {
-              if (previewState !== 'error') {
+              if (previewState === 'loading') {
                 setTimeout(() => {
                   setPreviewError(fetchError)
                   setPreviewState('error')
@@ -568,8 +581,9 @@ export default function AudioPlotter() {
                         id="inputNumFrequencyBands"
                         labelTxt="number of bands"
                         value={numFrequencyBands}
-                        onChange={(e) => {
-                          Try(() => setNumFrequencyBandsRaw(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const val = parseInt(e.target.value, 10)
+                          Try(() => setNumFrequencyBandsRaw(val, URL_UPDATE_OPTIONS))
                         }}
                         required
                         min={MIN_FREQUENCY_BANDS}
@@ -581,9 +595,9 @@ export default function AudioPlotter() {
                           <label className="form-label small">spread peaks</label>
                           <div>
                             <CheckBox
-                              checked={spreadPeaks}
-                              onChange={(e) => setSpreadPeaks(e.target.checked, URL_UPDATE_OPTIONS)}
-                            
+                              checked={spreadPeaks ?? false}
+                              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSpreadPeaks(e.target.checked, URL_UPDATE_OPTIONS)}
+
                             />
                           </div>
                           <small className="text-muted d-block mt-1">
@@ -594,7 +608,7 @@ export default function AudioPlotter() {
 
                       {numFrequencyBands > 1 && bands && (
                         <div className="mt-3">
-                          {FREQUENCY_PRESETS[numFrequencyBands].map((preset, i) => (
+                          {FREQUENCY_PRESETS[ensureFrequencyBandCount(numFrequencyBands)].map((preset: FrequencyBandConfig, i: number) => (
                             <div key={i} className="card mb-2">
                               <div className="card-body py-2 px-3">
                                 <div className="row align-items-center mb-2">
@@ -607,10 +621,12 @@ export default function AudioPlotter() {
                                     <input
                                       type="color"
                                       className="form-control form-control-color"
-                                      value={bands[i]?.color || DEFAULT_BAND_COLORS[i]}
-                                      onChange={(e) => {
+                                      value={bands?.at(i)?.color ?? DEFAULT_BAND_COLORS.at(i) ?? '#000000'}
+                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        if (!bands) return
                                         const newBands = [...bands]
-                                        newBands[i] = { ...newBands[i], color: e.target.value }
+                                        const existingBand = newBands.at(i) ?? { color: '#000000', opacity: 1 }
+                                        newBands[i] = { ...existingBand, color: e.target.value }
                                         setBands(newBands, URL_UPDATE_OPTIONS)
                                       }}
                                       title="Choose color"
@@ -628,17 +644,21 @@ export default function AudioPlotter() {
                                       min="0"
                                       max="1"
                                       step="0.01"
-                                      value={bands[i]?.opacity !== undefined ? bands[i].opacity : 1}
-                                      onChange={(e) => {
+                                      value={bands?.at(i)?.opacity ?? 1}
+                                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                        if (!bands) return
                                         const newBands = [...bands]
-                                        newBands[i] = { ...newBands[i], opacity: parseFloat(e.target.value) }
-                                        setBands(newBands, URL_UPDATE_OPTIONS)
+                                        const existingBand = newBands.at(i)
+                                        if (existingBand) {
+                                          newBands[i] = { ...existingBand, opacity: parseFloat(e.target.value) }
+                                          setBands(newBands, URL_UPDATE_OPTIONS)
+                                        }
                                       }}
                                     />
                                   </div>
                                   <div className="col-auto">
                                     <small className="text-muted">
-                                      {Math.round((bands[i]?.opacity !== undefined ? bands[i].opacity : 1) * 100)}%
+                                      {Math.round((bands?.at(i)?.opacity ?? 1) * 100)}%
                                     </small>
                                   </div>
                                 </div>
@@ -674,7 +694,7 @@ export default function AudioPlotter() {
                           className="form-select"
                           aria-label="choose visualisation style"
                           value={visStyle}
-                          onChange={(e) => setVisStyle(e.target.value, URL_UPDATE_OPTIONS)}
+                          onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setVisStyle(ensureStyleType(e.target.value), URL_UPDATE_OPTIONS)}
                           required
                         >
                           {VIS_STYLES.map((s) => (
@@ -691,7 +711,7 @@ export default function AudioPlotter() {
                             id="inputHeight"
                             labelTxt="height"
                             value={imgHeight}
-                            onChange={(e) => setImgHeightRaw(e.target.value, URL_UPDATE_OPTIONS)}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setImgHeightRaw(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS)}
                             required
                             min={1}
                             max={MAX_HEIGHT}
@@ -702,8 +722,9 @@ export default function AudioPlotter() {
                             id="inputNumBands"
                             labelTxt="points"
                             value={numBands}
-                            onChange={(e) => {
-                              Try(() => setNumBandsRaw(parseInt(e.target.value, 10), URL_UPDATE_OPTIONS))
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                              const val = parseInt(e.target.value, 10)
+                              Try(() => setNumBandsRaw(val, URL_UPDATE_OPTIONS))
                             }}
                             required
                             min={MIN_BANDS}
@@ -743,16 +764,16 @@ export default function AudioPlotter() {
                         <CheckBox
                           labelTxt="normalize"
                           id="inputDoNormalize"
-                          checked={doNormalize}
-                          onChange={(e) => {
+                          checked={doNormalize ?? true}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             setDoNormalize(e.target.checked, URL_UPDATE_OPTIONS)
                           }}
                         />
                         <CheckBox
                           labelTxt="add Caps"
                           id="inputAddCaps"
-                          checked={addCaps}
-                          onChange={(e) => {
+                          checked={addCaps ?? true}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                             setAddCaps(e.target.checked, URL_UPDATE_OPTIONS)
                           }}
                         />
@@ -782,7 +803,8 @@ export default function AudioPlotter() {
                         id="inputStrokeWidth"
                         labelTxt="stroke width"
                         value={strokeWidth}
-                        onChange={({ target: { value: num } }) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                          const num = parseFloat(e.target.value)
                           setStrokeWidthRaw(Math.max(MIN_STROKE_WIDTH, Math.min(num, maxStrokeWidth)), URL_UPDATE_OPTIONS)
                         }}
                         required
@@ -798,7 +820,7 @@ export default function AudioPlotter() {
                             className="form-select"
                             aria-label="choose blend mode"
                             value={blendMode}
-                            onChange={(e) => setBlendMode(e.target.value, URL_UPDATE_OPTIONS)}
+                            onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setBlendMode(ensureBlendMode(e.target.value), URL_UPDATE_OPTIONS)}
                             required
                           >
                             {BLEND_MODES.map((mode) => (
@@ -813,8 +835,8 @@ export default function AudioPlotter() {
                           <input
                             type="color"
                             className="form-control form-control-color w-100"
-                            value={backgroundColor}
-                            onChange={(e) => setBackgroundColor(e.target.value, URL_UPDATE_OPTIONS)}
+                            value={backgroundColor ?? DEFAULT_BACKGROUND_COLOR}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setBackgroundColor(e.target.value, URL_UPDATE_OPTIONS)}
                             title="Choose background color"
                           />
                         </div>
@@ -833,17 +855,18 @@ export default function AudioPlotter() {
                         <a
                           className={svgBlobURL ? 'btn btn-outline-dark' : 'btn btn-outline-warning'}
                           target="_blank"
-                          download={generateFilename(audioFile || url, {
+                          download={generateFilename(audioFile ?? url ?? '', {
                             height: imgHeight,
                             points: numBands,
-                            numBands: numFrequencyBands,
-                            trimStart: audioTrimPoints[0],
-                            trimEnd: audioTrimPoints[1],
-                            normalize: doNormalize,
-                            addCaps: addCaps,
+                            numBands: numFrequencyBands ?? 1,
+                            trimStart: audioTrimPoints[0] ?? 0,
+                            trimEnd: audioTrimPoints[1] ?? 0,
+                            normalize: doNormalize ?? true,
+                            addCaps: addCaps ?? true,
+                            spreadPeaks: spreadPeaks ?? false,
                           })}
-                          disabled={!svgBlobURL}
-                          href={svgBlobURL}
+                          href={svgBlobURL ?? undefined}
+                          onClick={(e) => !svgBlobURL && e.preventDefault()}
                         >
                           Download SVG (from blob!)
                         </a>
@@ -852,15 +875,15 @@ export default function AudioPlotter() {
                         className="btn btn-outline-primary"
                         onClick={() =>
                           downloadSVGNodeInDOM(
-                            generateFilename(audioFile || url, {
+                            generateFilename(audioFile ?? url ?? '', {
                               height: imgHeight,
                               points: numBands,
-                              numBands: numFrequencyBands,
-                              trimStart: audioTrimPoints[0],
-                              trimEnd: audioTrimPoints[1],
-                              normalize: doNormalize,
-                              addCaps: addCaps,
-                              spreadPeaks: spreadPeaks,
+                              numBands: numFrequencyBands ?? 1,
+                              trimStart: audioTrimPoints[0] ?? 0,
+                              trimEnd: audioTrimPoints[1] ?? 0,
+                              normalize: doNormalize ?? true,
+                              addCaps: addCaps ?? true,
+                              spreadPeaks: spreadPeaks ?? false,
                             })
                           )
                         }
@@ -893,7 +916,7 @@ export default function AudioPlotter() {
           <div
             ref={previewPanelRef}
             className={stickyPreview ? 'preview-panel' : 'preview-panel-inline'}
-            style={stickyPreview ? { ['--preview-height']: previewHeight } : {}}
+            style={stickyPreview ? ({ '--preview-height': previewHeight } as React.CSSProperties) : {}}
           >
         <div
           className="drag-handle"
@@ -965,7 +988,7 @@ export default function AudioPlotter() {
                 {({ isFetching, fetchError, buffer }) => {
                   // Handle fetch errors
                   if (fetchError) {
-                    if (previewState !== 'error') {
+                    if (previewState === 'loading') {
                       setTimeout(() => {
                         setPreviewError(fetchError)
                         setPreviewState('error')
@@ -980,14 +1003,14 @@ export default function AudioPlotter() {
                     <AudioPeaks
                       buffer={buffer}
                       bands={numBands}
-                      normalize={doNormalize}
+                      normalize={doNormalize ?? true}
                       trimPoints={audioTrimPointsDebounced}
                       frequencyBands={frequencyBands}
                     >
                       {({ bandPeaks, decodeError }) => {
                         // Handle decode errors
                         if (decodeError) {
-                          if (previewState !== 'error') {
+                          if (previewState === 'loading') {
                             setTimeout(() => {
                               setPreviewError(decodeError)
                               setPreviewState('error')
@@ -1050,15 +1073,15 @@ export default function AudioPlotter() {
                 disabled={!hasWaveform}
                 onClick={() =>
                   downloadSVGNodeInDOM(
-                    generateFilename(audioFile || url, {
+                    generateFilename(audioFile ?? url ?? '', {
                       height: imgHeight,
                       points: numBands,
-                      numBands: numFrequencyBands,
-                      trimStart: audioTrimPoints[0],
-                      trimEnd: audioTrimPoints[1],
-                      normalize: doNormalize,
-                      addCaps: addCaps,
-                      spreadPeaks: spreadPeaks,
+                      numBands: numFrequencyBands ?? 1,
+                      trimStart: audioTrimPoints[0] ?? 0,
+                      trimEnd: audioTrimPoints[1] ?? 0,
+                      normalize: doNormalize ?? true,
+                      addCaps: addCaps ?? true,
+                      spreadPeaks: spreadPeaks ?? false,
                     })
                   )
                 }
@@ -1086,15 +1109,7 @@ export default function AudioPlotter() {
   )
 }
 
-const ErrorMessage = ({ error, children }) => (
-  <div className="card text-center text-dark bg-warning mb-3 m-auto" style={{ maxWidth: '42em' }}>
-    <div className="card-body">
-      <h5 className="card-title">Something went wrong…</h5>
-      <pre className="card-text">{error}</pre>
-      {children}
-    </div>
-  </div>
-)
+// Removed ErrorMessage - replaced by ErrorState component above
 
 const EmptyState = () => (
   <div className="preview-placeholder">
@@ -1107,7 +1122,11 @@ const EmptyState = () => (
   </div>
 )
 
-const ReadyState = ({ onGenerate }) => (
+interface ReadyStateProps {
+  onGenerate: () => void
+}
+
+const ReadyState = ({ onGenerate }: ReadyStateProps) => (
   <div className="preview-placeholder">
     <div className="text-center">
       <div className="mb-3">
@@ -1134,14 +1153,19 @@ const LoadingState = () => (
   </div>
 )
 
-const ErrorState = ({ error, onRetry }) => (
+interface ErrorStateProps {
+  error: string | null
+  onRetry: () => void
+}
+
+const ErrorState = ({ error, onRetry }: ErrorStateProps) => (
   <div className="preview-placeholder">
     <div className="text-center">
       <div className="mb-3">
         <ExclamationTriangle size={32} className="text-warning" aria-hidden="true" focusable="false" />
       </div>
       <h5 className="text-danger mb-2">Error</h5>
-      <p className="text-muted small mb-3">{error || 'Something went wrong'}</p>
+      <p className="text-muted small mb-3">{error ?? 'Something went wrong'}</p>
       <button className="btn btn-outline-primary" onClick={onRetry} type="button">
         Retry
       </button>
@@ -1149,7 +1173,13 @@ const ErrorState = ({ error, onRetry }) => (
   </div>
 )
 
-const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
+interface FormFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  id: string
+  labelTxt: string
+  helpTxt?: string
+}
+
+const FormField = ({ id, labelTxt, helpTxt, ...inputProps }: FormFieldProps) => (
   <>
     <label htmlFor={id} className="form-label small">
       {labelTxt}
@@ -1163,19 +1193,35 @@ const FormField = ({ id, labelTxt, helpTxt, ...inputProps }) => (
   </>
 )
 
-const NumberSliderInput = ({ id, labelTxt, ...inputProps }) => (
+interface NumberSliderInputProps extends Omit<FormFieldProps, 'helpTxt'> {
+  id: string
+  labelTxt: string
+}
+
+const NumberSliderInput = ({ id, labelTxt, ...inputProps }: NumberSliderInputProps) => (
   <div id={id} className="row mb-2">
     <div className="col">
       <FormField id={`${id}Range`} type="range" className="form-range" labelTxt={labelTxt} {...inputProps} />
     </div>
     <div className="col">
-      <FormField id={`${id}Nr`} type="number" {...inputProps} />
+      <FormField id={`${id}Nr`} type="number" labelTxt="" {...inputProps} />
     </div>
   </div>
 )
 
-function generateFilename(audioSource, settings) {
-  let decodedBasename
+interface FileSettings {
+  height: number
+  points: number
+  numBands: number
+  trimStart: number
+  trimEnd: number
+  normalize: boolean
+  addCaps: boolean
+  spreadPeaks: boolean
+}
+
+function generateFilename(audioSource: File | string, settings: FileSettings): string {
+  let decodedBasename: string
 
   // Handle File object
   if (audioSource instanceof File) {
@@ -1183,8 +1229,8 @@ function generateFilename(audioSource, settings) {
     decodedBasename = basename
   } else {
     // Handle URL string
-    const urlPath = audioSource.split('/').pop()
-    const basename = urlPath.split('?')[0].replace(/\.[^.]+$/, '') // remove query params and extension
+    const urlPath = audioSource.split('/').pop() ?? 'audioplot'
+    const basename = (urlPath.split('?').at(0) ?? urlPath).replace(/\.[^.]+$/, '') // remove query params and extension
     decodedBasename = decodeURIComponent(basename)
   }
 

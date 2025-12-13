@@ -1,6 +1,11 @@
-import React from 'react'
+interface AppLayoutProps {
+  version?: string
+  menu?: React.ReactNode
+  children?: React.ReactNode
+  preview?: React.ReactNode
+}
 
-const AppLayout = ({ version, menu, children, preview }) => {
+const AppLayout = ({ version, menu, children, preview }: AppLayoutProps) => {
   return (
     <div className="app">
       {/* Header - fixed at top of viewport (flex-shrink: 0) */}

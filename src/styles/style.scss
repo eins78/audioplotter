@@ -1,4 +1,4 @@
-@import '~bootstrap/scss/functions';
+@import 'bootstrap/scss/functions';
 
 // ============================================================================
 // SASS VARIABLES (Compile-time Bootstrap compatibility)
@@ -9,7 +9,7 @@
 $indigo: #6610f2;
 $primary: shade-color($indigo, 22%);
 
-@import '~bootstrap/scss/bootstrap';
+@import 'bootstrap/scss/bootstrap';
 
 // ============================================================================
 // CSS CUSTOM PROPERTIES (Runtime Color System)

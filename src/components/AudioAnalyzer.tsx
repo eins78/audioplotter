@@ -1,7 +1,7 @@
 // adapted from <https://css-tricks.com/making-an-audio-waveform-visualizer-with-vanilla-javascript/>
 // licensed under GPLv3, see LICENSE file in this repo and <https://codepen.io/matthewstrom/pen/mddOWWg>
 
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AudioCtx from 'audio-context'
 import AudioUtil from 'audio-buffer-utils'
 import createDebug from 'debug'
@@ -30,7 +30,41 @@ export const DEFAULT_BAND_COLORS = Object.values({
   yellow: '#FFC107',
 })
 
-export const FREQUENCY_PRESETS = {
+// Type definitions
+export interface FrequencyBandConfig {
+  name: string
+  low: number
+  high: number
+}
+
+export interface FrequencyBandInput {
+  name: string
+  lowHz: number
+  highHz: number
+  color: string
+  opacity?: number
+}
+
+export interface BandPeaks {
+  name: string
+  lowHz: number
+  highHz: number
+  color: string
+  opacity?: number
+  peaks: number[]
+}
+
+export type FrequencyBandCount = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
+
+export function isFrequencyBandCount(value: unknown): value is FrequencyBandCount {
+  return typeof value === 'number' && value >= 1 && value <= 8 && Number.isInteger(value)
+}
+
+export function ensureFrequencyBandCount(value: unknown): FrequencyBandCount {
+  return isFrequencyBandCount(value) ? value : DEFAULT_FREQUENCY_BANDS
+}
+
+export const FREQUENCY_PRESETS: Record<FrequencyBandCount, FrequencyBandConfig[]> = {
   1: [{ name: 'Full', low: 20, high: 20000 }],
   2: [
     { name: 'Bass', low: 20, high: 250 },
@@ -83,29 +117,15 @@ export const FREQUENCY_PRESETS = {
   ],
 }
 
-// unused, just showing how to plug those 2 parts together…
-// export default function AudioAnalyzer({ url, ...restProps }) {
-//   return (
-//     <AudioBuffer url={url}>
-//       {({ isFetching, fetchError, bufferLength, buffer }) => {
-//         if (isFetching) return 'loading…'
-//         if (fetchError) return 'error!'
-//         if (!(bufferLength > 0)) return 'empty!'
-//         return <AudioPeaks buffer={buffer} {...restProps} />
-//       }}
-//     </AudioBuffer>
-//   )
-// }
-
 /**
  * Filters audio buffer to specific frequency range using BiquadFilter
- * @param {AudioContext} audioContext
- * @param {AudioBuffer} audioBuffer - Decoded audio
- * @param {number} lowHz - Low frequency cutoff
- * @param {number} highHz - High frequency cutoff
- * @returns {Promise<Float32Array>} Filtered audio data
  */
-async function filterAudioByFrequency(audioContext, audioBuffer, lowHz, highHz) {
+async function filterAudioByFrequency(
+  _audioContext: AudioContext,
+  audioBuffer: AudioBuffer,
+  lowHz: number,
+  highHz: number
+): Promise<Float32Array> {
   // Create offline context for processing
   const offlineContext = new OfflineAudioContext(1, audioBuffer.length, audioBuffer.sampleRate)
 
@@ -114,7 +134,8 @@ async function filterAudioByFrequency(audioContext, audioBuffer, lowHz, highHz) 
   const sourceData = audioBuffer.getChannelData(0)
   const targetData = newBuffer.getChannelData(0)
   for (let i = 0; i < sourceData.length; i++) {
-    targetData[i] = sourceData[i]
+    const value = sourceData.at(i) ?? 0
+    targetData[i] = value
   }
 
   // Create source with the new buffer
@@ -155,28 +176,50 @@ async function filterAudioByFrequency(audioContext, audioBuffer, lowHz, highHz) 
   return filteredBuffer.getChannelData(0)
 }
 
-export function AudioBuffer({ url, file, children } = {}) {
+// AudioBuffer component types
+interface AudioBufferData {
+  isFetching: boolean
+  fetchError: string | null
+  bufferLength: number
+  buffer: ArrayBuffer | null
+}
+
+interface AudioBufferProps {
+  url?: string
+  file?: File | null
+  children: (data: AudioBufferData) => React.ReactNode
+}
+
+export function AudioBuffer({ url, file, children }: AudioBufferProps) {
   const [isFetching, setIsFetching] = useState(false)
-  const [fetchError, setFetchError] = useState(undefined)
-  const buffer = useRef(new ArrayBuffer())
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const buffer = useRef<ArrayBuffer | null>(new ArrayBuffer(0))
   const bufferLength = buffer.current ? buffer.current.byteLength : 0
 
-  useEffect(
-    async function fetchData() {
-      if (!url && !file) return
+  useEffect(() => {
+    if (!url && !file) return
 
+    async function fetchData() {
       buffer.current = null
       setFetchError(null)
       setIsFetching(true)
-      let buf, err
+      let buf: ArrayBuffer | undefined
+      let err = false
 
       try {
         if (file) {
           // Handle File object using FileReader
-          buf = await new Promise((resolve, reject) => {
+          buf = await new Promise<ArrayBuffer>((resolve, reject) => {
             const reader = new FileReader()
-            reader.onload = (e) => resolve(e.target.result)
-            reader.onerror = (e) => reject(new Error('Failed to read file'))
+            reader.onload = (e) => {
+              const result = e.target?.result
+              if (result instanceof ArrayBuffer) {
+                resolve(result)
+              } else {
+                reject(new Error('Failed to read file as ArrayBuffer'))
+              }
+            }
+            reader.onerror = () => reject(new Error('Failed to read file'))
             reader.readAsArrayBuffer(file)
           })
         } else if (url) {
@@ -191,15 +234,31 @@ export function AudioBuffer({ url, file, children } = {}) {
         setFetchError(String(error))
       }
 
-      if (!err) buffer.current = buf
+      if (!err && buf) buffer.current = buf
       setIsFetching(false)
-    },
-    [url, file]
-  )
+    }
+
+    fetchData()
+  }, [url, file])
 
   return typeof children !== 'function'
     ? null
     : children({ isFetching, fetchError, bufferLength, buffer: buffer.current })
+}
+
+// AudioPeaks component types
+interface AudioPeaksData {
+  bandPeaks: BandPeaks[] | null
+  decodeError: string | null
+}
+
+interface AudioPeaksProps {
+  buffer: ArrayBuffer | null
+  bands?: number
+  trimPoints?: [number, number]
+  normalize?: boolean
+  frequencyBands?: FrequencyBandInput[] | null
+  children: (data: AudioPeaksData) => React.ReactNode
 }
 
 export function AudioPeaks({
@@ -209,102 +268,101 @@ export function AudioPeaks({
   normalize = true,
   frequencyBands = null,
   children,
-} = {}) {
-  const [audioContext, setAudioContext] = useState()
-  const [decodeError, setDecodeError] = useState(undefined)
-  const [bandPeaks, setBandPeaks] = useState(undefined)
+}: AudioPeaksProps) {
+  const [audioContext, setAudioContext] = useState<AudioContext | undefined>(undefined)
+  const [decodeError, setDecodeError] = useState<string | null>(null)
+  const [bandPeaks, setBandPeaks] = useState<BandPeaks[] | null>(null)
 
   const bufferLength = buffer ? buffer.byteLength : 0
 
   useEffect(() => {
     setAudioContext(new AudioCtx())
     return function cleanup() {
-      if (audioContext && audioContext.close) audioContext.close()
+      if (audioContext?.close) audioContext.close()
     }
   }, [])
 
-  useEffect(
-    async function calculatePeaks() {
-      debugPeaks('RECALCULATING peaks (bands=%d normalize=%s frequencyBands=%s)', bands, normalize, frequencyBands ? frequencyBands.length : 0)
+  useEffect(() => {
+    debugPeaks(
+      'RECALCULATING peaks (bands=%d normalize=%s frequencyBands=%s)',
+      bands,
+      normalize,
+      frequencyBands ? frequencyBands.length : 0
+    )
 
-      if (!(audioContext && bufferLength > 0)) {
-        return setBandPeaks(null)
-      }
+    if (!(audioContext && bufferLength > 0 && buffer)) {
+      setBandPeaks(null)
+      return
+    }
 
-      // NOTE: no `await`, Safari only supports the callback style
-      audioContext.decodeAudioData(
-        buffer.slice(),
-        async function onSuccess(audioData) {
-          try {
-            // If frequencyBands provided, process each band separately
-            if (frequencyBands && frequencyBands.length > 0) {
-              const allBandPeaks = []
+    // NOTE: no `await`, Safari only supports the callback style
+    audioContext.decodeAudioData(
+      buffer.slice(),
+      async function onSuccess(audioData: AudioBuffer) {
+        try {
+          // If frequencyBands provided, process each band separately
+          if (frequencyBands && frequencyBands.length > 0) {
+            const allBandPeaks: BandPeaks[] = []
 
-              for (const band of frequencyBands) {
-                // Filter audio by frequency range
-                const filteredAudioData = await filterAudioByFrequency(
-                  audioContext,
-                  audioData,
-                  band.lowHz,
-                  band.highHz
-                )
+            for (const band of frequencyBands) {
+              // Filter audio by frequency range
+              const filteredAudioData = await filterAudioByFrequency(audioContext, audioData, band.lowHz, band.highHz)
 
-                // Create a real AudioBuffer from the filtered data
-                const filteredBuffer = audioContext.createBuffer(1, filteredAudioData.length, audioData.sampleRate)
-                filteredBuffer.getChannelData(0).set(filteredAudioData)
+              // Create a real AudioBuffer from the filtered data
+              const filteredBuffer = audioContext.createBuffer(1, filteredAudioData.length, audioData.sampleRate)
+              filteredBuffer.getChannelData(0).set(filteredAudioData)
 
-                // Apply time-domain sampling and trimming
-                const timeSampledData = filterData(filteredBuffer, bands, trimPoints)
-                const peaks = normalize ? normalizeData(timeSampledData) : timeSampledData
+              // Apply time-domain sampling and trimming
+              const timeSampledData = filterData(filteredBuffer, bands, trimPoints)
+              const peaks = normalize ? normalizeData(timeSampledData) : timeSampledData
 
-                allBandPeaks.push({
-                  name: band.name,
-                  lowHz: band.lowHz,
-                  highHz: band.highHz,
-                  color: band.color,
-                  opacity: band.opacity,
-                  peaks,
-                })
-              }
-
-              setBandPeaks(allBandPeaks)
-            } else {
-              // Single band mode (backwards compatible)
-              const filteredData = filterData(audioData, bands, trimPoints)
-              const peaks = normalize ? normalizeData(filteredData) : filteredData
-              setBandPeaks([
-                {
-                  name: 'Full',
-                  lowHz: 20,
-                  highHz: 20000,
-                  color: '#000000',
-                  peaks,
-                },
-              ])
+              allBandPeaks.push({
+                name: band.name,
+                lowHz: band.lowHz,
+                highHz: band.highHz,
+                color: band.color,
+                opacity: band.opacity,
+                peaks,
+              })
             }
-            setDecodeError(null)
-          } catch (err) {
-            setBandPeaks(null)
-            setDecodeError(String(err))
+
+            setBandPeaks(allBandPeaks)
+          } else {
+            // Single band mode (backwards compatible)
+            const filteredData = filterData(audioData, bands, trimPoints)
+            const peaks = normalize ? normalizeData(filteredData) : filteredData
+            setBandPeaks([
+              {
+                name: 'Full',
+                lowHz: 20,
+                highHz: 20000,
+                color: '#000000',
+                peaks,
+              },
+            ])
           }
-        },
-        function onErr(err) {
+          setDecodeError(null)
+        } catch (err) {
           setBandPeaks(null)
           setDecodeError(String(err))
         }
-      )
-    },
-    [buffer, bands, trimPoints, normalize, frequencyBands, audioContext]
-  )
+      },
+      function onErr(err: DOMException) {
+        setBandPeaks(null)
+        setDecodeError(String(err))
+      }
+    )
+  }, [buffer, bands, trimPoints, normalize, frequencyBands, audioContext, bufferLength])
 
-  const data = { bandPeaks, decodeError }
+  const data: AudioPeaksData = { bandPeaks, decodeError }
   return typeof children !== 'function' ? null : children(data)
 }
 
-function filterData(audioBufferTotal, numSamples, trimPoints) {
+export function filterData(audioBufferTotal: AudioBuffer, numSamples: number, trimPoints: [number, number]): number[] {
+  const [trimStart = 0, trimEnd = 0] = trimPoints
   const bufferLength = audioBufferTotal.length
-  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimPoints[0]), 1)
-  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimPoints[1]), bufferLength)
+  const bufferStart = Math.max(Math.floor((bufferLength / 100) * trimStart), 1)
+  const bufferEnd = Math.min(Math.ceil((bufferLength / 100) * trimEnd), bufferLength)
 
   if (bufferLength - bufferStart - bufferEnd < 1) return []
 
@@ -315,12 +373,12 @@ function filterData(audioBufferTotal, numSamples, trimPoints) {
 
   const blockSize = Math.floor(rawData.length / numSamples) // the number of samples in each subdivision
 
-  const filteredData = []
+  const filteredData: number[] = []
   for (let i = 0; i < numSamples; i++) {
-    let blockStart = blockSize * i // the location of the first sample in the block
+    const blockStart = blockSize * i // the location of the first sample in the block
     let sum = 0
     for (let j = 0; j < blockSize; j++) {
-      sum = sum + Math.abs(rawData[blockStart + j]) // find the sum of all the samples in the block
+      sum = sum + Math.abs(rawData.at(blockStart + j) ?? 0) // find the sum of all the samples in the block
     }
     filteredData.push(sum / blockSize) // divide the sum by the block size to get the average
   }
@@ -328,7 +386,7 @@ function filterData(audioBufferTotal, numSamples, trimPoints) {
   return filteredData
 }
 
-function normalizeData(filteredData) {
+export function normalizeData(filteredData: number[]): number[] {
   const multiplier = Math.pow(Math.max(...filteredData), -1)
   return filteredData.map((n) => n * multiplier)
 }

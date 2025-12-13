@@ -88,10 +88,11 @@ describe('calcMaxStrokeWidth', () => {
 
 describe('SvgFromAudioPeaks component', () => {
   const testPeaks = [0.2, 0.4, 0.6, 0.8, 1.0]
+  const testBandPeaks = [{ name: 'Full', lowHz: 20, highHz: 20000, color: '#000000', peaks: testPeaks }]
 
   it('renders SVG element', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
     )
 
     const svg = container.querySelector('svg')
@@ -100,7 +101,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('applies correct width and height', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={200} style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={200} style="saw" strokeWidth={1} />
     )
 
     const svg = container.querySelector('svg')
@@ -111,7 +112,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('renders zigzag style', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="zigzag" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="zigzag" strokeWidth={1} />
     )
 
     const polyline = container.querySelector('polyline')
@@ -120,7 +121,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('renders saw style', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
     )
 
     const polyline = container.querySelector('polyline')
@@ -129,7 +130,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('renders bars style', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="bars" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="bars" strokeWidth={1} />
     )
 
     const lines = container.querySelectorAll('line')
@@ -139,7 +140,7 @@ describe('SvgFromAudioPeaks component', () => {
   it('applies stroke width correctly', async () => {
     const strokeWidth = 5
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={strokeWidth} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={strokeWidth} />
     )
 
     const polyline = container.querySelector('polyline')
@@ -148,16 +149,18 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('applies stroke color', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
     )
 
-    const polyline = container.querySelector('polyline')
-    expect(polyline?.getAttribute('stroke')).toBe('#222')
+    const group = container.querySelector('g')
+    const polyline = group?.querySelector('polyline')
+    expect(polyline?.getAttribute('stroke')).toBe('#000000')
   })
 
   it('handles empty peaks array', async () => {
+    const emptyBandPeaks = [{ name: 'Full', lowHz: 20, highHz: 20000, color: '#000000', peaks: [] }]
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={[]} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={emptyBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} />
     )
 
     const svg = container.querySelector('svg')
@@ -166,7 +169,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('handles withCaps=true', async () => {
     const { container} = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} withCaps={true} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} withCaps={true} />
     )
 
     const polyline = container.querySelector('polyline')
@@ -175,7 +178,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('handles withCaps=false', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} withCaps={false} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height={DEFAULT_HEIGHT} style="saw" strokeWidth={1} withCaps={false} />
     )
 
     const polyline = container.querySelector('polyline')
@@ -184,7 +187,7 @@ describe('SvgFromAudioPeaks component', () => {
 
   it('accepts string height', async () => {
     const { container } = await render(
-      <SvgFromAudioPeaks peaks={testPeaks} height="200" style="saw" strokeWidth={1} />
+      <SvgFromAudioPeaks bandPeaks={testBandPeaks} height="200" style="saw" strokeWidth={1} />
     )
 
     const svg = container.querySelector('svg')
@@ -192,7 +195,7 @@ describe('SvgFromAudioPeaks component', () => {
   })
 
   it('accepts numeric height', async () => {
-    const { container } = await render(<SvgFromAudioPeaks peaks={testPeaks} height={200} style="saw" strokeWidth={1} />)
+    const { container } = await render(<SvgFromAudioPeaks bandPeaks={testBandPeaks} height={200} style="saw" strokeWidth={1} />)
 
     const svg = container.querySelector('svg')
     expect(svg).toBeTruthy()
