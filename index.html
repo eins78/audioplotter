@@ -17,6 +17,18 @@
     <meta name="application-name" content="audioplotter" />
     <meta name="msapplication-TileColor" content="#500cbd" />
 
+    <!-- SEO -->
+    <meta name="description" content="Create graphics for penplotters from audio files. Visualize waveforms as downloadable SVGs." />
+    <link rel="canonical" href="https://audioplotter.ars.is" />
+
+    <!-- Open Graph / Social -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://audioplotter.ars.is" />
+    <meta property="og:title" content="audioplotter" />
+    <meta property="og:description" content="Create graphics for penplotters from audio files. Visualize waveforms as downloadable SVGs." />
+    <meta property="og:image" content="https://audioplotter.ars.is/icons/android-chrome-512x512.png" />
+    <meta name="twitter:card" content="summary" />
+
     <title>audioplotter</title>
 
     <!-- Dark mode detection (must run before body renders) -->
@@ -28,7 +40,50 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <noscript>
+      <style>
+        .noscript-fallback {
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+          max-width: 600px;
+          margin: 4rem auto;
+          padding: 2rem;
+          text-align: center;
+          color: #333;
+        }
+        @media (prefers-color-scheme: dark) {
+          .noscript-fallback { color: #e0e0e0; }
+        }
+        .noscript-fallback h1 {
+          color: #500cbd;
+          font-size: 2rem;
+          margin-bottom: 1rem;
+        }
+        .noscript-fallback p {
+          line-height: 1.6;
+          margin-bottom: 1.5rem;
+        }
+        .noscript-fallback a { color: #500cbd; }
+        .noscript-fallback ul {
+          list-style: none;
+          padding: 0;
+        }
+        .noscript-fallback li { margin: 0.5rem 0; }
+      </style>
+      <div class="noscript-fallback">
+        <h1>audioplotter</h1>
+        <p>Create graphics for penplotters from audio files. Visualize waveforms as downloadable SVGs.</p>
+        <p><strong>JavaScript is required</strong> to use this app. It uses the Web Audio API to analyze audio files in your browser.</p>
+        <ul>
+          <li><a href="https://github.com/eins78/audioplotter#readme">Documentation</a></li>
+          <li><a href="https://github.com/eins78/audioplotter">Source Code</a></li>
+        </ul>
+      </div>
+    </noscript>
+    <div id="root">
+      <div style="display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:system-ui,-apple-system,sans-serif;color:#500cbd;">
+        Loading audioplotter…
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
